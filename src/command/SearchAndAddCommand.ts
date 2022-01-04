@@ -13,12 +13,14 @@ export class SearchAndAddCommand implements ICommand {
 
         if (!query) {
             msg.channel.send(createInfoEmbed(`No songs found`));
+            return;
         }
 
         const videos = await yts({ query, pages: 1 }).then((res) => res.videos);
         
         if (videos === null || videos.length === 0) {
             msg.channel.send(createInfoEmbed(`No songs found`));
+            return;
         }
 
         this.player.addMedia({
