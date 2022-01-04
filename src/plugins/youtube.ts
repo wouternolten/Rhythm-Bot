@@ -27,22 +27,6 @@ export default class YoutubePlugin extends IBotPlugin {
     }
 
     registerDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>) {
-        map.on(youtubeType, async (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-            if (cmd.arguments.length > 0) {
-                for (const arg of cmd.arguments) {
-                    await this.bot.player.addMedia({
-                        type: youtubeType,
-                        url: arg,
-                        requestor: msg.author.username,
-                    });
-                }
-
-                if (!this.bot.player.playing) {
-                    this.bot.joinChannelAndPlay(msg);
-                }
-            }
-        });
-
         this.bot.player.typeRegistry.set(youtubeType, {
             getPlaylist: (item: MediaItem) =>
                 new Promise<MediaItem[]>((done, error) => {
