@@ -1,7 +1,25 @@
+import {
+    ForcePlayVideoCommand,
+    HelpCommand,
+    JoinUserChannelCommand,
+    LeaveChannelCommand,
+    ListSongsCommand,
+    MoveSongCommand,
+    PlaySongCommand,
+    PingCommand,
+    RemoveSongCommand,
+    SearchAndAddCommand,
+    SearchCommand,
+    SimplePlayerActCommand,
+    TimeCommand,
+    ToggleRepeatModeCommand,
+    VolumeCommand,
+} from './../command';
+import { VoiceConnection, VoiceState } from 'discord.js';
 import { MediaPlayer } from '../media';
 import { BotStatus } from './bot-status';
 import { IRhythmBotConfig } from './bot-config';
-import { joinUserChannel, createInfoEmbed, createErrorEmbed, secondsToTimestamp, createEmbed } from '../helpers';
+import { joinUserChannel, createInfoEmbed } from '../helpers';
 import {
     IBot,
     CommandMap,
@@ -14,15 +32,10 @@ import {
     MessageReaction,
     User,
 } from 'discord-bot-quickstart';
-import { search as yts } from 'yt-search';
-import { EntityRepository } from '@mikro-orm/sqlite';
-import { ORM } from '../app';
-import { MediaItem } from '../media/media-item.model';
 
 const helptext = readFile('../helptext.txt');
-const random = (array) => array[Math.floor(Math.random() * array.length)];
-const pingPhrases = [`Can't stop won't stop!`, `:ping_pong: Pong Bitch!`];
-const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
+const RICK_ROLL_ID = 'dQw4w9WgXcQ';
+const AIR_HORN_ID = 'UaUa_0qPPgc';
 
 export class RhythmBot extends IBot<IRhythmBotConfig> {
     helptext: string;
@@ -34,7 +47,7 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
             auto: {
                 deafen: false,
                 pause: false,
-                play: false,
+                play: true,
                 reconnect: true,
             },
             discord: {
@@ -69,54 +82,10 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
     }
 
     onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
-        map.on('ping', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-            let phrases = pingPhrases.slice();
-            if (msg.guild) {
-                phrases = phrases.concat(msg.guild.emojis.cache.array().map((x) => x.name));
-            }
-            msg.channel.send(random(phrases));
-        })
-            .on('help', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                msg.channel.send(this.helptext);
-            })
-            .on('join', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                joinUserChannel(msg)
-                    .then((connection) => {
-                        this.player.connection = connection;
-                        msg.channel.send(createInfoEmbed(`Joined Channel: ${connection.channel.name}`));
-                        if (this.config.auto.play) {
-                            this.player.play();
-                        }
-                    })
-                    .catch((err) => {
-                        msg.channel.send(createErrorEmbed(err));
-                    });
-            })
-            .on('leave', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                this.player.stop();
-                this.player.connection = null;
-                this.client.voice.connections.forEach((conn) => {
-                    conn.disconnect();
-                    msg.channel.send(createInfoEmbed(`Disconnecting from channel: ${conn.channel.name}`));
-                });
-            })
-            .on('play', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                this.joinChannelAndPlay(msg);
-            })
-            .on('pause', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                this.player.pause();
-            })
-            .on('time', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                let media = this.player.queue.first;
-                if (this.player.playing && this.player.dispatcher) {
-                    let elapsed = secondsToTimestamp(this.player.dispatcher.totalStreamTime / 1000);
-                    msg.channel.send(createInfoEmbed('Time Elapsed', `${elapsed} / ${media.duration}`));
-                } else if (this.player.queue.first) {
-                    msg.channel.send(createInfoEmbed('Time Elapsed', `00:00:00 / ${media.duration}`));
-                }
-            })
-            .on('search', async (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                let noResults = false;
+        // TODO:
+        // - Bug found: unfortunately, due to classes not being available until onClientCreated() has been called, so we need to instantiate that
+        // - Refactor all commands
+        // - Asynchronously load commands with memoization. 
 
                 if (cmd.body != null && cmd.body !== '') {
                     if (YOUTUBE_REGEX.test(cmd.body)) {
@@ -127,120 +96,29 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
                         });
 
                         return;
-                    }
+        }
 
-                    const videos = await yts({ query: cmd.body, pages: 1 }).then((res) => res.videos);
-                    if (videos != null && videos.length > 0) {
-                        await Promise.all(
-                            videos
-                                .slice(0, 3)
-                                .map((video) =>
-                                    createEmbed()
-                                        .setTitle(`${video.title}`)
-                                        .addField('Author:', `${video.author.name}`, true)
-                                        .addField('Duration', `${video.timestamp}`, true)
-                                        .setThumbnail(video.image)
-                                        .setURL(video.url)
-                                )
-                                .map((embed) =>
-                                    msg.channel.send(embed).then((m) => m.react(this.config.emojis.addSong))
-                                )
-                        );
-                    } else {
-                        noResults = true;
-                    }
-                } else {
-                    noResults = true;
-                }
-
-                if (noResults) {
-                    msg.channel.send(createInfoEmbed(`No songs found`));
-                }
-            })
-            .on('add', async (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                if (cmd.arguments.length > 0) {
-                    for (const arg in cmd.arguments) {
-                        let parts = arg.split(':');
-                        if (parts.length == 2) {
-                            await this.player.addMedia({
-                                type: parts[0],
-                                url: parts[1],
-                                requestor: msg.author.username,
-                            });
-                        } else {
-                            msg.channel.send(createErrorEmbed(`Invalid media type format`));
-                        }
-                    }
-
-                    if (this.player.queue.length > 0 && !this.player.playing) {
-                        this.joinChannelAndPlay(msg);
-                    }
-                }
-            })
-            .on('remove', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                if (cmd.arguments.length > 0) {
-                    let idx = parseInt(cmd.arguments[0]);
-                    let item = this.player.at(idx - 1);
-                    if (item) {
-                        this.player.remove(item);
-                    }
-                }
-            })
-            .on('skip', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                this.player.skip();
-            })
-            .on('stop', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                this.player.stop();
-            })
-            .on('list', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                let items = this.player.queue.map(
-                    (item, idx) =>
-                        `${idx + 1}. Type: "${item.type}", Title: "${item.name}${
-                            item.requestor ? `", Requested By: ${item.requestor}` : ''
-                        }"`
-                );
-                if (items.length > 0) {
-                    msg.channel.send(createInfoEmbed('Current Playing Queue', items.join('\n\n')));
-                } else {
-                    msg.channel.send(createInfoEmbed(`There are no songs in the queue.`));
-                }
-            })
-            .on('clear', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                this.player.clear();
-            })
-            .on('move', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                if (cmd.arguments.length > 1) {
-                    let current = Math.min(Math.max(parseInt(cmd.arguments[0]), 0), this.player.queue.length - 1),
-                        targetDesc = cmd.arguments[0],
-                        target = 0;
-                    if (targetDesc == 'up') {
-                        target = Math.min(current - 1, 0);
-                    } else if (targetDesc == 'down') {
-                        target = Math.max(current + 1, this.player.queue.length - 1);
-                    } else {
-                        target = parseInt(targetDesc);
-                    }
-
-                    this.player.move(current, target);
-                }
-            })
-            .on('shuffle', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                this.player.shuffle();
-            })
-            .on('volume', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                if (cmd.arguments.length > 0) {
-                    let temp = cmd.arguments[0];
-                    if (temp) {
-                        let volume = Math.min(Math.max(parseInt(temp), 0), 100);
-                        this.player.setVolume(volume);
-                    }
-                }
-                msg.channel.send(createInfoEmbed(`Volume is at ${this.player.getVolume()}`));
-            })
-            .on('repeat', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                this.config.queue.repeat = !this.config.queue.repeat;
-                msg.channel.send(createInfoEmbed(`Repeat mode is ${this.config.queue.repeat ? 'on' : 'off'}`));
-            });
+        map
+            .on('clear', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'clear').execute(cmd, msg))
+            .on('help', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new HelpCommand(this.helptext).execute(cmd, msg))
+            .on('horn', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new ForcePlayVideoCommand(this.player, AIR_HORN_ID).execute(cmd, msg))
+            .on('join', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new JoinUserChannelCommand(this.player, this.config).execute(cmd, msg))
+            .on('leave', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new LeaveChannelCommand(this.player, this.client).execute(cmd, msg))
+            .on('list', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new ListSongsCommand(this.player).execute(cmd, msg))
+            .on('move', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new MoveSongCommand(this.player).execute(cmd, msg))
+            .on('p', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SearchAndAddCommand(this.player).execute(cmd, msg))
+            .on('pause', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'pause').execute(cmd, msg))
+            .on('play', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new PlaySongCommand(this.player).execute(cmd, msg))
+            .on('ping', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new PingCommand().execute(cmd, msg))
+            .on('remove', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new RemoveSongCommand(this.player).execute(cmd, msg))
+            .on('repeat', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new ToggleRepeatModeCommand(this.config).execute(cmd, msg))
+            .on('rick', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new ForcePlayVideoCommand(this.player, RICK_ROLL_ID).execute(cmd, msg))
+            .on('search', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SearchCommand(this.player, this.config).execute(cmd, msg))
+            .on('shuffle', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'shuffle').execute(cmd, msg))
+            .on('skip', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'skip').execute(cmd, msg))
+            .on('stop', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'stop').execute(cmd, msg))
+            .on('time', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new TimeCommand(this.player).execute(cmd, msg))
+            .on('volume', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new VolumeCommand(this.player).execute(cmd, msg));
     }
 
     parsedMessage(msg: SuccessfulParsedMessage<Message>) {
@@ -273,7 +151,7 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
                                 type: 'youtube',
                                 url: embed.url,
                                 requestor: user.username,
-                            });
+                            }, reaction.message);
                         }
                         if (reaction.emoji.name === this.config.emojis.stopSong) {
                             this.logger.debug('Emoji Click: Stopping Song');
