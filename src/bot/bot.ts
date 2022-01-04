@@ -82,43 +82,34 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
     }
 
     onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
-        // TODO:
-        // - Bug found: unfortunately, due to classes not being available until onClientCreated() has been called, so we need to instantiate that
-        // - Refactor all commands
-        // - Asynchronously load commands with memoization. 
+        const commandMap = {
+            clear: new SimplePlayerActCommand(this.player, 'clear'),
+            help: new HelpCommand(this.helptext),
+            horn: new ForcePlayVideoCommand(this.player, AIR_HORN_ID),
+            join: new JoinUserChannelCommand(this.player, this.config),
+            leave: new LeaveChannelCommand(this.player, this.client),
+            list: new ListSongsCommand(this.player),
+            move: new MoveSongCommand(this.player),
+            p: new SearchAndAddCommand(this.player),
+            pause: new SimplePlayerActCommand(this.player, 'pause'),
+            play: new PlaySongCommand(this.player),
+            ping: new PingCommand(),
+            q: new ListSongsCommand(this.player),
+            queue: new ListSongsCommand(this.player),
+            remove: new RemoveSongCommand(this.player),
+            repeat: new ToggleRepeatModeCommand(this.config),
+            rick: new ForcePlayVideoCommand(this.player, RICK_ROLL_ID),
+            search: new SearchCommand(this.player, this.config),
+            shuffle: new SimplePlayerActCommand(this.player, 'shuffle'),
+            skip: new SimplePlayerActCommand(this.player, 'skip'),
+            stop: new SimplePlayerActCommand(this.player, 'stop'),
+            time: new TimeCommand(this.player),
+            volume: new VolumeCommand(this.player),
+        };
 
-                if (cmd.body != null && cmd.body !== '') {
-                    if (YOUTUBE_REGEX.test(cmd.body)) {
-                        await this.player.addMedia({
-                            type: 'youtube',
-                            url: cmd.body,
-                            requestor: msg.author.username
-                        });
-
-                        return;
-        }
-
-        map
-            .on('clear', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'clear').execute(cmd, msg))
-            .on('help', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new HelpCommand(this.helptext).execute(cmd, msg))
-            .on('horn', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new ForcePlayVideoCommand(this.player, AIR_HORN_ID).execute(cmd, msg))
-            .on('join', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new JoinUserChannelCommand(this.player, this.config).execute(cmd, msg))
-            .on('leave', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new LeaveChannelCommand(this.player, this.client).execute(cmd, msg))
-            .on('list', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new ListSongsCommand(this.player).execute(cmd, msg))
-            .on('move', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new MoveSongCommand(this.player).execute(cmd, msg))
-            .on('p', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SearchAndAddCommand(this.player).execute(cmd, msg))
-            .on('pause', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'pause').execute(cmd, msg))
-            .on('play', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new PlaySongCommand(this.player).execute(cmd, msg))
-            .on('ping', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new PingCommand().execute(cmd, msg))
-            .on('remove', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new RemoveSongCommand(this.player).execute(cmd, msg))
-            .on('repeat', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new ToggleRepeatModeCommand(this.config).execute(cmd, msg))
-            .on('rick', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new ForcePlayVideoCommand(this.player, RICK_ROLL_ID).execute(cmd, msg))
-            .on('search', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SearchCommand(this.player, this.config).execute(cmd, msg))
-            .on('shuffle', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'shuffle').execute(cmd, msg))
-            .on('skip', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'skip').execute(cmd, msg))
-            .on('stop', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new SimplePlayerActCommand(this.player, 'stop').execute(cmd, msg))
-            .on('time', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new TimeCommand(this.player).execute(cmd, msg))
-            .on('volume', (cmd: SuccessfulParsedMessage<Message>, msg: Message) => new VolumeCommand(this.player).execute(cmd, msg));
+        Object.keys(commandMap).forEach(key => {
+            map.on(key, commandMap[key].execute.bind(commandMap[key]))
+        });
     }
 
     parsedMessage(msg: SuccessfulParsedMessage<Message>) {
