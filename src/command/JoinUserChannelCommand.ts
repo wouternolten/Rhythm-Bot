@@ -15,6 +15,11 @@ export class JoinUserChannelCommand implements ICommand {
     }
 
     async execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): Promise<void> {
+        if (this.player.connection) {
+            msg.channel.send(createInfoEmbed('Already in a channel.'));
+            return;
+        }
+
         joinUserChannel(msg)
             .then((connection) => {
                 this.player.connection = connection;

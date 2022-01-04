@@ -8,7 +8,6 @@ export class HelpCommand implements ICommand {
     }
 
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
-        console.log(this.helptext);
         msg.channel.send(this.helptext);
     }
 }

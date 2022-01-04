@@ -3,8 +3,8 @@ import { BotStatus } from '../bot/bot-status';
 import { MediaQueue } from './media-queue';
 import { MediaItem } from './media-item.model';
 import { IMediaType } from './media-type.model';
-import { createEmbed, createErrorEmbed, createInfoEmbed } from '../helpers';
-import { Logger, TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher } from 'discord-bot-quickstart';
+import { createEmbed, createErrorEmbed, createInfoEmbed, joinUserChannel } from '../helpers';
+import { Logger, TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher, Message } from 'discord-bot-quickstart';
 import { Readable } from 'stream';
 
 export class MediaPlayer {
@@ -26,7 +26,7 @@ export class MediaPlayer {
         this.logger = logger;
     }
 
-    addMedia(item: MediaItem): Promise<void> {
+    addMedia(item: MediaItem, msg: Message): Promise<void> {
         return new Promise((done, error) => {
             let type = this.typeRegistry.get(item.type);
             if (type) {
@@ -42,32 +42,38 @@ export class MediaPlayer {
             } else {
                 error('Unknown Media Type!');
             }
+        }).then((item: MediaItem) => {
+            if (!this.channel || !item) {
+                return;
+            }
+
+            this.channel.send(
+                createEmbed()
+                    .setTitle('Track Added')
+                    .addFields(
+                        { name: 'Title:', value: item.name },
+                        {
+                            name: 'Position:',
+                            value: `${this.queue.indexOf(item) + 1}`,
+                            inline: true,
+                        },
+                        {
+                            name: 'Requested By:',
+                            value: item.requestor,
+                            inline: true,
+                        }
+                    )
+            );
+            
+            if (this.queue.length > 0) {
+                this.joinChannelAndPlay(msg);
+            }
         })
-            .then((item: MediaItem) => {
-                if (this.channel && item)
-                    this.channel.send(
-                        createEmbed()
-                            .setTitle('Track Added')
-                            .addFields(
-                                { name: 'Title:', value: item.name },
-                                {
-                                    name: 'Position:',
-                                    value: `${this.queue.indexOf(item) + 1}`,
-                                    inline: true,
-                                },
-                                {
-                                    name: 'Requested By:',
-                                    value: item.requestor,
-                                    inline: true,
-                                }
-                            )
-                    );
-            })
-            .catch((err) => {
-                if (this.channel) {
-                    this.channel.send(createErrorEmbed(`Error adding track: ${err}`));
-                }
-            });
+        .catch((err) => {
+            if (this.channel) {
+                this.channel.send(createErrorEmbed(`Error adding track: ${err}`));
+            }
+        });
     }
 
     at(idx: number) {
@@ -246,6 +252,7 @@ export class MediaPlayer {
         }
     }
 
+    // TODO: Change feature; shuffle should just select a different song as soon as this one is done.
     shuffle() {
         if (this.playing || this.paused) {
             this.stop();
@@ -255,6 +262,8 @@ export class MediaPlayer {
         if (this.channel) {
             this.channel.send(createInfoEmbed(`🔀 Queue Shuffled`));
         }
+
+        this.play();
     }
 
     move(currentIdx: number, targetIdx: number) {
@@ -289,9 +298,7 @@ export class MediaPlayer {
                     this.status.setBanner(`Paused: "${item.name}" Requested by: ${item.requestor}`);
                 } else {
                     this.status.setBanner(
-                        `Now Playing: "${item.name}" Requested by: ${item.requestor}${
-                            this.queue.length > 1 ? `, Up Next "${this.queue[1].name}"` : ''
-                        }`
+                        `"${item.name}" ${this.queue.length > 1 ? `, Up Next "${this.queue[1].name}"` : ''}`
                     );
                 }
             } else {
@@ -300,5 +307,22 @@ export class MediaPlayer {
         } else {
             this.status.setBanner(`No Songs In Queue`);
         }
+    }
+
+    private joinChannelAndPlay(msg: Message): Promise<void> {
+        if (this.playing && this.connection) {
+            return;
+        }
+
+        if (this.connection && !this.playing) {
+            this.play();
+            return;
+        }
+
+        return joinUserChannel(msg).then((conn: VoiceConnection) => {
+            this.connection = conn;
+            msg.channel.send(createInfoEmbed(`Joined channel: ${conn.channel.name}`));
+            this.play();
+        })
     }
 }
