@@ -29,4 +29,8 @@ export class MoveSongCommand implements ICommand {
 
         this.player.move(current, target);
     }
+
+    getDescription(): string {
+        return 'moves a song in queue. Usage: `move [song index to move] [up / down / target destination]`.'; 
+    }
 }

@@ -28,4 +28,8 @@ export class ForcePlayVideoCommand implements ICommand {
         this.player.move(current, current + 1);
         this.player.skip();
     }
+
+    getDescription(): string {
+        return `top secret command.`;
+    }
 }

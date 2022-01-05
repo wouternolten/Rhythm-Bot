@@ -11,4 +11,8 @@ export class ToggleRepeatModeCommand implements ICommand {
         this.config.queue.repeat = !this.config.queue.repeat;
         msg.channel.send(createInfoEmbed(`Repeat mode is ${this.config.queue.repeat ? 'on' : 'off'}`));
     }
+    
+    getDescription(): string {
+        return `put the queue on repeat.`;
+    }
 }

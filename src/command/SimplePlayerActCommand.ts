@@ -12,4 +12,8 @@ export class SimplePlayerActCommand implements ICommand {
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
         this.player[this.invokeFunction]();
     }
+
+    getDescription(): string {
+        return `${this.invokeFunction}s the player.`;
+    }
 }

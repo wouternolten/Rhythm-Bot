@@ -15,4 +15,8 @@ export class PingCommand implements ICommand {
 
         msg.channel.send(random(phrases));
     }
+
+    getDescription(): string {
+        return 'check if the bot is still alive.'; 
+    }
 }
