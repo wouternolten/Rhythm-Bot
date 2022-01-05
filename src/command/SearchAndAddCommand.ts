@@ -5,6 +5,8 @@ import { ICommand } from './ICommand';
 import { createInfoEmbed } from '../helpers';
 import yts from 'yt-search';
 
+const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
+
 export class SearchAndAddCommand implements ICommand {
     constructor(private readonly player: MediaPlayer) { }
     
@@ -13,6 +15,16 @@ export class SearchAndAddCommand implements ICommand {
 
         if (!query) {
             msg.channel.send(createInfoEmbed(`No songs found`));
+            return;
+        }
+
+        if (YOUTUBE_REGEX.test(cmd.body)) {
+            await this.player.addMedia({
+                type: 'youtube',
+                url: cmd.body,
+                requestor: msg.author.username
+            }, msg);
+
             return;
         }
 
