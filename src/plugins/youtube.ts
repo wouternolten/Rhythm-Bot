@@ -60,6 +60,7 @@ export default class YoutubePlugin extends IBotPlugin {
                     let stream = ytdl(item.url, {
                         filter: 'audioonly',
                         quality: 'highestaudio',
+                        begin: item.begin
                     });
                     if (stream) {
                         done(stream);
