@@ -19,6 +19,7 @@ export class MediaPlayer {
     channel: TextChannel | DMChannel | NewsChannel;
     connection?: VoiceConnection;
     dispatcher?: StreamDispatcher;
+    goingToPlay: boolean = false;
 
     constructor(config: IRhythmBotConfig, status: BotStatus, logger: Logger) {
         this.config = config;
@@ -41,15 +42,15 @@ export class MediaPlayer {
                 return;
             }
                 
-                type.getDetails(item)
-                    .then((media) => {
-                        item.name = media.name;
-                        item.duration = media.duration;
-                        this.determineStatus();
-                        this.queue.enqueue(item);
-                        done(item);
-                    })
-                    .catch((err) => error(err));
+            type.getDetails(item)
+                .then((media) => {
+                    item.name = media.name;
+                    item.duration = media.duration;
+                    this.determineStatus();
+                    this.queue.enqueue(item);
+                    done(item);
+                })
+                .catch((err) => error(err));
             
         }).then((item: MediaItem) => {
             if (!this.channel || !item) {
@@ -57,23 +58,23 @@ export class MediaPlayer {
             }
 
             if (!silent) {
-            this.channel.send(
-                createEmbed()
-                    .setTitle('Track Added')
-                    .addFields(
-                        { name: 'Title:', value: item.name },
-                        {
-                            name: 'Position:',
-                            value: `${this.queue.indexOf(item) + 1}`,
-                            inline: true,
-                        },
-                        {
-                            name: 'Requested By:',
-                            value: item.requestor,
-                            inline: true,
-                        }
-                    )
-            );
+                this.channel.send(
+                    createEmbed()
+                        .setTitle('Track Added')
+                        .addFields(
+                            { name: 'Title:', value: item.name },
+                            {
+                                name: 'Position:',
+                                value: `${this.queue.indexOf(item) + 1}`,
+                                inline: true,
+                            },
+                            {
+                                name: 'Requested By:',
+                                value: item.requestor,
+                                inline: true,
+                            }
+                        )
+                );
             }
             
             if (this.queue.length > 0) {
@@ -321,19 +322,28 @@ export class MediaPlayer {
     }
 
     private joinChannelAndPlay(msg: Message): Promise<void> {
+        if (this.goingToPlay) {
+            return;
+        }
+
+        this.goingToPlay = true;
+
         if (this.playing && this.connection) {
+            this.goingToPlay = false;
             return;
         }
 
         if (this.connection && !this.playing) {
+            this.goingToPlay = false;
             this.play();
             return;
         }
 
-        return joinUserChannel(msg).then((conn: VoiceConnection) => {
-            this.connection = conn;
-            msg.channel.send(createInfoEmbed(`Joined channel: ${conn.channel.name}`));
-            this.play();
-        })
+        return joinUserChannel(msg)
+            .then((conn: VoiceConnection) => {
+                this.connection = conn;
+                this.play();
+            })
+            .finally(() => this.goingToPlay = false);
     }
 }
