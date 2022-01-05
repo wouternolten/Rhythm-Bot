@@ -12,7 +12,6 @@ export class PlaySongCommand implements ICommand {
             if (!this.player.connection) {
                 joinUserChannel(msg).then((conn) => {
                     this.player.connection = conn;
-                    msg.channel.send(createInfoEmbed(`Joined Channel: ${conn.channel.name}`));
                     done();
                 });
             } else {
@@ -21,5 +20,9 @@ export class PlaySongCommand implements ICommand {
         }).then(() => {
             this.player.play();
         });
+    }
+
+    getDescription(): string {
+        return 'play a song.'; 
     }
 }

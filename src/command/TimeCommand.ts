@@ -18,4 +18,8 @@ export class TimeCommand implements ICommand {
             msg.channel.send(createInfoEmbed('No song playing.'));
         }
     }
+    
+    getDescription(): string {
+        return `display the time elapsed in the current song.`;
+    }
 }

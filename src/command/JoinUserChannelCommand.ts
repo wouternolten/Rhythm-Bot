@@ -33,4 +33,8 @@ export class JoinUserChannelCommand implements ICommand {
                 msg.channel.send(createErrorEmbed(err));
             });
     }
+
+    getDescription(): string {
+        return 'lets the bot join a voice channel.'; 
+    }
 }

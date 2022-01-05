@@ -18,4 +18,8 @@ export class LeaveChannelCommand implements ICommand {
             msg.channel.send(createInfoEmbed(`Disconnecting from channel: ${conn.channel.name}`));
         });
     }
+
+    getDescription(): string {
+        return 'lets the bot leave the voice channel.'; 
+    }
 }

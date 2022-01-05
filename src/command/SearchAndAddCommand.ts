@@ -29,4 +29,8 @@ export class SearchAndAddCommand implements ICommand {
             requestor: msg.author.username
         }, msg);
     }
+
+    getDescription(): string {
+        return `search for a song and directly add it to the queue.`
+    }
 }

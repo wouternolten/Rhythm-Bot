@@ -56,4 +56,8 @@ export class SearchCommand implements ICommand {
             msg.channel.send(createInfoEmbed(`No songs found`));
         }
     }
+
+    getDescription(): string {
+        return 'search for a song.';
+    }
 }

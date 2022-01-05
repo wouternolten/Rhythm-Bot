@@ -1,5 +1,4 @@
 export * from './ForcePlayVideoCommand';
-export * from './HelpCommand';
 export * from './ICommand';
 export * from './JoinUserChannelCommand';
 export * from './LeaveChannelCommand';

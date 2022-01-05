@@ -19,4 +19,9 @@ export class ListSongsCommand implements ICommand {
             msg.channel.send(createInfoEmbed(`There are no songs in the queue.`));
         }
     }
+
+    
+    getDescription(): string {
+        return 'lists all songs currently in queue.'; 
+    }
 }

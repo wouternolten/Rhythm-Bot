@@ -17,4 +17,8 @@ export class RemoveSongCommand implements ICommand {
             this.player.remove(item);
         }
     }
+
+    getDescription(): string {
+        return 'remove a song from the queue. Usage: `remove [song index]`.'; 
+    }
 }

@@ -17,4 +17,8 @@ export class VolumeCommand implements ICommand {
         }
         msg.channel.send(createInfoEmbed(`Volume is at ${this.player.getVolume()}`));
     }
+
+    getDescription(): string {
+        return 'turn the volume up/down. Minimum = 0 (muted) Maximum = 100.';
+    }
 }

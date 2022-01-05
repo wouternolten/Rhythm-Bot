@@ -1,6 +1,6 @@
 import {
     ForcePlayVideoCommand,
-    HelpCommand,
+    ICommand,
     JoinUserChannelCommand,
     LeaveChannelCommand,
     ListSongsCommand,
@@ -19,7 +19,7 @@ import { VoiceConnection, VoiceState } from 'discord.js';
 import { MediaPlayer } from '../media';
 import { BotStatus } from './bot-status';
 import { IRhythmBotConfig } from './bot-config';
-import { joinUserChannel, createInfoEmbed } from '../helpers';
+import { joinUserChannel } from '../helpers';
 import {
     IBot,
     CommandMap,
@@ -82,9 +82,8 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
     }
 
     onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
-        const commandMap = {
+        const commandMap: {[key: string]: ICommand} = {
             clear: new SimplePlayerActCommand(this.player, 'clear'),
-            help: new HelpCommand(this.helptext),
             horn: new ForcePlayVideoCommand(this.player, AIR_HORN_ID),
             join: new JoinUserChannelCommand(this.player, this.config),
             leave: new LeaveChannelCommand(this.player, this.client),
@@ -106,6 +105,17 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
             time: new TimeCommand(this.player),
             volume: new VolumeCommand(this.player),
         };
+
+        const descriptions = Object
+            .keys(commandMap)
+            .map((key) => '`' + key + '`: ' + commandMap[key].getDescription())
+            .join('\n');
+        
+        const helpCommand = {
+            execute: (cmd: SuccessfulParsedMessage<Message>, msg: Message): void => { msg.channel.send("Commands: \n\n" + descriptions) }
+        } as unknown as ICommand;
+
+        commandMap.help = helpCommand;
 
         Object.keys(commandMap).forEach(key => {
             map.on(key, commandMap[key].execute.bind(commandMap[key]))
@@ -192,7 +202,6 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
             if (!this.player.connection) {
                 joinUserChannel(msg).then((conn) => {
                     this.player.connection = conn;
-                    msg.channel.send(createInfoEmbed(`Joined Channel: ${conn.channel.name}`));
                     done();
                 });
             } else {
