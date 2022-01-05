@@ -4,4 +4,5 @@ export interface MediaItem {
     requestor?: string;
     name?: string;
     duration?: string;
+    begin?: string | number | Date;
 }

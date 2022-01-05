@@ -24,8 +24,15 @@ export class ForcePlayVideoCommand implements ICommand {
         if (current === 0) {
             return;
         }
-    
-        this.player.move(current, current + 1);
+
+        if (this.player.dispatcher) {
+            const time = this.player.dispatcher.totalStreamTime;
+            const currentSong = this.player.queue.first;
+            currentSong.begin = `${time}ms`;
+
+            await this.player.addMedia(currentSong, msg, true);
+        }
+
         this.player.skip();
     }
 
