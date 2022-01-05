@@ -2,7 +2,7 @@ import { MediaPlayer } from '../media/media-player';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { ICommand } from './ICommand';
-import { createInfoEmbed } from '../helpers';
+import { createInfoEmbed, getPlayList } from '../helpers';
 import yts from 'yt-search';
 
 const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
@@ -19,6 +19,28 @@ export class SearchAndAddCommand implements ICommand {
         }
 
         if (YOUTUBE_REGEX.test(cmd.body)) {
+            if (cmd.body.indexOf('&list=') !== -1) {
+                const playList = await getPlayList(cmd.body);
+                
+                if (!playList) {
+                    return;
+                }
+
+                for (const item of playList.items) {
+                    await this.player.addMedia({
+                        type: item.type,
+                        name: item.name,
+                        url: item.url,
+                        duration: item.duration,
+                        requestor: msg.author.username,
+                    }, msg, true);
+                }
+
+                createInfoEmbed(`Playlist "${playList.title}" added`);
+
+                return;
+            }
+
             await this.player.addMedia({
                 type: 'youtube',
                 url: cmd.body,

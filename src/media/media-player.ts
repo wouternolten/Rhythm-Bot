@@ -26,10 +26,21 @@ export class MediaPlayer {
         this.logger = logger;
     }
 
-    addMedia(item: MediaItem, msg: Message): Promise<void> {
+    addMedia(item: MediaItem, msg: Message, silent = false): Promise<void> {
         return new Promise((done, error) => {
             let type = this.typeRegistry.get(item.type);
-            if (type) {
+
+            if (!type) {
+                error('Unknown Media Type!');
+            }
+            
+            if (item.name && item.duration) {
+                this.determineStatus();
+                this.queue.enqueue(item);
+                done(item);
+                return;
+            }
+                
                 type.getDetails(item)
                     .then((media) => {
                         item.name = media.name;
@@ -39,14 +50,13 @@ export class MediaPlayer {
                         done(item);
                     })
                     .catch((err) => error(err));
-            } else {
-                error('Unknown Media Type!');
-            }
+            
         }).then((item: MediaItem) => {
             if (!this.channel || !item) {
                 return;
             }
 
+            if (!silent) {
             this.channel.send(
                 createEmbed()
                     .setTitle('Track Added')
@@ -64,6 +74,7 @@ export class MediaPlayer {
                         }
                     )
             );
+            }
             
             if (this.queue.length > 0) {
                 this.joinChannelAndPlay(msg);
