@@ -42,7 +42,10 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
     player: MediaPlayer;
     status: BotStatus;
 
-    constructor(config: IRhythmBotConfig) {
+    constructor(
+        config: IRhythmBotConfig,
+        private readonly specialCommandBot: SpecialCommandBot
+    ) {
         super(config, <IRhythmBotConfig>{
             auto: {
                 deafen: false,
@@ -78,7 +81,9 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
                 skipSong: '⏭️',
             },
         });
+
         this.helptext = helptext;
+        this.specialCommandBot.registerExtraCommands(this.client, this.player);
     }
 
     onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
