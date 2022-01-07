@@ -123,7 +123,16 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
         commandMap.help = helpCommand;
 
         Object.keys(commandMap).forEach(key => {
-            map.on(key, commandMap[key].execute.bind(commandMap[key]))
+            map.on(key, (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
+                const channel = msg.member.voice.channel;
+
+                if (!channel || channel.type !== 'voice') {
+                    msg.channel.send(createInfoEmbed(`User isn't in a voice channel!`));
+                    return;
+                }
+
+                commandMap[key].execute(cmd, msg);
+            })
         });
     }
 
