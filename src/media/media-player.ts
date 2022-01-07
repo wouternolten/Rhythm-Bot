@@ -27,65 +27,58 @@ export class MediaPlayer {
         this.logger = logger;
     }
 
-    addMedia(item: MediaItem, msg: Message, silent = false): Promise<void> {
-        return new Promise((done, error) => {
+    async addMedia(item: MediaItem, msg: Message, silent = false): Promise<void> {
+        if (!item.name || !item.duration) {
             let type = this.typeRegistry.get(item.type);
 
             if (!type) {
-                error('Unknown Media Type!');
-            }
-            
-            if (item.name && item.duration) {
-                this.determineStatus();
-                this.queue.enqueue(item);
-                done(item);
-                return;
-            }
-                
-            type.getDetails(item)
-                .then((media) => {
-                    item.name = media.name;
-                    item.duration = media.duration;
-                    this.determineStatus();
-                    this.queue.enqueue(item);
-                    done(item);
-                })
-                .catch((err) => error(err));
-            
-        }).then((item: MediaItem) => {
-            if (!this.channel || !item) {
-                return;
+                return Promise.reject('Unknown Media Type!');
             }
 
-            if (!silent) {
-                this.channel.send(
-                    createEmbed()
-                        .setTitle('Track Added')
-                        .addFields(
-                            { name: 'Title:', value: item.name },
-                            {
-                                name: 'Position:',
-                                value: `${this.queue.indexOf(item) + 1}`,
-                                inline: true,
-                            },
-                            {
-                                name: 'Requested By:',
-                                value: item.requestor,
-                                inline: true,
-                            }
-                        )
-                );
+            try {
+                const details = await type.getDetails(item);
+
+                item.name = details.name;
+                item.duration = details.duration;
+            } catch (error) {
+                const errorMessage = 'Error when getting details for item';
+                console.error(errorMessage);
+                console.error({ item, error });
+                return Promise.reject(errorMessage);
             }
-            
-            if (this.queue.length > 0) {
-                this.joinChannelAndPlay(msg);
-            }
-        })
-        .catch((err) => {
-            if (this.channel) {
-                this.channel.send(createErrorEmbed(`Error adding track: ${err}`));
-            }
-        });
+        }
+
+        const oldQueueLength = this.queue.length;
+        this.queue.enqueue(item);
+        this.determineStatus();
+
+        if (!this.channel) {
+            return;
+        }
+
+        if (!silent) {
+            this.channel.send(
+                createEmbed()
+                    .setTitle('Track Added')
+                    .addFields(
+                        { name: 'Title:', value: item.name },
+                        {
+                            name: 'Position:',
+                            value: `${this.queue.indexOf(item) + 1}`,
+                            inline: true,
+                        },
+                        {
+                            name: 'Requested By:',
+                            value: item.requestor,
+                            inline: true,
+                        }
+                    )
+            );
+        }
+
+        if (oldQueueLength === 0) {
+            this.joinChannelAndPlay(msg);
+        }
     }
 
     at(idx: number) {
@@ -195,6 +188,7 @@ export class MediaPlayer {
     }
 
     play() {
+        console.log('In function play');
         if (this.queue.length == 0 && this.channel) {
             this.channel.send(createInfoEmbed(`Queue is empty! Add some songs!`));
         }
@@ -222,11 +216,14 @@ export class MediaPlayer {
     }
 
     stop() {
-        if (this.playing && this.dispatcher) {
-            let item = this.queue.first;
-            this.stopping = true;
-            this.paused = false;
+        if (this.playing) {
             this.playing = false;
+        }
+
+        if (this.dispatcher) {
+            this.stopping = true;
+            let item = this.queue.first;
+            this.paused = false;
             this.dispatcher.pause();
             this.dispatcher.destroy();
             this.determineStatus();
@@ -322,6 +319,7 @@ export class MediaPlayer {
     }
 
     private joinChannelAndPlay(msg: Message): Promise<void> {
+        console.log('Join channel and play');
         if (this.goingToPlay) {
             return;
         }
@@ -344,6 +342,7 @@ export class MediaPlayer {
                 this.connection = conn;
                 this.play();
             })
+            .catch((error) => console.error(error))
             .finally(() => this.goingToPlay = false);
     }
 }
