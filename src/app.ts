@@ -2,11 +2,9 @@ import * as fs from 'fs';
 import { requireFile, projectDir, writeJson } from 'discord-bot-quickstart';
 import { config as dotenv } from 'dotenv';
 import { MikroORM, IDatabaseDriver, Connection } from '@mikro-orm/core';
-import { EntityManager } from '@mikro-orm/sqlite';
-
 import { IRhythmBotConfig, RhythmBot } from './bot';
 import { Playlist } from './media/playlist.model';
-import { MediaItem } from './media/media-item.model';
+import { SpecialCommandBot } from './bot/SpecialCommandBot';
 
 dotenv();
 
@@ -35,7 +33,7 @@ export let ORM: MikroORM<IDatabaseDriver<Connection>>;
         migrator.createMigration();
         await migrator.up();
 
-        const bot = new RhythmBot(config);
+        const bot = new RhythmBot(config, new SpecialCommandBot());
 
         if (!!config && config.discord.token === '<BOT-TOKEN>') {
             bot.logger.debug('Invalid Token - Create valid token in the Discord Developer Portal');
