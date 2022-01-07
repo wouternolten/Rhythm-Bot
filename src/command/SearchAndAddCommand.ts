@@ -60,7 +60,9 @@ export class SearchAndAddCommand implements ICommand {
         this.player.addMedia({
             type: 'youtube',
             url: videos[0].url,
-            requestor: msg.author.username
+            requestor: msg.author.username,
+            name: videos[0].title,
+            duration: videos[0].timestamp
         }, msg);
     }
 
