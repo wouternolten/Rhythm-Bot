@@ -31,6 +31,7 @@ export class ForcePlayVideoCommand implements ICommand {
             currentSong.begin = `${time}ms`;
 
             await this.player.addMedia(currentSong, msg, true);
+            this.player.move(this.player.queue.length - 1, 1);
         }
 
         this.player.skip();
