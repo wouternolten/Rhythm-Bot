@@ -1,3 +1,4 @@
+import { SpecialCommandBot } from './SpecialCommandBot';
 import {
     ForcePlayVideoCommand,
     ICommand,
@@ -15,11 +16,10 @@ import {
     ToggleRepeatModeCommand,
     VolumeCommand,
 } from './../command';
-import { VoiceConnection, VoiceState } from 'discord.js';
 import { MediaPlayer } from '../media';
 import { BotStatus } from './bot-status';
 import { IRhythmBotConfig } from './bot-config';
-import { joinUserChannel } from '../helpers';
+import { createInfoEmbed, joinUserChannel } from '../helpers';
 import {
     IBot,
     CommandMap,
