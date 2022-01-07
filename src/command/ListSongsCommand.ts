@@ -10,9 +10,10 @@ export class ListSongsCommand implements ICommand {
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
         let items = this.player.queue.map(
             (item, idx) =>
-                `${idx + 1}. Type: "${item.type}", Title: "${item.name}${item.requestor ? `", Requested By: ${item.requestor}` : ''
+                `${idx + 1}: "${item.name}${item.requestor ? `"` : ''
                 }"`
         );
+
         if (items.length > 0) {
             msg.channel.send(createInfoEmbed('Current Playing Queue', items.join('\n\n')));
         } else {
