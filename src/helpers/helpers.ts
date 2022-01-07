@@ -4,16 +4,13 @@ import moment from 'moment';
 import ytpl from 'ytpl';
 
 export function joinUserChannel(msg: Message): Promise<VoiceConnection> {
-    return new Promise((done, error) => {
-        let channel = msg.member.voice.channel;
-        if (channel && channel.type === 'voice') {
-            channel.join().then((connection) => {
-                done(connection);
-            });
-        } else {
-            error(`User isn't on a voice channel!`);
-        }
-    });
+    const channel = msg.member.voice.channel;
+
+    if (channel && channel.type === 'voice') {
+        return channel.join();
+    }
+
+    return Promise.reject(`User isn't in a voice channel!`);
 }
 
 export function secondsToTimestamp(seconds: number): string {
