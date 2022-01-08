@@ -10,22 +10,18 @@ import { Readable } from 'stream';
 export class MediaPlayer {
     typeRegistry: Map<string, IMediaType> = new Map<string, IMediaType>();
     queue: MediaQueue = new MediaQueue();
-    playing: boolean = false;
-    paused: boolean = false;
-    stopping: boolean = false;
-    config: IRhythmBotConfig;
-    status: BotStatus;
-    logger: Logger;
-    channel: TextChannel | DMChannel | NewsChannel;
     connection?: VoiceConnection;
     dispatcher?: StreamDispatcher;
-    goingToPlay: boolean = false;
+    private playing: boolean = false;
+    private paused: boolean = false;
+    private stopping: boolean = false;
 
-    constructor(config: IRhythmBotConfig, status: BotStatus, logger: Logger) {
-        this.config = config;
-        this.status = status;
-        this.logger = logger;
-    }
+    constructor(
+        private readonly config: IRhythmBotConfig,
+        private readonly status: BotStatus, // TODO: Make subscription-driven. (Command, don't ask)
+        private readonly channel: TextChannel | DMChannel | NewsChannel,
+        private readonly logger: Logger
+    ) {}
 
     async addMedia(item: MediaItem, msg: Message, silent = false): Promise<void> {
         if (!item.name || !item.duration) {
