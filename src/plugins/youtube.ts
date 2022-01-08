@@ -30,6 +30,7 @@ export default class YoutubePlugin extends IBotPlugin {
         this.bot.player.typeRegistry.set(youtubeType, {
             getPlaylist: (item: MediaItem) =>
                 new Promise<MediaItem[]>((done, error) => {
+                    console.log('Getting playlist');
                     ytpl(item.url)
                         .then((playlist) => {
                             const items = playlist.items.map(
@@ -46,6 +47,7 @@ export default class YoutubePlugin extends IBotPlugin {
                 }),
             getDetails: (item: MediaItem) =>
                 new Promise<MediaItem>((done, error) => {
+                    console.log('Fetching details');
                     item.url = item.url.includes('://') ? item.url : `https://www.youtube.com/watch?v=${item.url}`;
                     getInfo(item.url)
                         .then((info) => {
@@ -57,6 +59,7 @@ export default class YoutubePlugin extends IBotPlugin {
                 }),
             getStream: (item: MediaItem) =>
                 new Promise<Readable>((done, error) => {
+                    console.log('Getting stream');
                     let stream = ytdl(item.url, {
                         filter: 'audioonly',
                         quality: 'highestaudio',

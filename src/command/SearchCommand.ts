@@ -25,6 +25,10 @@ export class SearchCommand implements ICommand {
                     requestor: msg.author.username
                 }, msg);
 
+                if (!this.player.isPlaying()) {
+                    this.player.play();
+                }
+
                 return;
             }
 

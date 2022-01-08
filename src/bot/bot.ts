@@ -19,7 +19,7 @@ import {
 import { MediaPlayer } from '../media';
 import { BotStatus } from './bot-status';
 import { IRhythmBotConfig } from './bot-config';
-import { createInfoEmbed, joinUserChannel } from '../helpers';
+import { createErrorEmbed, createInfoEmbed } from '../helpers';
 import {
     IBot,
     CommandMap,
@@ -37,6 +37,11 @@ const helptext = readFile('../helptext.txt');
 const RICK_ROLL_ID = 'dQw4w9WgXcQ';
 const AIR_HORN_ID = 'UaUa_0qPPgc';
 
+
+/** 
+ * TODO: Create player on first command.
+ * Then directly insert player into channel.
+*/
 export class RhythmBot extends IBot<IRhythmBotConfig> {
     helptext: string;
     player: MediaPlayer;
@@ -218,19 +223,4 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
     }
 
     onRegisterConsoleCommands(map: CommandMap<(args: ParsedArgs, rl: Interface) => void>): void {}
-
-    joinChannelAndPlay(msg: Message) {
-        new Promise<void>((done) => {
-            if (!this.player.connection) {
-                joinUserChannel(msg).then((conn) => {
-                    this.player.connection = conn;
-                    done();
-                });
-            } else {
-                done();
-            }
-        }).then(() => {
-            this.player.play();
-        });
-    }
 }

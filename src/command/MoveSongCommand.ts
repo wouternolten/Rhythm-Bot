@@ -2,6 +2,7 @@ import { MediaPlayer } from 'src/media';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { ICommand } from './ICommand';
+import { createInfoEmbed } from 'src/helpers';
 
 export class MoveSongCommand implements ICommand {
     constructor(private readonly player: MediaPlayer) { }
@@ -28,6 +29,8 @@ export class MoveSongCommand implements ICommand {
         }
 
         this.player.move(current, target);
+
+        createInfoEmbed('Moved song');
     }
 
     getDescription(): string {
