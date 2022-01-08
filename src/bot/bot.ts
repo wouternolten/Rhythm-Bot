@@ -131,6 +131,15 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
                     return;
                 }
 
+                if (!this.player) {
+                    msg.channel.send(createErrorEmbed(`Error: no player found.`));
+                    return;
+                }
+
+                if (!this.player.connection) {
+                    this.player.setConnection(msg.member.voice.connection);
+                }
+
                 commandMap[key].execute(cmd, msg);
             })
         });
@@ -138,14 +147,13 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
 
     parsedMessage(msg: SuccessfulParsedMessage<Message>) {
         const handlers = this.commands.get(msg.command);
-        if (handlers) {
-            this.player.channel = msg.message.channel;
+        if (handlers && !this.player) {
+            this.player = new MediaPlayer(this.config, this.status, msg.message.channel, this.logger);
         }
     }
 
     onClientCreated(client: Client): void {
         this.status = new BotStatus(client);
-        this.player = new MediaPlayer(this.config, this.status, this.logger);
 
         client.on('messageReactionAdd', async (reaction: MessageReaction, user: User) => {
             if (reaction.partial) {
