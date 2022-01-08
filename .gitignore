@@ -46,3 +46,4 @@ bot-config.json
 *.env
 /build
 /migrations
+/data/sounds
