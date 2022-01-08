@@ -9,7 +9,7 @@ export class TimeCommand implements ICommand {
 
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
         const media = this.player.queue.first;
-        if (this.player.playing && this.player.dispatcher) {
+        if (this.player.isPlaying() && this.player.dispatcher) {
             const elapsed = secondsToTimestamp(this.player.dispatcher.totalStreamTime / 1000);
             msg.channel.send(createInfoEmbed('Time Elapsed', `${elapsed} / ${media.duration}`));
         } else if (this.player.queue.first) {

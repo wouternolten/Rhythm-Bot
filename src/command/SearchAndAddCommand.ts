@@ -37,33 +37,33 @@ export class SearchAndAddCommand implements ICommand {
                 }
 
                 createInfoEmbed(`Playlist "${playList.title}" added`);
-
+            } else {
+                await this.player.addMedia({
+                    type: 'youtube',
+                    url: cmd.body,
+                    requestor: msg.author.username
+                }, msg);
+            }
+        } else {
+            const videos = await yts({ query, pages: 1 }).then((res) => res.videos);
+            
+            if (videos === null || videos.length === 0) {
+                msg.channel.send(createInfoEmbed(`No songs found`));
                 return;
             }
 
             await this.player.addMedia({
                 type: 'youtube',
-                url: cmd.body,
-                requestor: msg.author.username
+                url: videos[0].url,
+                requestor: msg.author.username,
+                name: videos[0].title,
+                duration: videos[0].timestamp
             }, msg);
-
-            return;
         }
 
-        const videos = await yts({ query, pages: 1 }).then((res) => res.videos);
-        
-        if (videos === null || videos.length === 0) {
-            msg.channel.send(createInfoEmbed(`No songs found`));
-            return;
+        if (!this.player.isPlaying()) {
+            this.player.play();
         }
-
-        this.player.addMedia({
-            type: 'youtube',
-            url: videos[0].url,
-            requestor: msg.author.username,
-            name: videos[0].title,
-            duration: videos[0].timestamp
-        }, msg);
     }
 
     getDescription(): string {
