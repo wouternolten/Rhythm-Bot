@@ -7,7 +7,8 @@
         "start": "NODE_ENV=development node --inspect --trace-warnings -r ts-node/register -r tsconfig-paths/register src/app",
         "start:dev": "NODE_ENV=development nodemon --inspect --trace-warnings",
         "start:prod": "NODE_ENV=production node --trace-warnings dist/app",
-        "build": "tsc"
+        "build": "tsc",
+        "test": "jest"
     },
     "author": "Malexion",
     "license": "MIT",
@@ -35,11 +36,15 @@
         "uuid": "^8.3.2",
         "winston": "^3.3.3",
         "yt-search": "^2.10.1",
-        "ytdl-core": "^4.4.1",
+        "ytdl-core": "^4.9.2",
         "ytpl": "^2.0.4",
         "zlib-sync": "^0.1.7"
     },
     "devDependencies": {
+        "@babel/core": "^7.16.7",
+        "@babel/preset-env": "^7.16.7",
+        "@babel/preset-typescript": "^7.16.7",
+        "@types/jest": "^27.4.0",
         "@types/jsonfile": "^5.0.1",
         "@types/minimist": "^1.2.0",
         "@types/moment": "^2.13.0",
@@ -48,6 +53,8 @@
         "@types/uuid": "^8.3.1",
         "@types/winston": "^2.4.4",
         "@types/yt-search": "^2.3.0",
+        "babel-jest": "^27.4.6",
+        "jest": "^27.4.7",
         "nodemon": "^2.0.13",
         "prettier": "^2.4.1",
         "ts-node": "^10.2.1",
