@@ -1,3 +1,4 @@
+export * from './AutoPlayNextVideoCommand';
 export * from './ForcePlayVideoCommand';
 export * from './ICommand';
 export * from './JoinUserChannelCommand';
