@@ -14,6 +14,7 @@ export class MediaPlayer {
     queue: MediaQueue = new MediaQueue();
     connection?: VoiceConnection;
     dispatcher?: StreamDispatcher;
+    private autoPlay: boolean = false;
     private playing: boolean = false;
     private paused: boolean = false;
     private stopping: boolean = false;
@@ -312,5 +313,13 @@ export class MediaPlayer {
 
     isPlaying(): boolean {
         return this.playing;
+    }
+
+    toggleAutoPlay(): void {
+        this.autoPlay = !this.autoPlay;
+    }
+
+    getAutoPlay(): boolean {
+        return this.autoPlay;
     }
 }

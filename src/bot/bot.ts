@@ -1,5 +1,6 @@
 import { SpecialCommandBot } from './SpecialCommandBot';
 import {
+    AutoPlayNextVideoCommand,
     ForcePlayVideoCommand,
     ICommand,
     JoinUserChannelCommand,
@@ -92,7 +93,8 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
     }
 
     onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
-        const commandMap: {[key: string]: ICommand} = {
+        const commandMap: { [key: string]: ICommand } = {
+            autoplay: new AutoPlayNextVideoCommand(this.player),
             clear: new SimplePlayerActCommand(this.player, 'clear'),
             horn: new ForcePlayVideoCommand(this.player, AIR_HORN_ID),
             join: new JoinUserChannelCommand(this.player, this.config),
