@@ -1,4 +1,3 @@
-import { SpecialCommandBot } from './SpecialCommandBot';
 import {
     AutoPlayNextVideoCommand,
     ForcePlayVideoCommand,
@@ -49,8 +48,7 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
     status: BotStatus;
 
     constructor(
-        config: IRhythmBotConfig,
-        private readonly specialCommandBot: SpecialCommandBot
+        config: IRhythmBotConfig
     ) {
         super(config, <IRhythmBotConfig>{
             auto: {
@@ -89,14 +87,13 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
         });
 
         this.helptext = helptext;
-        this.specialCommandBot.registerExtraCommands(this.client, this.player);
     }
 
     onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
+        // TODO: find a way to fetch the player from somewhere?
         const commandMap: { [key: string]: ICommand } = {
             autoplay: new AutoPlayNextVideoCommand(this.player),
             clear: new SimplePlayerActCommand(this.player, 'clear'),
-            horn: new ForcePlayVideoCommand(this.player, AIR_HORN_ID),
             join: new JoinUserChannelCommand(this.player, this.config),
             leave: new LeaveChannelCommand(this.player, this.client),
             list: new ListSongsCommand(this.player),
@@ -130,7 +127,7 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
         commandMap.help = helpCommand;
 
         Object.keys(commandMap).forEach(key => {
-            map.on(key, (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
+            map.on(key, async (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
                 const channel = msg.member.voice.channel;
 
                 if (!channel || channel.type !== 'voice') {
@@ -144,7 +141,12 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
                 }
 
                 if (!this.player.connection) {
-                    this.player.setConnection(msg.member.voice.connection);
+                    try {
+                        await this.player.setConnection(msg.member.voice.channel);
+                    } catch (error) {
+                        msg.channel.send(createErrorEmbed(`Error: player ${msg.member.nickname} is not in a voice channel`));
+                        return;
+                    }
                 }
 
                 commandMap[key].execute(cmd, msg);
@@ -154,13 +156,15 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
 
     parsedMessage(msg: SuccessfulParsedMessage<Message>) {
         const handlers = this.commands.get(msg.command);
-        if (handlers && !this.player) {
-            this.player = new MediaPlayer(this.config, this.status, msg.message.channel, this.logger);
+        if (handlers) {
+            // TODO: find a better way to do this.
+            this.player.setChannel(msg.message.channel);
         }
     }
 
     onClientCreated(client: Client): void {
         this.status = new BotStatus(client);
+        this.player = new MediaPlayer(this.config, this.status, this.logger);
 
         client.on('messageReactionAdd', async (reaction: MessageReaction, user: User) => {
             if (reaction.partial) {
@@ -206,23 +210,6 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
         });
     }
 
-    onReady(client: Client): void {
-        this.player.determineStatus();
-        console.log(`Guilds: ${this.client.guilds.cache.keyArray().length}`);
-        this.client.guilds.cache.forEach((guild) => {
-            console.log(`\nGuild Name: ${guild.name}`);
-
-            const channels = guild.channels.cache
-                .filter((x) => x.isText() && x.permissionsFor(this.client.user).has('MANAGE_MESSAGES'))
-                .map((x) => x.name);
-
-            if (channels && channels.length > 0) {
-                console.log(`Can manage message in these channels \n${channels.join('\n')}`);
-            } else {
-                console.log('Unable to manage messages on this guild');
-            }
-        });
-    }
-
+    onReady(client: Client): void {}
     onRegisterConsoleCommands(map: CommandMap<(args: ParsedArgs, rl: Interface) => void>): void {}
 }
