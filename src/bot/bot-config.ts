@@ -25,4 +25,5 @@ export interface IRhythmBotConfig extends IBotConfig {
         pauseSong?: string;
         skipSong?: string;
     };
+    useWelcomeBot: boolean
 }
