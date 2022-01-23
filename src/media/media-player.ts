@@ -3,9 +3,14 @@ import { BotStatus } from '../bot/bot-status';
 import { MediaQueue } from './media-queue';
 import { MediaItem } from './media-item.model';
 import { IMediaType } from './media-type.model';
-import { createEmbed, createErrorEmbed, createInfoEmbed, joinUserChannel } from '../helpers';
-import { Logger, TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher, Message } from 'discord-bot-quickstart';
+import { createEmbed, createErrorEmbed, createInfoEmbed, secondsToTimestamp } from '../helpers';
+import { Logger, TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher, Message, VoiceChannel } from 'discord-bot-quickstart';
 import { Readable } from 'stream';
+import ytdl from 'ytdl-core';
+import { getInfo } from 'ytdl-core';
+import ytpl from 'ytpl';
+
+const youtubeType: string = 'youtube';
 
 // TODO: Why does the playerp stop for a millisecond when searching?
 export class MediaPlayer {
@@ -14,7 +19,9 @@ export class MediaPlayer {
     queue: MediaQueue = new MediaQueue();
     connection?: VoiceConnection;
     dispatcher?: StreamDispatcher;
+    // TODO: find a way to directly inject this.
     private autoPlay: boolean = false;
+    private channel: TextChannel | DMChannel | NewsChannel;
     private playing: boolean = false;
     private paused: boolean = false;
     private stopping: boolean = false;
@@ -22,9 +29,11 @@ export class MediaPlayer {
     constructor(
         private readonly config: IRhythmBotConfig,
         private readonly status: BotStatus, // TODO: Make subscription-driven. (Command, don't ask)
-        private readonly channel: TextChannel | DMChannel | NewsChannel,
         private readonly logger: Logger
-    ) {}
+    ) {
+        // TODO: this is ugly. Fix it.
+        this.fillTypeRegistryWithDefaults();
+    }
 
     async addMedia(item: MediaItem, msg: Message, silent = false): Promise<void> {
         if (!item.name || !item.duration) {
@@ -41,8 +50,7 @@ export class MediaPlayer {
                 item.duration = details.duration;
             } catch (error) {
                 const errorMessage = 'Error when getting details for item';
-                console.error(errorMessage);
-                console.error({ item, error });
+                this.logger.error(`${errorMessage}: \n ${JSON.stringify({ item, error })}`);
                 return Promise.reject(errorMessage);
             }
         }
@@ -307,12 +315,73 @@ export class MediaPlayer {
         });
     }
 
-    setConnection(connection: VoiceConnection): void {
-        this.connection = connection;
+    private fillTypeRegistryWithDefaults(): void {
+        this.typeRegistry.set(youtubeType, {
+            getPlaylist: (item: MediaItem) =>
+                new Promise<MediaItem[]>((done, error) => {
+                    console.log('Getting playlist');
+                    ytpl(item.url)
+                        .then((playlist) => {
+                            const items = playlist.items.map(
+                                (item) =>
+                                    <MediaItem>{
+                                        type: youtubeType,
+                                        url: item.url,
+                                        name: item.title,
+                                    }
+                            );
+                            done(items);
+                        })
+                        .catch((err) => error(err));
+                }),
+            getDetails: (item: MediaItem) =>
+                new Promise<MediaItem>((done, error) => {
+                    console.log('Fetching details');
+                    item.url = item.url.includes('://') ? item.url : `https://www.youtube.com/watch?v=${item.url}`;
+                    getInfo(item.url)
+                        .then((info) => {
+                            item.name = info.videoDetails.title ? info.videoDetails.title : 'Unknown';
+                            item.duration = secondsToTimestamp(parseInt(info.videoDetails.lengthSeconds) || 0);
+                            done(item);
+                        })
+                        .catch((err) => error(err));
+                }),
+            getStream: (item: MediaItem) =>
+                new Promise<Readable>((done, error) => {
+                    console.log('Getting stream');
+                    let stream = ytdl(item.url, {
+                        filter: 'audioonly',
+                        quality: 'highestaudio',
+                        begin: item.begin
+                    });
+                    if (stream) {
+                        done(stream);
+                    } else {
+                        error('Unable to get media stream');
+                    }
+                }),
+        });
+    }
+
+    async setConnection(channel: VoiceChannel): Promise<void> {
+        if (channel.type === 'voice') {
+            this.connection = await channel.join();
+            return;
+        }
+
+        return Promise.reject(`User isn't in a voice channel!`);
     }
 
     isPlaying(): boolean {
         return this.playing;
+    }
+
+    getChannel(): TextChannel | DMChannel | NewsChannel {
+        return this.channel;
+    }
+
+    setChannel(channel: TextChannel | DMChannel | NewsChannel): void {
+        this.channel = channel;
     }
 
     toggleAutoPlay(): void {
