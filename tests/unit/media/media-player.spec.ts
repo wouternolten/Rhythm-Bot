@@ -1,6 +1,6 @@
 import { MessageEmbed, VoiceConnection } from 'discord.js';
 import { MediaItem } from './../../../src/media/media-item.model';
-import { Logger, Message, TextChannel, StreamDispatcher } from 'discord-bot-quickstart';
+import { Logger, Message, TextChannel, StreamDispatcher, VoiceChannel } from 'discord-bot-quickstart';
 import { BotStatus } from './../../../src/bot/bot-status';
 import { IRhythmBotConfig } from '../../../src/bot/bot-config';
 import { IMediaType, MediaPlayer } from '../../../src/media';
@@ -71,9 +71,15 @@ const connection = {
     play: jest.fn()
 } as unknown as VoiceConnection;
 
+const voiceChannel = {
+    type: 'voice',
+    join: () => Promise.resolve(connection)
+} as unknown as VoiceChannel;
+
 beforeEach(() => {
     jest.clearAllMocks();
-    mediaPlayer = new MediaPlayer(config, status, channel, logger);
+    mediaPlayer = new MediaPlayer(config, status, logger);
+    mediaPlayer.setChannel(channel);
 })
 
 describe('Adding media', () => {
@@ -131,12 +137,14 @@ describe('Playing', () => {
      
     });
 
-    it('Should log when type is invalid of first queue item', () => {
+    it('Should log when type is invalid of first queue item', async () => {
         const item = { ...VALID_ITEM };
         item.type = 'invalid type';
 
+        expect.assertions(1);
+
         mediaPlayer.queue.enqueue(item);
-        mediaPlayer.setConnection(connection);
+        await mediaPlayer.setConnection(voiceChannel);
 
         mediaPlayer.play();
 
@@ -161,7 +169,7 @@ describe('Playing', () => {
         beforeEach(() => {
             mediaPlayer.queue.enqueue(VALID_ITEM);
             mediaPlayer.typeRegistry.set(ITEM_TYPE, mediaType);
-            mediaPlayer.setConnection(connection);
+            mediaPlayer.setConnection(voiceChannel);
             connection.play = jest.fn(() => dispatcher);
         });
 
