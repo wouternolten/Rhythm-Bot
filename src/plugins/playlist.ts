@@ -1,28 +1,22 @@
-import { IRhythmBotConfig, RhythmBot } from '../bot';
+import { RhythmBot } from '../bot';
 import { createInfoEmbed } from '../helpers';
 import {
     IBot,
     IBotPlugin,
-    readDir,
-    readJson,
-    writeJson,
-    deleteFile,
-    fileExists,
     SuccessfulParsedMessage,
     CommandMap,
     IBotConfig,
 } from 'discord-bot-quickstart';
-import { Message, Client } from 'discord.js';
+import { Message } from 'discord.js';
 import { EntityRepository } from '@mikro-orm/core';
 import { ORM } from '../app';
 import { Playlist } from '../media/playlist.model';
-import { MediaItem } from '../media/media-item.model';
 
 export default class PlaylistPlugin extends IBotPlugin {
     bot: RhythmBot;
     playlistRepo: EntityRepository<Playlist> = ORM.em.getRepository(Playlist);
 
-    preInitialize(bot: IBot<IRhythmBotConfig>) {
+    preInitialize(bot: IBot<IBotConfig>) {
         this.bot = bot as RhythmBot;
     }
 
