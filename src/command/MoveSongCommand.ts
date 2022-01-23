@@ -2,7 +2,7 @@ import { MediaPlayer } from 'src/media';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { ICommand } from './ICommand';
-import { createInfoEmbed } from 'src/helpers';
+import { createInfoEmbed } from '../helpers';
 
 export class MoveSongCommand implements ICommand {
     constructor(private readonly player: MediaPlayer) { }
