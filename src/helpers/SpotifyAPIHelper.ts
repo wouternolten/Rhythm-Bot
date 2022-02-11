@@ -26,7 +26,9 @@ export class SpotifyAPIHelper {
             artistTrackQuery = track;
         }
 
-        const totalQuery = `/search?q=${artistTrackQuery.replace(/\s/gm, '%20')}&type=track&limit=1`;
+        const totalQuery = `/search?q=${artistTrackQuery.trim().replace(/[\s]+/gm, '%20')}&type=track&limit=1`;
+
+        console.log({ track, artist, totalQuery });
 
         const requestOptions = {
             headers: {

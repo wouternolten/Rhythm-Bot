@@ -262,6 +262,7 @@ export class MediaPlayer {
         });
         
         this.playing = true;
+        this.lastPlayedSong = item;
         
         this.dispatcher.on('start', async () => {
             this.determineStatus();
@@ -275,7 +276,6 @@ export class MediaPlayer {
             msg.react(this.config.emojis.playSong);
             msg.react(this.config.emojis.pauseSong);
             msg.react(this.config.emojis.skipSong);
-            this.lastPlayedSong = item;
         });
         this.dispatcher.on('debug', (info: string) => {
             this.logger.debug(info);
@@ -393,13 +393,27 @@ export class MediaPlayer {
             this.config.spotify.clientSecret
         );
 
-        const lettersAndSpacesRegex = /[^\w\s]/gm;
+        const lettersAndSpacesRegex = /[^\w\s\-]+/gm;
+
+        /**
+         * For future readers: most stuff in youtube videos that's behind brackets can be omitted.
+         * For instance: 
+         * - (Official video)
+         * - (Remastered 2012)
+         * - (Music video)
+         * - ...etc.
+         * 
+         * Spotify will not recognize this. 
+         * However, this will mean that searching will be a little more vague, possibly leading to results
+         * that are not connected to the original.
+         */
+        const everyThingAfterBracketsRegex = /\(.*/gm;
 
         const [artist, track] = lastPlayedSong
             .name
-            .split(" - ")
-            .map((artistOrTrack: string) => artistOrTrack.replace(/\(.*/gm, ''))
-            .map((artistOrTrack: string) => artistOrTrack.replace(lettersAndSpacesRegex, ' '))
+            .replace(everyThingAfterBracketsRegex, '')
+            .replace(lettersAndSpacesRegex, ' ')
+            .split(" - ");
 
         let searchTrack: string, searchArtist: string;
 
