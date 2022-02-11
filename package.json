@@ -20,6 +20,7 @@
         "@mikro-orm/core": "^4.5.9",
         "@mikro-orm/migrations": "^4.5.9",
         "@mikro-orm/sqlite": "^4.5.9",
+        "axios": "^0.25.0",
         "bufferutil": "^4.0.1",
         "discord-bot-quickstart": "0.0.15",
         "discord-command-parser": "^1.5.3",
