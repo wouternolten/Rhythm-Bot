@@ -35,7 +35,7 @@ export class MediaPlayer {
         this.fillTypeRegistryWithDefaults();
     }
 
-    async addMedia(item: MediaItem, msg: Message, silent = false): Promise<void> {
+    async addMedia(item: MediaItem, silent = false): Promise<void> {
         if (!item.name || !item.duration) {
             let type = this.typeRegistry.get(item.type);
 

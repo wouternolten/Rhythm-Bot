@@ -22,17 +22,6 @@ const VALID_ITEM = {
     begin: ITEM_BEGIN
 } as MediaItem;
 
-const VALID_MESSAGE = {
-    member: {
-        voice: {
-            channel: {
-                type: 'voice',
-                join: jest.fn().mockResolvedValue({})
-            }
-        }
-    }
-} as unknown as Message;
-
 let mediaPlayer: MediaPlayer;
 const config: IRhythmBotConfig = {
     stream: {
@@ -87,7 +76,7 @@ describe('Adding media', () => {
         expect.assertions(1);
 
         try {
-            await mediaPlayer.addMedia({} as MediaItem, VALID_MESSAGE);
+            await mediaPlayer.addMedia({} as MediaItem);
         } catch (error) {
             expect(error).toEqual('Unknown Media Type!');
         }
@@ -107,14 +96,14 @@ describe('Adding media', () => {
         expect.assertions(1);
 
         try {
-            await mediaPlayer.addMedia(item, VALID_MESSAGE);
+            await mediaPlayer.addMedia(item);
         } catch (error) {
             expect(error).toEqual('Error when getting details for item');
         }
     });
 
     it('Should send a message to the channel when not silent', async () => {
-        await mediaPlayer.addMedia(VALID_ITEM, VALID_MESSAGE, false);
+        await mediaPlayer.addMedia(VALID_ITEM, false);
 
         expect(channel.send).toBeCalled();
     });
