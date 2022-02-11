@@ -25,5 +25,12 @@ export interface IRhythmBotConfig extends IBotConfig {
         pauseSong?: string;
         skipSong?: string;
     };
-    useWelcomeBot: boolean
+    useWelcomeBot: boolean,
+    youtube?: {
+        apiKey: string;
+    }
+    spotify?: {
+        clientId: string;
+        clientSecret: string;
+    }
 }
