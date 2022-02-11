@@ -64,36 +64,44 @@ describe('Test fetching data for search string', () => {
             }
         });
 
+        it('Should error out when empty track is given', async () => {
+            try {
+                await helper.getSpotifyIDForSong('');
+            } catch (error) {
+                expect(error).toBeDefined();
+            }
+        })
+
         describe('Invalid return data', () => {
             beforeEach(() => {
                 expect.assertions(1);
             });
 
-            it('Should error out when no response is given', () => {
-                checkSpotifyId(undefined);
+            it('Should error out when no response is given', async () => {
+                await checkSpotifyId(undefined);
             })
 
-            it('Should error out when data is not set', () => {
-                checkSpotifyId({});
+            it('Should error out when data is not set', async () => {
+                await checkSpotifyId({});
             });
 
-            it('Should error out when tracks are not set', () => {
-                checkSpotifyId({ data: {} });
+            it('Should error out when tracks are not set', async () => {
+                await checkSpotifyId({ data: {} });
             });
 
-            it('Should error out when items are not set', () => {
-                checkSpotifyId({ data: { tracks: {} } });
+            it('Should error out when items are not set', async () => {
+                await checkSpotifyId({ data: { tracks: {} } });
             });
 
-            it('Should error out when id is not set', () => {
-                checkSpotifyId({ data: { tracks: { items: [] } } });
+            it('Should error out when id is not set', async () => {
+                await checkSpotifyId({ data: { tracks: { items: [] } } });
             });
 
             async function checkSpotifyId(returnData: {}): Promise<void> {
                 axios.get = jest.fn().mockResolvedValue(returnData);
 
                 try {
-                    await helper.getSpotifyIDForSong(TRACK_STRING, ARTIST_STRING);
+                    const id = await helper.getSpotifyIDForSong(TRACK_STRING, ARTIST_STRING);
                 } catch (error) {
                     expect(error).toBeDefined();
                 }

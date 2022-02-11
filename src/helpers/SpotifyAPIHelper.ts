@@ -12,9 +12,21 @@ export class SpotifyAPIHelper {
     ) {}
 
     async getSpotifyIDForSong(track: string, artist?: string): Promise<string> {
+        if (track === '') {
+            return Promise.reject('Invalid track passed');
+        }
+
         const token = await this.getAccessToken();
-        const artistTrackQuery = `track:${track}${artist ? '+artist:' + artist : ''}`.replace(/\s/gm, '%20');
-        const totalQuery = `/search?q=${artistTrackQuery}&type=track&limit=1`;
+
+        let artistTrackQuery: string;
+
+        if (artist) {
+            artistTrackQuery = `track:${track}+artist:${artist}`;
+        } else {
+            artistTrackQuery = track;
+        }
+
+        const totalQuery = `/search?q=${artistTrackQuery.replace(/\s/gm, '%20')}&type=track&limit=1`;
 
         const requestOptions = {
             headers: {
@@ -23,14 +35,17 @@ export class SpotifyAPIHelper {
             }
         } as AxiosRequestConfig;
 
-        return axios.get(API_BASE_URL + totalQuery, requestOptions)
-            .then((result) => {
-                if (!result.data?.tracks?.items[0]?.id) {
-                    return Promise.reject('Invalid response; no tracks found');
-                }
+        const result = await axios.get(API_BASE_URL + totalQuery, requestOptions);
 
-                return result.data.tracks.items[0].id;
-            });
+        if (!result.data?.tracks?.items[0]?.id) {
+            if (track.indexOf(" ") !== -1) {
+                return this.getSpotifyIDForSong(track.slice(0, track.lastIndexOf(" ")), artist);
+            }
+
+            return Promise.reject('Invalid response; no tracks found');
+        }
+
+        return result.data.tracks.items[0].id;
     }
 
     async getRecommendationForTrack(spotifyId: string): Promise<string> {

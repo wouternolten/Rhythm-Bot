@@ -1,5 +1,4 @@
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
-import { YoutubeAPIHelper } from './../helpers/YoutubeAPIHelper';
 import { IRhythmBotConfig } from '../bot/bot-config';
 import { BotStatus } from '../bot/bot-status';
 import { MediaQueue } from './media-queue';
@@ -11,9 +10,9 @@ import { Readable } from 'stream';
 import ytdl from 'ytdl-core';
 import { getInfo } from 'ytdl-core';
 import ytpl from 'ytpl';
+import yts from 'yt-search';
 
 const youtubeType: string = 'youtube';
-const MAX_YOUTUBE_ITEMS = 5;
 
 // TODO: Why does the playerp stop for a millisecond when searching?
 export class MediaPlayer {
@@ -23,7 +22,7 @@ export class MediaPlayer {
     connection?: VoiceConnection;
     dispatcher?: StreamDispatcher;
     private lastPlayedSong?: MediaItem;
-    private autoPlay: boolean = false;
+    private autoPlay: boolean = true;
 
     
     // TODO: find a way to directly inject this.
@@ -109,8 +108,8 @@ export class MediaPlayer {
 
     async play(): Promise<void> {
         if (this.queue.length == 0) {
-            if (this.autoPlay) {
-                await this.findNextSongAndPlay();
+            if (this.autoPlay && this.lastPlayedSong) {
+                await this.findNextSongAndPlay(this.lastPlayedSong);
                 return;
             }
 
@@ -384,7 +383,7 @@ export class MediaPlayer {
         return Promise.reject(`User isn't in a voice channel!`);
     }
 
-    private async findNextSongAndPlayWithSpotify(lastPlayedSong: MediaItem): Promise<void> {
+    private async findNextSongAndPlay(lastPlayedSong: MediaItem): Promise<void> {
         if (!this.config.youtube || !this.config.spotify) {
             return;
         }
@@ -394,55 +393,41 @@ export class MediaPlayer {
             this.config.spotify.clientSecret
         );
 
-        const song = lastPlayedSong.name.split(" - ");
+        const lettersAndSpacesRegex = /[^\w\s]/gm;
 
-        const spotifyId: string = await helper.getSpotifyIDForSong(song[0], song[1] || undefined);
+        const [artist, track] = lastPlayedSong
+            .name
+            .split(" - ")
+            .map((artistOrTrack: string) => artistOrTrack.replace(/\(.*/gm, ''))
+            .map((artistOrTrack: string) => artistOrTrack.replace(lettersAndSpacesRegex, ' '))
+
+        let searchTrack: string, searchArtist: string;
+
+        if (!track) {
+            searchTrack = artist;
+        } else {
+            searchTrack = track;
+            searchArtist = artist;
+        }
+
+        const spotifyId: string = await helper.getSpotifyIDForSong(searchTrack, searchArtist || undefined);
         const recommendation: string = await helper.getRecommendationForTrack(spotifyId);
-    }
-
-    private async findNextSongAndPlay(): Promise<void> {
-        if (!this.lastPlayedSong || !this.config.youtube) {
-            return;
-        }
-
-        let lastPlayedYoutubeId = this.getYoutubeIdFromUrl(this.lastPlayedSong.url);
-
-        if (!lastPlayedYoutubeId) {
-            return;
-        }
-
-        let success = false;
-        let nextVideoIds: string[] = null;
+        const videos = await yts({ query: recommendation, pages: 1 }).then((res) => res.videos);
         
-        try {
-            nextVideoIds = await new YoutubeAPIHelper(this.config.youtube.apiKey)
-                .getRecommendedYoutubeIdsForCurrentVideo(lastPlayedYoutubeId, MAX_YOUTUBE_ITEMS);
-        } catch (error) {
-            this.logger.error(`Error finding recommended video for url. Currenturl: ${lastPlayedYoutubeId}, error: ${JSON.stringify(error)}`);
+        if (videos === null || videos.length === 0) {
+            this.logger.info(`No songs found for recommendation.`);
             return;
         }
 
-        if (!nextVideoIds) {
-            return;
-        }
+        await this.addMedia({
+            type: 'youtube',
+            url: videos[0].url,
+            requestor: 'Gewoon Bram',
+            name: videos[0].title,
+            duration: videos[0].timestamp
+        }, true);
 
-        let index = 0;
-
-        while (!success && index < nextVideoIds.length) {
-            index++;
-        
-            try {
-                await this.addMedia({
-                    type: 'youtube',
-                    url: `https://youtube.com/watch?v=${nextVideoIds[index]}`,
-                    requestor: 'Gewoon Bram'
-                });
-
-                success = true;
-            } catch (error) {}
-        }
-
-        if (this.queue.length > 0) {
+        if (!this.isPlaying()) {
             this.play();
         }
     }
