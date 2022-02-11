@@ -33,7 +33,7 @@ export class SearchAndAddCommand implements ICommand {
                         url: item.url,
                         duration: item.duration,
                         requestor: msg.author.username,
-                    }, msg, true);
+                    }, true);
                 }
 
                 createInfoEmbed(`Playlist "${playList.title}" added`);
@@ -42,7 +42,7 @@ export class SearchAndAddCommand implements ICommand {
                     type: 'youtube',
                     url: cmd.body,
                     requestor: msg.author.username
-                }, msg);
+                });
             }
         } else {
             const videos = await yts({ query, pages: 1 }).then((res) => res.videos);
@@ -58,7 +58,7 @@ export class SearchAndAddCommand implements ICommand {
                 requestor: msg.author.username,
                 name: videos[0].title,
                 duration: videos[0].timestamp
-            }, msg);
+            });
         }
 
         if (!this.player.isPlaying()) {

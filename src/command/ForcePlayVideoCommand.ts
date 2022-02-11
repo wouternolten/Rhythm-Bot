@@ -17,7 +17,7 @@ export class ForcePlayVideoCommand implements ICommand {
             type: 'youtube',
             url: `https://www.youtube.com/watch?v=${this.youtubeId}`,
             requestor: msg.author.username,
-        }, msg);
+        });
 
         const current = this.player.queue.length - 1;
 
@@ -30,7 +30,7 @@ export class ForcePlayVideoCommand implements ICommand {
             const currentSong = this.player.queue.first;
             currentSong.begin = `${time}ms`;
 
-            await this.player.addMedia(currentSong, msg, true);
+            await this.player.addMedia(currentSong, true);
             this.player.move(this.player.queue.length - 1, 1);
         }
 

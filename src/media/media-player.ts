@@ -1,3 +1,4 @@
+import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
 import { IRhythmBotConfig } from '../bot/bot-config';
 import { BotStatus } from '../bot/bot-status';
 import { MediaQueue } from './media-queue';
@@ -9,6 +10,7 @@ import { Readable } from 'stream';
 import ytdl from 'ytdl-core';
 import { getInfo } from 'ytdl-core';
 import ytpl from 'ytpl';
+import yts from 'yt-search';
 
 const youtubeType: string = 'youtube';
 
@@ -19,8 +21,11 @@ export class MediaPlayer {
     queue: MediaQueue = new MediaQueue();
     connection?: VoiceConnection;
     dispatcher?: StreamDispatcher;
+    private lastPlayedSong?: MediaItem;
+    private autoPlay: boolean = true;
+
+    
     // TODO: find a way to directly inject this.
-    private autoPlay: boolean = false;
     private channel: TextChannel | DMChannel | NewsChannel;
     private playing: boolean = false;
     private paused: boolean = false;
@@ -35,7 +40,7 @@ export class MediaPlayer {
         this.fillTypeRegistryWithDefaults();
     }
 
-    async addMedia(item: MediaItem, msg: Message, silent = false): Promise<void> {
+    async addMedia(item: MediaItem, silent = false): Promise<void> {
         if (!item.name || !item.duration) {
             let type = this.typeRegistry.get(item.type);
 
@@ -103,6 +108,11 @@ export class MediaPlayer {
 
     async play(): Promise<void> {
         if (this.queue.length == 0) {
+            if (this.autoPlay && this.lastPlayedSong) {
+                await this.findNextSongAndPlay(this.lastPlayedSong);
+                return;
+            }
+
             this.channel.send(createInfoEmbed(`Queue is empty! Add some songs!`));
             return;
         }
@@ -252,6 +262,7 @@ export class MediaPlayer {
         });
         
         this.playing = true;
+        this.lastPlayedSong = item;
         
         this.dispatcher.on('start', async () => {
             this.determineStatus();
@@ -370,6 +381,76 @@ export class MediaPlayer {
         }
 
         return Promise.reject(`User isn't in a voice channel!`);
+    }
+
+    private async findNextSongAndPlay(lastPlayedSong: MediaItem): Promise<void> {
+        if (!this.config.youtube || !this.config.spotify) {
+            return;
+        }
+        
+        const helper = new SpotifyAPIHelper(
+            this.config.spotify.clientId,
+            this.config.spotify.clientSecret
+        );
+
+        const lettersAndSpacesRegex = /[^\w\s\-]+/gm;
+
+        /**
+         * For future readers: most stuff in youtube videos that's behind brackets can be omitted.
+         * For instance: 
+         * - (Official video)
+         * - (Remastered 2012)
+         * - (Music video)
+         * - ...etc.
+         * 
+         * Spotify will not recognize this. 
+         * However, this will mean that searching will be a little more vague, possibly leading to results
+         * that are not connected to the original.
+         */
+        const everyThingAfterBracketsRegex = /\(.*/gm;
+
+        const [artist, track] = lastPlayedSong
+            .name
+            .replace(everyThingAfterBracketsRegex, '')
+            .replace(lettersAndSpacesRegex, ' ')
+            .split(" - ");
+
+        let searchTrack: string, searchArtist: string;
+
+        if (!track) {
+            searchTrack = artist;
+        } else {
+            searchTrack = track;
+            searchArtist = artist;
+        }
+
+        const spotifyId: string = await helper.getSpotifyIDForSong(searchTrack, searchArtist || undefined);
+        const recommendation: string = await helper.getRecommendationForTrack(spotifyId);
+        const videos = await yts({ query: recommendation, pages: 1 }).then((res) => res.videos);
+        
+        if (videos === null || videos.length === 0) {
+            this.logger.info(`No songs found for recommendation.`);
+            return;
+        }
+
+        await this.addMedia({
+            type: 'youtube',
+            url: videos[0].url,
+            requestor: 'Gewoon Bram',
+            name: videos[0].title,
+            duration: videos[0].timestamp
+        }, true);
+
+        if (!this.isPlaying()) {
+            this.play();
+        }
+    }
+
+    private getYoutubeIdFromUrl(fullUrl: string): string | null
+    {
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const match = fullUrl.match(regExp);
+        return ( match && match[7].length==11 ) ? match[7] : null;
     }
 
     isPlaying(): boolean {
