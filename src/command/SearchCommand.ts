@@ -23,7 +23,7 @@ export class SearchCommand implements ICommand {
                     type: 'youtube',
                     url: cmd.body,
                     requestor: msg.author.username
-                }, msg);
+                });
 
                 if (!this.player.isPlaying()) {
                     this.player.play();
