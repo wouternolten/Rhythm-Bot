@@ -14,6 +14,6 @@ export class AutoPlayNextVideoCommand implements ICommand {
     }
 
     getDescription(): string {
-        return '🚧 (DOES NOT WORK YET) (toggle on/off) autoplay the first recommendation when queue is empty. 🚧';
+        return '(toggle on/off) autoplay the first recommendation when queue is empty.';
     }
 }
