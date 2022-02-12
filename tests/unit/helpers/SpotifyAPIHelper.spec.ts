@@ -1,5 +1,5 @@
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
-import axios, { Axios } from 'axios';
+import axios from 'axios';
 
 jest.mock('axios');
 
