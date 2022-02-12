@@ -185,7 +185,7 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
                                 type: 'youtube',
                                 url: embed.url,
                                 requestor: user.username,
-                            }, reaction.message);
+                            });
                         }
                         if (reaction.emoji.name === this.config.emojis.stopSong) {
                             this.logger.debug('Emoji Click: Stopping Song');
