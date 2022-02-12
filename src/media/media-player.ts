@@ -1,3 +1,4 @@
+import { YoutubeMediaType } from './../mediatypes/YoutubeMediaType';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
 import { IRhythmBotConfig } from '../bot/bot-config';
 import { BotStatus } from '../bot/bot-status';
@@ -327,51 +328,7 @@ export class MediaPlayer {
     }
 
     private fillTypeRegistryWithDefaults(): void {
-        this.typeRegistry.set(youtubeType, {
-            getPlaylist: (item: MediaItem) =>
-                new Promise<MediaItem[]>((done, error) => {
-                    console.log('Getting playlist');
-                    ytpl(item.url)
-                        .then((playlist) => {
-                            const items = playlist.items.map(
-                                (item) =>
-                                    <MediaItem>{
-                                        type: youtubeType,
-                                        url: item.url,
-                                        name: item.title,
-                                    }
-                            );
-                            done(items);
-                        })
-                        .catch((err) => error(err));
-                }),
-            getDetails: (item: MediaItem) =>
-                new Promise<MediaItem>((done, error) => {
-                    console.log('Fetching details');
-                    item.url = item.url.includes('://') ? item.url : `https://www.youtube.com/watch?v=${item.url}`;
-                    getInfo(item.url)
-                        .then((info) => {
-                            item.name = info.videoDetails.title ? info.videoDetails.title : 'Unknown';
-                            item.duration = secondsToTimestamp(parseInt(info.videoDetails.lengthSeconds) || 0);
-                            done(item);
-                        })
-                        .catch((err) => error(err));
-                }),
-            getStream: (item: MediaItem) =>
-                new Promise<Readable>((done, error) => {
-                    console.log('Getting stream');
-                    let stream = ytdl(item.url, {
-                        filter: 'audioonly',
-                        quality: 'highestaudio',
-                        begin: item.begin
-                    });
-                    if (stream) {
-                        done(stream);
-                    } else {
-                        error('Unable to get media stream');
-                    }
-                }),
-        });
+        this.typeRegistry.set(youtubeType, new YoutubeMediaType(this.logger));
     }
 
     async setConnection(channel: VoiceChannel): Promise<void> {
