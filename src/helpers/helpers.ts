@@ -1,6 +1,5 @@
 import { MediaItem } from './../media/media-item.model';
 import { Message, VoiceConnection, MessageEmbed } from 'discord.js';
-import moment from 'moment';
 import ytpl from 'ytpl';
 
 export function joinUserChannel(msg: Message): Promise<VoiceConnection> {
@@ -14,7 +13,25 @@ export function joinUserChannel(msg: Message): Promise<VoiceConnection> {
 }
 
 export function secondsToTimestamp(seconds: number): string {
-    return moment().startOf('day').seconds(seconds).format('HH:mm:ss');
+    let secondsLeft = seconds;
+
+    let hours = Math.floor(secondsLeft / 3600);
+    secondsLeft -= hours * 3600;
+    
+    let minutes = Math.floor(secondsLeft / 60);
+    secondsLeft -= minutes * 60;
+
+    return `${leftPad(hours, 2)}:${leftPad(minutes, 2)}:${leftPad(secondsLeft, 2)}`;
+}
+
+function leftPad(integer: Number, amount: Number): string {
+    let paddedInt: string = integer.toString();
+
+    while (paddedInt.length < amount) {
+        paddedInt = '0' + paddedInt;
+    }
+
+    return paddedInt;
 }
 
 export function createEmbed() {
