@@ -5,16 +5,19 @@ import { Readable } from 'stream';
 import ytpl from 'ytpl';
 import { IMediaType } from './../media/media-type.model';
 import { secondsToTimestamp } from '../helpers';
+import { Service } from 'typedi';
 
+@Service()
 export class YoutubeMediaType implements IMediaType {
-    constructor(private readonly logger: Logger) { }
+    // TODO: Inject logger
+    constructor(private readonly logger: Logger) {}
     
     getType(): string {
         return 'youtube'; 
     }
 
     getPlaylist(item: MediaItem): Promise<MediaItem[]> {
-        this.logger.info('Getting playlist');
+        console.info('Getting playlist');
 
         return ytpl(item.url).then((playlist: ytpl.Result) => {
             if (!playlist?.items || !Array.isArray(playlist.items)) {
@@ -33,7 +36,7 @@ export class YoutubeMediaType implements IMediaType {
     }
 
     getDetails(item: MediaItem): Promise<MediaItem> {
-        this.logger.info('Fetching details');
+        console.info('Fetching details');
 
         if (item.name && item.duration) {
             return Promise.resolve(item);
@@ -51,7 +54,7 @@ export class YoutubeMediaType implements IMediaType {
     }
 
     getStream(item: MediaItem): Promise<Readable> {
-        this.logger.info('Getting stream');
+        console.info('Getting stream');
 
         return Promise.resolve(
             ytdl(item.url, {
