@@ -1,13 +1,15 @@
-import { Logger } from 'discord-bot-quickstart';
 import ytdl, { getInfo } from 'ytdl-core';
 import { MediaItem } from './../media/media-item.model';
 import { Readable } from 'stream';
 import ytpl from 'ytpl';
 import { IMediaType } from './../media/media-type.model';
 import { secondsToTimestamp } from '../helpers';
+import { Inject, Service } from 'typedi';
+import winston from 'winston';
 
+@Service()
 export class YoutubeMediaType implements IMediaType {
-    constructor(private readonly logger: Logger) { }
+    constructor(@Inject('logger') private readonly logger: winston.Logger) {}
     
     getType(): string {
         return 'youtube'; 

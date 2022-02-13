@@ -1,10 +1,13 @@
+import { IMediaTypeProvider } from './../../../src/mediatypes/IMediaTypeProvider';
 import { MessageEmbed, VoiceConnection } from 'discord.js';
 import { MediaItem } from './../../../src/media/media-item.model';
-import { Logger, Message, TextChannel, StreamDispatcher, VoiceChannel } from 'discord-bot-quickstart';
+import { TextChannel, StreamDispatcher, VoiceChannel } from 'discord-bot-quickstart';
 import { BotStatus } from './../../../src/bot/bot-status';
 import { IRhythmBotConfig } from '../../../src/bot/bot-config';
 import { IMediaType, MediaPlayer } from '../../../src/media';
 import { Readable } from 'stream';
+import { Logger } from 'winston';
+import { MediaTypeNotFoundError } from '../../../src/mediatypes/MediaTypeNotFoundError';
 
 const ITEM_TYPE = 'youtube';
 const ITEM_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
@@ -65,13 +68,31 @@ const voiceChannel = {
     join: () => Promise.resolve(connection)
 } as unknown as VoiceChannel;
 
+let mediaTypeProvider: IMediaTypeProvider;
+
 beforeEach(() => {
     jest.clearAllMocks();
-    mediaPlayer = new MediaPlayer(config, status, logger);
+    mediaTypeProvider = {
+        get: jest.fn()
+    } as IMediaTypeProvider;
+
+    mediaPlayer = new MediaPlayer(config, status, logger, mediaTypeProvider);
     mediaPlayer.setChannel(channel);
 })
 
 describe('Adding media', () => {
+    it('Should reject when mediaTypeProvider throws error', async () => {
+        expect.assertions(1);
+
+        mediaTypeProvider.get = jest.fn(() => { throw new MediaTypeNotFoundError('MY ERROR') });
+
+        try {
+            await mediaPlayer.addMedia({} as MediaItem);
+        } catch (error) {
+            expect(error).toContain('MY ERROR');
+        }
+    });
+
     it('Should reject when unnamed item and invalid type are given', async () => {
         expect.assertions(1);
 
@@ -91,7 +112,13 @@ describe('Adding media', () => {
             getDetails: jest.fn().mockRejectedValue('Error')
         } as unknown as IMediaType;
 
-        mediaPlayer.typeRegistry.set(ITEM_TYPE, mediaType);
+        mediaTypeProvider.get = jest.fn((args) => {
+            if (args !== ITEM_TYPE) {
+                throw new Error('ERROR IN TEST');
+            }
+
+            return mediaType;
+        });
 
         expect.assertions(1);
 
@@ -157,7 +184,7 @@ describe('Playing', () => {
 
         beforeEach(() => {
             mediaPlayer.queue.enqueue(VALID_ITEM);
-            mediaPlayer.typeRegistry.set(ITEM_TYPE, mediaType);
+            mediaTypeProvider.get = jest.fn().mockReturnValue(mediaType);
             mediaPlayer.setConnection(voiceChannel);
             connection.play = jest.fn(() => dispatcher);
         });
