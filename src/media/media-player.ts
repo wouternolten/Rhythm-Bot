@@ -1,24 +1,17 @@
-import { YoutubeMediaType } from './../mediatypes/YoutubeMediaType';
+import { IMediaTypeProvider } from './../mediatypes/IMediaTypeProvider';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
 import { IRhythmBotConfig } from '../bot/bot-config';
 import { BotStatus } from '../bot/bot-status';
 import { MediaQueue } from './media-queue';
 import { MediaItem } from './media-item.model';
-import { IMediaType } from './media-type.model';
-import { createEmbed, createErrorEmbed, createInfoEmbed, secondsToTimestamp } from '../helpers';
+import { createEmbed, createErrorEmbed, createInfoEmbed } from '../helpers';
 import { Logger, TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher, Message, VoiceChannel } from 'discord-bot-quickstart';
 import { Readable } from 'stream';
-import ytdl from 'ytdl-core';
-import { getInfo } from 'ytdl-core';
-import ytpl from 'ytpl';
 import yts from 'yt-search';
-
-const youtubeType: string = 'youtube';
 
 // TODO: Why does the playerp stop for a millisecond when searching?
 export class MediaPlayer {
      // TODO: Make all variables private.
-    typeRegistry: Map<string, IMediaType> = new Map<string, IMediaType>();
     queue: MediaQueue = new MediaQueue();
     connection?: VoiceConnection;
     dispatcher?: StreamDispatcher;
@@ -35,15 +28,18 @@ export class MediaPlayer {
     constructor(
         private readonly config: IRhythmBotConfig,
         private readonly status: BotStatus, // TODO: Make subscription-driven. (Command, don't ask)
-        private readonly logger: Logger
-    ) {
-        // TODO: this is ugly. Fix it.
-        this.fillTypeRegistryWithDefaults();
-    }
+        private readonly logger: Logger,
+        private readonly mediaTypeProvider: IMediaTypeProvider
+    ) { }
 
     async addMedia(item: MediaItem, silent = false): Promise<void> {
         if (!item.name || !item.duration) {
-            let type = this.typeRegistry.get(item.type);
+            let type = undefined;
+            try {
+                type = this.mediaTypeProvider.get(item.type);
+            } catch (error) {
+                return Promise.reject(`Error when fetching media type: ${error}`);
+            }
 
             if (!type) {
                 return Promise.reject('Unknown Media Type!');
@@ -129,11 +125,11 @@ export class MediaPlayer {
         }
 
         let item = this.queue.first;
-        let type = this.typeRegistry.get(item.type);
+        let type = this.mediaTypeProvider.get(item.type);
 
         if (!type) {
             this.channel.send(createErrorEmbed(`Invalid type for item. See logs`));
-            console.error({ message: 'Invalid type for item', erroredItem: item });
+            this.logger.error({ message: 'Invalid type for item', erroredItem: item });
             return;
         }
 
@@ -325,10 +321,6 @@ export class MediaPlayer {
         this.dispatcher.on('end', (reason: string) => {
             this.logger.debug(`Stream Ended: ${reason}`);
         });
-    }
-
-    private fillTypeRegistryWithDefaults(): void {
-        this.typeRegistry.set(youtubeType, new YoutubeMediaType(this.logger));
     }
 
     async setConnection(channel: VoiceChannel): Promise<void> {

@@ -1,7 +1,10 @@
 import 'reflect-metadata';
 import * as fs from 'fs';
 import * as path from 'path';
+import { IMediaTypeProvider } from './mediatypes/IMediaTypeProvider';
 import { Container } from 'typedi';
+import { MediaTypeProvider } from './mediatypes/MediaTypeProvider';
+import { requireFile, projectDir, writeJson, ConsoleReader } from 'discord-bot-quickstart';
 import { config as dotenv } from 'dotenv';
 import { MikroORM, IDatabaseDriver, Connection } from '@mikro-orm/core';
 import { IRhythmBotConfig, RhythmBot } from './bot';
@@ -53,8 +56,15 @@ export let ORM: MikroORM<IDatabaseDriver<Connection>>;
             ]
         }) as winston.Logger);
 
+        const mediaTypeProvider = Container.get(MediaTypeProvider) as IMediaTypeProvider;
+        const musicBot = new RhythmBot(
+            config,
+            mediaTypeProvider,
+            Container.get('logger'),
+            new ConsoleReader(Container.get('logger'))
+        );
+
         musicBot.connect().then(() => {
-            musicBot.logger.debug('Rhythm Bot Online');
             musicBot.listen();
         });
 

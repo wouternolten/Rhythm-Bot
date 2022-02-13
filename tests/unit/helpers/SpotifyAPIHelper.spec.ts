@@ -1,7 +1,9 @@
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
+import { Logger } from 'winston';
 import axios from 'axios';
 
 jest.mock('axios');
+jest.mock('typedi');
 
 const CLIENT_ID = 'id';
 const CLIENT_SECRET = 'secret';
@@ -17,9 +19,12 @@ const TOKEN_RESPONSE = {
 };
 
 let helper: SpotifyAPIHelper;
+const logger = {
+    debug: jest.fn()
+} as unknown as Logger;
 
 beforeEach(() => {
-    helper = new SpotifyAPIHelper(CLIENT_ID, CLIENT_SECRET)
+    helper = new SpotifyAPIHelper(CLIENT_ID, CLIENT_SECRET, logger)
 });
 
 describe('Test fetching data for search string', () => {

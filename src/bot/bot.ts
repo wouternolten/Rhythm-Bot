@@ -1,3 +1,4 @@
+import { IMediaTypeProvider } from './../mediatypes/IMediaTypeProvider';
 import {
     AutoPlayNextVideoCommand,
     ForcePlayVideoCommand,
@@ -21,75 +22,58 @@ import { BotStatus } from './bot-status';
 import { IRhythmBotConfig } from './bot-config';
 import { createErrorEmbed, createInfoEmbed } from '../helpers';
 import {
-    IBot,
     CommandMap,
     Client,
-    ParsedArgs,
-    Interface,
     SuccessfulParsedMessage,
     Message,
     readFile,
     MessageReaction,
     User,
+    ConsoleReader,
+    ParsedArgs,
+    Interface,
 } from 'discord-bot-quickstart';
+import { Logger } from 'winston';
+import { IBot } from './IBot';
+import { parse } from 'discord-command-parser';
 
-const helptext = readFile('../helptext.txt');
 const RICK_ROLL_ID = 'dQw4w9WgXcQ';
-const AIR_HORN_ID = 'UaUa_0qPPgc';
-
 
 /** 
  * TODO: Create player on first command.
  * Then directly insert player into channel.
 */
-export class RhythmBot extends IBot<IRhythmBotConfig> {
-    helptext: string;
+export class RhythmBot implements IBot {
     player: MediaPlayer;
     status: BotStatus;
+    private readonly client: Client;
+    private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
 
     constructor(
-        config: IRhythmBotConfig
+        private readonly config: IRhythmBotConfig,
+        private readonly mediaTypeProvider: IMediaTypeProvider,
+        private readonly logger: Logger,
+        private readonly console: ConsoleReader,
     ) {
-        super(config, <IRhythmBotConfig>{
-            auto: {
-                deafen: false,
-                pause: false,
-                play: true,
-                reconnect: true,
-            },
-            discord: {
-                log: true,
-            },
-            command: {
-                symbol: '!',
-            },
-            directory: {
-                plugins: './plugins',
-                logs: '../bot.log',
-            },
-            queue: {
-                announce: true,
-                repeat: false,
-            },
-            stream: {
-                seek: 0,
-                volume: 1,
-                bitrate: 'auto',
-                forwardErrorCorrection: false,
-            },
-            emojis: {
-                addSong: '👍',
-                stopSong: '⏹️',
-                playSong: '▶️',
-                pauseSong: '⏸️',
-                skipSong: '⏭️',
-            },
-        });
+        // TODO: MOVE TO DI CONTAINER
+        this.client = this.createClient();
 
-        this.helptext = helptext;
+        this.console
+            .commands
+            .on('exit', (args: ParsedArgs, rl: Interface) => {
+                if(this.client)
+                    this.client.destroy();
+                rl.close();
+            });
+
+        this.status = new BotStatus(this.client);
+        this.player = new MediaPlayer(this.config, this.status, this.logger, this.mediaTypeProvider);
+        this.commands = this.registerDiscordCommands();
     }
 
-    onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
+    registerDiscordCommands(): CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void> {
+        const map = new CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>();
+
         // TODO: find a way to fetch the player from somewhere?
         const commandMap: { [key: string]: ICommand } = {
             autoplay: new AutoPlayNextVideoCommand(this.player),
@@ -152,6 +136,8 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
                 commandMap[key].execute(cmd, msg);
             })
         });
+
+        return map;
     }
 
     parsedMessage(msg: SuccessfulParsedMessage<Message>) {
@@ -162,9 +148,9 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
         }
     }
 
-    onClientCreated(client: Client): void {
-        this.status = new BotStatus(client);
-        this.player = new MediaPlayer(this.config, this.status, this.logger);
+    // TODO: MOVE TO SEPARATE CLASS.
+    createClient(): Client {
+        const client = new Client();
 
         client.on('messageReactionAdd', async (reaction: MessageReaction, user: User) => {
             if (reaction.partial) {
@@ -207,9 +193,41 @@ export class RhythmBot extends IBot<IRhythmBotConfig> {
                     reaction.users.remove(user.id);
                 }
             }
+        })
+        .on('ready', () => {
+            this.logger.debug('Bot Online');
+        })
+        .on('disconnect', () => {
+            this.logger.debug('Bot Disconnected');
+        })
+        .on('error', (error: Error) => {
+            this.logger.error(error);
+        })
+        .on('message', (msg: Message) => {
+            let parsed = parse(msg, this.config.command.symbol);
+
+            if (!parsed.success) return;
+            
+            this.parsedMessage(parsed);
+
+            let handlers = this.commands.get(parsed.command);
+
+            if(handlers) {
+                this.logger.debug(`Bot Command: ${msg.content}`);
+                handlers.forEach(handle => {
+                    handle(parsed as SuccessfulParsedMessage<Message>, msg);
+                });
+            }
         });
+
+        return client;
     }
 
-    onReady(client: Client): void {}
-    onRegisterConsoleCommands(map: CommandMap<(args: ParsedArgs, rl: Interface) => void>): void {}
+    connect(): Promise<string> {
+        return this.client.login(this.config.discord.token);
+    }
+
+    listen(): void {
+        return this.console.listen();
+    }
 }
