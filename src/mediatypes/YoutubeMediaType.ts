@@ -1,23 +1,22 @@
-import { Logger } from 'discord-bot-quickstart';
 import ytdl, { getInfo } from 'ytdl-core';
 import { MediaItem } from './../media/media-item.model';
 import { Readable } from 'stream';
 import ytpl from 'ytpl';
 import { IMediaType } from './../media/media-type.model';
 import { secondsToTimestamp } from '../helpers';
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
+import winston from 'winston';
 
 @Service()
 export class YoutubeMediaType implements IMediaType {
-    // TODO: Inject logger
-    constructor(private readonly logger: Logger) {}
+    constructor(@Inject('logger') private readonly logger: winston.Logger) {}
     
     getType(): string {
         return 'youtube'; 
     }
 
     getPlaylist(item: MediaItem): Promise<MediaItem[]> {
-        console.info('Getting playlist');
+        this.logger.info('Getting playlist');
 
         return ytpl(item.url).then((playlist: ytpl.Result) => {
             if (!playlist?.items || !Array.isArray(playlist.items)) {
@@ -36,7 +35,7 @@ export class YoutubeMediaType implements IMediaType {
     }
 
     getDetails(item: MediaItem): Promise<MediaItem> {
-        console.info('Fetching details');
+        this.logger.info('Fetching details');
 
         if (item.name && item.duration) {
             return Promise.resolve(item);
@@ -54,7 +53,7 @@ export class YoutubeMediaType implements IMediaType {
     }
 
     getStream(item: MediaItem): Promise<Readable> {
-        console.info('Getting stream');
+        this.logger.info('Getting stream');
 
         return Promise.resolve(
             ytdl(item.url, {
