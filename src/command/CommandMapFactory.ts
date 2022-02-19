@@ -22,6 +22,7 @@ import {
     TimeCommand,
     VolumeCommand
 } from ".";
+import { PlayAOEFileCommand } from "./PlayAOEFileCommand";
 import { PlaySoundFileCommand } from "./PlaySoundFileCommand";
 
 const RICK_ROLL_ID = 'dQw4w9WgXcQ';
@@ -91,6 +92,7 @@ export class CommandMapFactory implements ICommandMapFactory {
         return {
             horn: new PlaySoundFileCommand('airhorn_four.wav'),
             badumtss: new PlaySoundFileCommand('badum_tss.wav'),
+            aoe: new PlayAOEFileCommand()
         };
     }
 

@@ -16,6 +16,7 @@ import {
     projectDir,
     requireFile,
 } from 'discord-bot-quickstart';
+import { PlayAOEFileCommand } from '../command/PlayAOEFileCommand';
 
 const TWO_SECONDS = 2000;
 
@@ -44,7 +45,8 @@ export class WelcomeTuneBot extends IBot<IRhythmBotConfig> {
     onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
         const commandMap: { [key: string]: ICommand } = {
             horn: new PlaySoundFileCommand('airhorn_four.wav'),
-            badumtss: new PlaySoundFileCommand('badum_tss.wav')
+            badumtss: new PlaySoundFileCommand('badum_tss.wav'),
+            aoe: new PlayAOEFileCommand()
         };
 
         const descriptions = Object

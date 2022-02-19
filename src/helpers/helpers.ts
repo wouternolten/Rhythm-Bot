@@ -24,7 +24,7 @@ export function secondsToTimestamp(seconds: number): string {
     return `${leftPad(hours, 2)}:${leftPad(minutes, 2)}:${leftPad(secondsLeft, 2)}`;
 }
 
-function leftPad(integer: Number, amount: Number): string {
+export function leftPad(integer: Number, amount: Number): string {
     let paddedInt: string = integer.toString();
 
     while (paddedInt.length < amount) {
@@ -60,4 +60,14 @@ export async function getPlayList(url: string): Promise<{ title: string, items: 
         title: playList.title,
         items: playList.items.map(item => ({ type: 'youtube', url: item.shortUrl, name: item.title, duration: item.duration } as MediaItem))
     };
+}
+
+export function isInteger(body: string): Boolean {
+    if (typeof body !== 'string') {
+        return false;
+    }
+
+    const numericBody = Number(body);
+
+    return Number.isInteger(numericBody);
 }
