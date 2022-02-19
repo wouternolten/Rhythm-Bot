@@ -1,10 +1,12 @@
-import { Client, PresenceStatusData } from 'discord.js';
+import { ClientUser, PresenceStatusData } from 'discord.js';
 
 export class BotStatus {
-    constructor(private readonly client: Client) {}
+    constructor(private readonly user: ClientUser) {
+
+    }
 
     setBanner(status: string) {
-        this.client.user.setPresence({
+        this.user.setPresence({
             activity: {
                 name: status,
             },
@@ -12,6 +14,6 @@ export class BotStatus {
     }
 
     setActivity(activity: PresenceStatusData) {
-        this.client.user.setStatus(activity);
+        this.user.setStatus(activity);
     }
 }

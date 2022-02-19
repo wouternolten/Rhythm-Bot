@@ -1,233 +1,117 @@
-import { IMediaTypeProvider } from './../mediatypes/IMediaTypeProvider';
-import {
-    AutoPlayNextVideoCommand,
-    ForcePlayVideoCommand,
-    ICommand,
-    JoinUserChannelCommand,
-    LeaveChannelCommand,
-    ListSongsCommand,
-    MoveSongCommand,
-    PlaySongCommand,
-    PingCommand,
-    RemoveSongCommand,
-    SearchAndAddCommand,
-    SearchCommand,
-    SimplePlayerActCommand,
-    TimeCommand,
-    ToggleRepeatModeCommand,
-    VolumeCommand,
-} from './../command';
 import { MediaPlayer } from '../media';
-import { BotStatus } from './bot-status';
 import { IRhythmBotConfig } from './bot-config';
-import { createErrorEmbed, createInfoEmbed } from '../helpers';
 import {
     CommandMap,
-    Client,
     SuccessfulParsedMessage,
-    Message,
-    readFile,
-    MessageReaction,
-    User,
-    ConsoleReader,
-    ParsedArgs,
-    Interface,
+    Message
 } from 'discord-bot-quickstart';
 import { Logger } from 'winston';
-import { IBot } from './IBot';
 import { parse } from 'discord-command-parser';
+import { MessageReaction, User } from 'discord.js';
 
-const RICK_ROLL_ID = 'dQw4w9WgXcQ';
-
-/** 
- * TODO: Create player on first command.
- * Then directly insert player into channel.
-*/
-export class RhythmBot implements IBot {
-    player: MediaPlayer;
-    status: BotStatus;
-    private readonly client: Client;
-    private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
-
+export class RhythmBot {
     constructor(
         private readonly config: IRhythmBotConfig,
-        private readonly mediaTypeProvider: IMediaTypeProvider,
+        private readonly user: User,
+        private readonly player: MediaPlayer,
         private readonly logger: Logger,
-        private readonly console: ConsoleReader,
+        private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>
     ) {
-        // TODO: MOVE TO DI CONTAINER
-        this.client = this.createClient();
-
-        this.console
-            .commands
-            .on('exit', (args: ParsedArgs, rl: Interface) => {
-                if(this.client)
-                    this.client.destroy();
-                rl.close();
-            });
-
-        this.status = new BotStatus(this.client);
-        this.player = new MediaPlayer(this.config, this.status, this.logger, this.mediaTypeProvider);
-        this.commands = this.registerDiscordCommands();
-    }
-
-    registerDiscordCommands(): CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void> {
-        const map = new CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>();
-
-        // TODO: find a way to fetch the player from somewhere?
-        const commandMap: { [key: string]: ICommand } = {
-            autoplay: new AutoPlayNextVideoCommand(this.player),
-            clear: new SimplePlayerActCommand(this.player, 'clear'),
-            join: new JoinUserChannelCommand(this.player, this.config),
-            leave: new LeaveChannelCommand(this.player, this.client),
-            list: new ListSongsCommand(this.player),
-            move: new MoveSongCommand(this.player),
-            p: new SearchAndAddCommand(this.player),
-            pause: new SimplePlayerActCommand(this.player, 'pause'),
-            play: new PlaySongCommand(this.player),
-            ping: new PingCommand(),
-            q: new ListSongsCommand(this.player),
-            queue: new ListSongsCommand(this.player),
-            remove: new RemoveSongCommand(this.player),
-            repeat: new ToggleRepeatModeCommand(this.config),
-            rick: new ForcePlayVideoCommand(this.player, RICK_ROLL_ID),
-            search: new SearchCommand(this.player, this.config),
-            shuffle: new SimplePlayerActCommand(this.player, 'shuffle'),
-            skip: new SimplePlayerActCommand(this.player, 'skip'),
-            stop: new SimplePlayerActCommand(this.player, 'stop'),
-            time: new TimeCommand(this.player),
-            volume: new VolumeCommand(this.player),
-        };
-
-        const descriptions = Object
-            .keys(commandMap)
-            .map((key) => '`' + key + '`: ' + commandMap[key].getDescription())
-            .join('\n');
-        
-        const helpCommand = {
-            execute: (cmd: SuccessfulParsedMessage<Message>, msg: Message): void => { msg.channel.send("Commands: \n\n" + descriptions) }
-        } as unknown as ICommand;
-
-        commandMap.help = helpCommand;
-
-        Object.keys(commandMap).forEach(key => {
-            map.on(key, async (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                const channel = msg.member.voice.channel;
-
-                if (!channel || channel.type !== 'voice') {
-                    msg.channel.send(createInfoEmbed(`User isn't in a voice channel!`));
-                    return;
-                }
-
-                if (!this.player) {
-                    msg.channel.send(createErrorEmbed(`Error: no player found.`));
-                    return;
-                }
-
-                if (!this.player.connection) {
-                    try {
-                        await this.player.setConnection(msg.member.voice.channel);
-                    } catch (error) {
-                        msg.channel.send(createErrorEmbed(`Error: player ${msg.member.nickname} is not in a voice channel`));
-                        return;
-                    }
-                }
-
-                commandMap[key].execute(cmd, msg);
-            })
-        });
-
-        return map;
     }
 
     parsedMessage(msg: SuccessfulParsedMessage<Message>) {
-        const handlers = this.commands.get(msg.command);
-        if (handlers) {
-            // TODO: find a better way to do this.
-            this.player.setChannel(msg.message.channel);
+        // TODO: Split functionality; the player should not update a channel; another class should be responsible for this.
+        this.player.setChannel(msg.message.channel);
+    }
+
+    handleMessage(msg: Message): void {
+        if (!this.config.command?.symbol) {
+            this.logger.error('Symbol handle message not set.');
+
+            return;
         }
-    }
 
-    // TODO: MOVE TO SEPARATE CLASS.
-    createClient(): Client {
-        const client = new Client();
+        let parsed = parse(msg, this.config.command.symbol);
 
-        client.on('messageReactionAdd', async (reaction: MessageReaction, user: User) => {
-            if (reaction.partial) {
-                try {
-                    await reaction.fetch();
-                } catch (error) {
-                    this.logger.debug(error);
-                    return;
-                }
-            }
-            if (reaction.message.author.id === this.client.user.id && user.id !== this.client.user.id) {
-                if (reaction.message.embeds.length > 0) {
-                    const embed = reaction.message.embeds[0];
-                    if (embed) {
-                        if (reaction.emoji.name === this.config.emojis.addSong && embed.url) {
-                            this.logger.debug(`Emoji Click: Adding Media: ${embed.url}`);
-                            this.player.addMedia({
-                                type: 'youtube',
-                                url: embed.url,
-                                requestor: user.username,
-                            });
-                        }
-                        if (reaction.emoji.name === this.config.emojis.stopSong) {
-                            this.logger.debug('Emoji Click: Stopping Song');
-                            this.player.stop();
-                        } 
-                        if (reaction.emoji.name === this.config.emojis.playSong) {
-                            this.logger.debug('Emoji Click: Playing/Resuming Song');
-                            this.player.play();
-                        }
-                        if (reaction.emoji.name === this.config.emojis.pauseSong) {
-                            this.logger.debug('Emoji Click: Pausing Song');
-                            this.player.pause();
-                        }
-                        if (reaction.emoji.name === this.config.emojis.skipSong) {
-                            this.logger.debug('Emoji Click: Skipping Song');
-                            this.player.skip();
-                        }
-                    }
-                    reaction.users.remove(user.id);
-                }
-            }
-        })
-        .on('ready', () => {
-            this.logger.debug('Bot Online');
-        })
-        .on('disconnect', () => {
-            this.logger.debug('Bot Disconnected');
-        })
-        .on('error', (error: Error) => {
-            this.logger.error(error);
-        })
-        .on('message', (msg: Message) => {
-            let parsed = parse(msg, this.config.command.symbol);
+        if (!parsed.success) {
+            this.logger.error('Unable to handle message due to parsing errors');
 
-            if (!parsed.success) return;
-            
-            this.parsedMessage(parsed);
+            return;
+        }
 
-            let handlers = this.commands.get(parsed.command);
+        let handlers = this.commands.get(parsed.command);
 
-            if(handlers) {
-                this.logger.debug(`Bot Command: ${msg.content}`);
-                handlers.forEach(handle => {
-                    handle(parsed as SuccessfulParsedMessage<Message>, msg);
-                });
-            }
+        if (!handlers) {
+            return;
+        }
+
+        this.logger.debug(`Bot Command: ${msg.content}`);
+        this.parsedMessage(parsed);
+        handlers.forEach(handle => {
+            handle(parsed as SuccessfulParsedMessage<Message>, msg);
         });
-
-        return client;
     }
 
-    connect(): Promise<string> {
-        return this.client.login(this.config.discord.token);
-    }
+    async handleReaction(reaction: MessageReaction, user: User): Promise<void> {
+        if (!this.config.emojis) {
+            this.logger.warning('Emojis not set for reactions. Not handling reaction');
 
-    listen(): void {
-        return this.console.listen();
+            return;
+        }
+
+        if (reaction.partial) {
+            try {
+                await reaction.fetch();
+            } catch (error) {
+                this.logger.error(JSON.stringify(error));
+                return;
+            }
+        }
+
+        if (
+            reaction.message.author.id !== this.user.id ||
+            user.id === this.user.id ||
+            Array.isArray(reaction.message.embeds) == false ||
+            reaction.message.embeds.length === 0
+        ) {
+            return;
+        }
+    
+        const embed = reaction.message.embeds[0];
+
+        if (!embed) {
+            return;
+        }
+        
+        if (reaction.emoji.name === this.config.emojis.addSong && embed.url) {
+            this.logger.debug(`Emoji Click: Adding Media: ${embed.url}`);
+            this.player.addMedia({
+                type: 'youtube',
+                url: embed.url,
+                requestor: user.username,
+            });
+        }
+
+        if (reaction.emoji.name === this.config.emojis.stopSong) {
+            this.logger.debug('Emoji Click: Stopping Song');
+            this.player.stop();
+        }
+        
+        if (reaction.emoji.name === this.config.emojis.playSong) {
+            this.logger.debug('Emoji Click: Playing/Resuming Song');
+            this.player.play();
+        }
+
+        if (reaction.emoji.name === this.config.emojis.pauseSong) {
+            this.logger.debug('Emoji Click: Pausing Song');
+            this.player.pause();
+        }
+        
+        if (reaction.emoji.name === this.config.emojis.skipSong) {
+            this.logger.debug('Emoji Click: Skipping Song');
+            this.player.skip();
+        }
+        
+        reaction.users.remove(user.id);
     }
 }
