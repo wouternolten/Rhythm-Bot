@@ -1,4 +1,3 @@
-import { Inject } from 'typedi';
 import axios, { AxiosRequestConfig } from 'axios';
 import winston from 'winston';
 
@@ -11,9 +10,10 @@ export class SpotifyAPIHelper {
     constructor(
         private readonly clientId: string,
         private readonly clientSecret: string,
-        @Inject('logger') private readonly logger: winston.Logger
+        private readonly logger: winston.Logger
     ) {}
 
+    // TODO: FIX WHEN TRACK ARTIST CAN'T BE FOUND (example = Set Your Goals Ft. Hayley Williams - The Few That Remain)
     async getSpotifyIDForSong(track: string, artist?: string): Promise<string> {
         if (track === '') {
             return Promise.reject('Invalid track passed');
@@ -31,7 +31,7 @@ export class SpotifyAPIHelper {
 
         const totalQuery = `/search?q=${artistTrackQuery.trim().replace(/[\s]+/gm, '%20')}&type=track&limit=1`;
 
-        this.logger.debug({ track, artist, totalQuery });
+        this.logger.debug(JSON.stringify({ track, artist, totalQuery }));
 
         const requestOptions = {
             headers: {
