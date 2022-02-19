@@ -1,5 +1,4 @@
 import { IMediaTypeProvider } from './../mediatypes/IMediaTypeProvider';
-import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
 import { IRhythmBotConfig } from '../bot/bot-config';
 import { BotStatus } from '../bot/bot-status';
 import { MediaQueue } from './media-queue';
@@ -8,6 +7,7 @@ import { createEmbed, createErrorEmbed, createInfoEmbed } from '../helpers';
 import { Logger, TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher, Message, VoiceChannel } from 'discord-bot-quickstart';
 import { Readable } from 'stream';
 import yts from 'yt-search';
+import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';
 
 // TODO: Why does the playerp stop for a millisecond when searching?
 export class MediaPlayer {
@@ -339,7 +339,8 @@ export class MediaPlayer {
         
         const helper = new SpotifyAPIHelper(
             this.config.spotify.clientId,
-            this.config.spotify.clientSecret
+            this.config.spotify.clientSecret,
+            this.logger
         );
 
         const lettersAndSpacesRegex = /[^\w\s\-]+/gm;
