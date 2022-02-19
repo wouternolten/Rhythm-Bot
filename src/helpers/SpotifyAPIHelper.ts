@@ -1,3 +1,4 @@
+import { Inject } from 'typedi';
 import axios, { AxiosRequestConfig } from 'axios';
 import winston from 'winston';
 

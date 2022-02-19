@@ -21,6 +21,12 @@ const lineFormat = printf(({ level, message, timestamp }) => {
     return `[${timestamp}] (${level}): ${message}`;
 });
 
+const { Console, File } = transports;
+const { combine, timestamp, printf } = format;
+const lineFormat = printf(({ level, message, timestamp }) => {
+    return `[${timestamp}] (${level}): ${message}`;
+});
+
 dotenv();
 
 (async () => {
