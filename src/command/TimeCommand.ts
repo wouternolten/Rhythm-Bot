@@ -8,15 +8,16 @@ export class TimeCommand implements ICommand {
     constructor(private readonly player: MediaPlayer) {}
 
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
-        const media = this.player.queue.first;
-        if (this.player.isPlaying() && this.player.dispatcher) {
-            const elapsed = secondsToTimestamp(this.player.dispatcher.totalStreamTime / 1000);
-            msg.channel.send(createInfoEmbed('Time Elapsed', `${elapsed} / ${media.duration}`));
-        } else if (this.player.queue.first) {
-            msg.channel.send(createInfoEmbed('Time Elapsed', `00:00:00 / ${media.duration}`));
-        } else {
+        const media = this.player.getFirstSong();
+
+        if (!media) {
             msg.channel.send(createInfoEmbed('No song playing.'));
+            return;
         }
+
+        const streamTime = (this.player.dispatcher?.totalStreamTime || 0) / 1000;
+        const elapsed = secondsToTimestamp(streamTime);
+        msg.channel.send(createInfoEmbed('Time Elapsed', `${elapsed} / ${media.duration}`));
     }
     
     getDescription(): string {

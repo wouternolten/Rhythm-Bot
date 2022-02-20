@@ -19,19 +19,19 @@ export class ForcePlayVideoCommand implements ICommand {
             requestor: msg.author.username,
         });
 
-        const current = this.player.queue.length - 1;
+        const current = this.player.getQueueLength() - 1;
 
-        if (current === 0) {
+        if (current <= 0) {
             return;
         }
 
         if (this.player.dispatcher) {
             const time = this.player.dispatcher.totalStreamTime;
-            const currentSong = this.player.queue.first;
+            const currentSong = this.player.getFirstSong();
             currentSong.begin = `${time}ms`;
 
             await this.player.addMedia(currentSong, true);
-            this.player.move(this.player.queue.length - 1, 1);
+            this.player.move(this.player.getQueueLength() - 1, 1);
         }
 
         this.player.skip();

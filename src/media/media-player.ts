@@ -12,9 +12,10 @@ import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';
 // TODO: Why does the playerp stop for a millisecond when searching?
 export class MediaPlayer {
      // TODO: Make all variables private.
-    queue: MediaQueue = new MediaQueue();
     connection?: VoiceConnection;
     dispatcher?: StreamDispatcher;
+    
+    private readonly queue: MediaQueue = new MediaQueue();
     private lastPlayedSong?: MediaItem;
     private autoPlay: boolean = true;
 
@@ -414,5 +415,21 @@ export class MediaPlayer {
 
     getAutoPlay(): boolean {
         return this.autoPlay;
+    }
+
+    getFirstSong(): MediaItem | null {
+        if (this.queue.length === 0) {
+            return null;
+        }
+
+        return this.queue.first;
+    }
+
+    getQueueLength(): number {
+        return this.queue.length;
+    }
+
+    getQueue(): MediaItem[] {
+        return [...this.queue];
     }
 }
