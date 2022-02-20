@@ -11,15 +11,11 @@ import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';
 
 // TODO: Why does the playerp stop for a millisecond when searching?
 export class MediaPlayer {
-     // TODO: Make all variables private.
-    connection?: VoiceConnection;
+    private connection?: VoiceConnection;
     private dispatcher?: StreamDispatcher;
     private readonly queue: MediaQueue = new MediaQueue();
     private lastPlayedSong?: MediaItem;
     private autoPlay: boolean = true;
-
-    
-    // TODO: find a way to directly inject this.
     private channel: TextChannel | DMChannel | NewsChannel;
     private playing: boolean = false;
     private paused: boolean = false;
@@ -462,5 +458,23 @@ export class MediaPlayer {
         }
         
         return this.dispatcher.totalStreamTime;
+    }
+
+    isConnected(): boolean {
+        return !!this.connection;
+    }
+    
+    async connectToMessageChannel(message: Message): Promise<void> {
+        const { channel } = message.member.voice;
+
+        if (channel && channel.type === 'voice') {
+            this.connection = await channel.join();
+        }
+        
+        return Promise.reject(`User isn't in a voice channel!`);
+    }
+
+    disconnect() {
+        this.connection = undefined;
     }
 }

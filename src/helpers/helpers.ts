@@ -1,16 +1,6 @@
 import { MediaItem } from './../media/media-item.model';
-import { Message, VoiceConnection, MessageEmbed } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 import ytpl from 'ytpl';
-
-export function joinUserChannel(msg: Message): Promise<VoiceConnection> {
-    const channel = msg.member.voice.channel;
-
-    if (channel && channel.type === 'voice') {
-        return channel.join();
-    }
-
-    return Promise.reject(`User isn't in a voice channel!`);
-}
 
 export function secondsToTimestamp(seconds: number): string {
     if (seconds < 0) {

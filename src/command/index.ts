@@ -7,7 +7,7 @@ export * from './JoinUserChannelCommand';
 export * from './LeaveChannelCommand';
 export * from './ListSongsCommand';
 export * from './MoveSongCommand';
-export * from './PlaySongCommand';
+export * from './StartPlayingCommand';
 export * from './PingCommand';
 export * from './RemoveSongCommand';
 export * from './SearchAndAddCommand';
