@@ -13,8 +13,7 @@ import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';
 export class MediaPlayer {
      // TODO: Make all variables private.
     connection?: VoiceConnection;
-    dispatcher?: StreamDispatcher;
-    
+    private dispatcher?: StreamDispatcher;
     private readonly queue: MediaQueue = new MediaQueue();
     private lastPlayedSong?: MediaItem;
     private autoPlay: boolean = true;
@@ -431,5 +430,37 @@ export class MediaPlayer {
 
     getQueue(): MediaItem[] {
         return [...this.queue];
+    }
+
+    // TODO: 
+    // 1. Place current video after forced video
+    // 2. Play current video again at stopped timestamp.
+    async forcePlaySong(item: MediaItem) {
+        await this.addMedia(item, true);
+
+        const currentSong = this.queue.length - 1;
+
+        if (currentSong <= 0) {
+            return;
+        }
+
+        if (this.dispatcher) {
+            const time = this.dispatcher.totalStreamTime;
+            const currentSong = this.queue.first;
+            currentSong.begin = `${time}ms`;
+
+            await this.addMedia(currentSong, true);
+            this.move(this.getQueueLength() - 1, 1);
+        }
+
+        this.skip();
+    }
+
+    getCurrentSongTimeElapsedInMilliSeconds(): number {
+        if (!this.dispatcher) {
+            return 0;
+        }
+        
+        return this.dispatcher.totalStreamTime;
     }
 }

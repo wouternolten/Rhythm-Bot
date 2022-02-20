@@ -15,8 +15,7 @@ export class TimeCommand implements ICommand {
             return;
         }
 
-        const streamTime = (this.player.dispatcher?.totalStreamTime || 0) / 1000;
-        const elapsed = secondsToTimestamp(streamTime);
+        const elapsed = secondsToTimestamp(this.player.getCurrentSongTimeElapsedInMilliSeconds() / 1000);
         msg.channel.send(createInfoEmbed('Time Elapsed', `${elapsed} / ${media.duration}`));
     }
     
