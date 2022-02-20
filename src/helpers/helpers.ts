@@ -13,6 +13,10 @@ export function joinUserChannel(msg: Message): Promise<VoiceConnection> {
 }
 
 export function secondsToTimestamp(seconds: number): string {
+    if (seconds < 0) {
+        throw new Error('Timestamp cannot be negative');
+    }
+
     let secondsLeft = seconds;
 
     let hours = Math.floor(secondsLeft / 3600);
