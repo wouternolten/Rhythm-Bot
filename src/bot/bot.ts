@@ -31,6 +31,10 @@ export class RhythmBot {
             return;
         }
 
+        if (msg.author.id === this.user.id) {
+            return;
+        }
+
         let parsed = parse(msg, this.config.command.symbol);
 
         if (!parsed.success) {

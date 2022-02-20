@@ -61,7 +61,8 @@ const commandFunction = jest.fn();
 commands.on('cmd', (cmd, msg) => commandFunction(cmd, msg));
 
 const message = {
-    content: "Some content"
+    content: "Some content",
+    author: otherUser
 } as unknown as Message;
 
 describe('Invalid config', () => {
@@ -90,6 +91,8 @@ describe('Invalid config', () => {
 
 describe('Valid constructor parameters', () => {
     beforeEach(() => {
+        jest.clearAllMocks();
+
         bot = new RhythmBot(
             config,
             botUser,
@@ -97,6 +100,17 @@ describe('Valid constructor parameters', () => {
             logger,
             commands
         );
+    });
+
+    it('Should return when message user is bot itself', () => {
+        mockParseReturnValue.mockReturnValue({ success: true, command: "cmd" });
+        const botMessage = { ...message } as unknown as Message;
+        botMessage.author = botUser;
+
+        bot.handleMessage(botMessage);
+
+        expect(logger.error).not.toBeCalled();
+        expect(commandFunction).not.toBeCalled();
     });
 
     it('Should log error and return when parsing fails on handle message', () => {
