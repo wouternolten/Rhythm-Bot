@@ -12,7 +12,7 @@ export class LeaveChannelCommand implements ICommand {
 
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
         this.player.stop();
-        this.player.connection = null;
+        this.player.disconnect();
         this.client.voice.connections.forEach((conn) => {
             conn.disconnect();
             msg.channel.send(createInfoEmbed(`Disconnecting from channel: ${conn.channel.name}`));

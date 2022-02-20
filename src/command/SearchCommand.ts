@@ -3,7 +3,7 @@ import { MediaPlayer } from './../media/media-player';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { ICommand } from './ICommand';
-import { createEmbed, createInfoEmbed, joinUserChannel } from '../helpers';
+import { createEmbed, createInfoEmbed } from '../helpers';
 import yts from 'yt-search';
 
 const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;

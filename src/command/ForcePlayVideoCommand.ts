@@ -9,32 +9,12 @@ export class ForcePlayVideoCommand implements ICommand {
         private readonly youtubeId: string
     ) { }
 
-    // TODO: 
-    // 1. Place current video after forced video
-    // 2. Play current video again at stopped timestamp.
     async execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): Promise<void> {
-        await this.player.addMedia({
+        this.player.forcePlaySong({
             type: 'youtube',
             url: `https://www.youtube.com/watch?v=${this.youtubeId}`,
             requestor: msg.author.username,
         });
-
-        const current = this.player.queue.length - 1;
-
-        if (current === 0) {
-            return;
-        }
-
-        if (this.player.dispatcher) {
-            const time = this.player.dispatcher.totalStreamTime;
-            const currentSong = this.player.queue.first;
-            currentSong.begin = `${time}ms`;
-
-            await this.player.addMedia(currentSong, true);
-            this.player.move(this.player.queue.length - 1, 1);
-        }
-
-        this.player.skip();
     }
 
     getDescription(): string {

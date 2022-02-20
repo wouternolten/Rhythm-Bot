@@ -11,15 +11,11 @@ import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';
 
 // TODO: Why does the playerp stop for a millisecond when searching?
 export class MediaPlayer {
-     // TODO: Make all variables private.
-    queue: MediaQueue = new MediaQueue();
-    connection?: VoiceConnection;
-    dispatcher?: StreamDispatcher;
+    private connection?: VoiceConnection;
+    private dispatcher?: StreamDispatcher;
+    private readonly queue: MediaQueue = new MediaQueue();
     private lastPlayedSong?: MediaItem;
     private autoPlay: boolean = true;
-
-    
-    // TODO: find a way to directly inject this.
     private channel: TextChannel | DMChannel | NewsChannel;
     private playing: boolean = false;
     private paused: boolean = false;
@@ -414,5 +410,71 @@ export class MediaPlayer {
 
     getAutoPlay(): boolean {
         return this.autoPlay;
+    }
+
+    getFirstSong(): MediaItem | null {
+        if (this.queue.length === 0) {
+            return null;
+        }
+
+        return this.queue.first;
+    }
+
+    getQueueLength(): number {
+        return this.queue.length;
+    }
+
+    getQueue(): MediaItem[] {
+        return [...this.queue];
+    }
+
+    // TODO: 
+    // 1. Place current video after forced video
+    // 2. Play current video again at stopped timestamp.
+    async forcePlaySong(item: MediaItem) {
+        await this.addMedia(item, true);
+
+        const currentSong = this.queue.length - 1;
+
+        if (currentSong <= 0) {
+            return;
+        }
+
+        if (this.dispatcher) {
+            const time = this.dispatcher.totalStreamTime;
+            const currentSong = this.queue.first;
+            currentSong.begin = `${time}ms`;
+
+            await this.addMedia(currentSong, true);
+            this.move(this.getQueueLength() - 1, 1);
+        }
+
+        this.skip();
+    }
+
+    getCurrentSongTimeElapsedInMilliSeconds(): number {
+        if (!this.dispatcher) {
+            return 0;
+        }
+        
+        return this.dispatcher.totalStreamTime;
+    }
+
+    isConnected(): boolean {
+        return !!this.connection;
+    }
+    
+    async connectToMessageChannel(message: Message): Promise<void> {
+        const { channel } = message.member.voice;
+
+        if (channel && channel.type === 'voice') {
+            this.connection = await channel.join();
+        }
+        
+        return Promise.reject(`User isn't in a voice channel!`);
+    }
+
+    disconnect() {
+        this.connection = undefined;
     }
 }

@@ -8,10 +8,8 @@ export class ListSongsCommand implements ICommand {
     constructor(private readonly player: MediaPlayer) { }
 
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
-        let items = this.player.queue.map(
-            (item, idx) =>
-                `${idx + 1}: "${item.name}${item.requestor ? `"` : ''
-                }"`
+        let items = this.player.getQueue().map(
+            (item, idx) => `${idx + 1}: "${item.name}${item.requestor ? `"` : ''}"`
         );
 
         if (items.length > 0) {

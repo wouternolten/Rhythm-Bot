@@ -13,7 +13,7 @@ import {
     ListSongsCommand,
     MoveSongCommand,
     SearchAndAddCommand,
-    PlaySongCommand,
+    StartPlayingCommand,
     PingCommand,
     RemoveSongCommand,
     ToggleRepeatModeCommand,
@@ -50,9 +50,9 @@ export class CommandMapFactory implements ICommandMapFactory {
                     return;
                 }
 
-                if (!this.player.connection) {
+                if (!this.player.isConnected()) {
                     try {
-                        await this.player.setConnection(msg.member.voice.channel);
+                        await this.player.connectToMessageChannel(msg);
                     } catch (error) {
                         msg.channel.send(createErrorEmbed(`Error: player ${msg.member.nickname} is not in a voice channel`));
                         return;
@@ -105,7 +105,7 @@ export class CommandMapFactory implements ICommandMapFactory {
             move: new MoveSongCommand(this.player),
             p: new SearchAndAddCommand(this.player),
             pause: new SimplePlayerActCommand(this.player, 'pause'),
-            play: new PlaySongCommand(this.player),
+            play: new StartPlayingCommand(this.player),
             ping: new PingCommand(),
             q: new ListSongsCommand(this.player),
             queue: new ListSongsCommand(this.player),
