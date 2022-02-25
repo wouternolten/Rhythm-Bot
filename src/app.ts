@@ -57,7 +57,7 @@ dotenv();
             });
         
         consoleReader.listen();
-
+        
         Container.set('consoleReader', consoleReader);
         const logger: Logger = Container.get('logger') as Logger;
 
@@ -78,6 +78,8 @@ dotenv();
         const commandMapFactory: ICommandMapFactory = new CommandMapFactory(
             mediaPlayer,
             config,
+            spotifyApiHelper,
+            Container.get('logger')
         );
 
         const musicBot = new RhythmBot(

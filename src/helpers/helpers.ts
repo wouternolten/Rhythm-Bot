@@ -40,22 +40,6 @@ export function createInfoEmbed(title: string, message: string = '') {
     return new MessageEmbed().setColor('#0099ff').setTitle(title).setDescription(message);
 }
 
-export async function getPlayList(url: string): Promise<{ title: string, items: MediaItem[] } | undefined> {
-    let playList: ytpl.Result;
-
-    try {
-        playList = await ytpl(url);
-    } catch (error) {
-        console.error('Error when fetching playlist: ' + error);
-        return;
-    }
-
-    return {
-        title: playList.title,
-        items: playList.items.map(item => ({ type: 'youtube', url: item.shortUrl, name: item.title, duration: item.duration } as MediaItem))
-    };
-}
-
 export function isInteger(body: string): Boolean {
     if (typeof body !== 'string') {
         return false;
