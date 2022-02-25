@@ -1,3 +1,4 @@
+import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import { IMediaTypeProvider } from './../../../src/mediatypes/IMediaTypeProvider';
 import { MessageEmbed, VoiceConnection } from 'discord.js';
 import { MediaItem } from './../../../src/media/media-item.model';
@@ -68,6 +69,8 @@ const voiceChannel = {
     join: () => Promise.resolve(connection)
 } as unknown as VoiceChannel;
 
+const spotifyAPIHelper = {} as unknown as SpotifyAPIHelper;
+
 let mediaTypeProvider: IMediaTypeProvider;
 
 beforeEach(() => {
@@ -76,7 +79,7 @@ beforeEach(() => {
         get: jest.fn()
     } as IMediaTypeProvider;
 
-    mediaPlayer = new MediaPlayer(config, status, logger, mediaTypeProvider);
+    mediaPlayer = new MediaPlayer(config, status, logger, mediaTypeProvider, spotifyAPIHelper);
     mediaPlayer.setChannel(channel);
 })
 
@@ -146,20 +149,13 @@ describe('Playing', () => {
         expect(messageEmbed.title).toEqual(`Queue is empty! Add some songs!`);
     });
 
-    it('Should display a message when no connection is established', () => {
-        mediaPlayer.queue.enqueue(VALID_ITEM);
-
-        mediaPlayer.play();
-     
-    });
-
     it('Should log when type is invalid of first queue item', async () => {
         const item = { ...VALID_ITEM };
         item.type = 'invalid type';
 
         expect.assertions(1);
 
-        mediaPlayer.queue.enqueue(item);
+        mediaPlayer.addMedia(item, true);
         await mediaPlayer.setConnection(voiceChannel);
 
         mediaPlayer.play();
@@ -183,7 +179,7 @@ describe('Playing', () => {
         } as unknown as StreamDispatcher;
 
         beforeEach(() => {
-            mediaPlayer.queue.enqueue(VALID_ITEM);
+            mediaPlayer.addMedia(VALID_ITEM, true);
             mediaTypeProvider.get = jest.fn().mockReturnValue(mediaType);
             mediaPlayer.setConnection(voiceChannel);
             connection.play = jest.fn(() => dispatcher);

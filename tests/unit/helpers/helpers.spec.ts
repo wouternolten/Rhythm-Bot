@@ -4,6 +4,7 @@ describe('Seconds to timestamp', () => {
     const secondsToTimeStampTest: { seconds: number, timeStamp: string }[] = [
         { seconds: 0, timeStamp: '00:00:00'},
         { seconds: 1, timeStamp: '00:00:01' },
+        { seconds: 1.1111111111111, timeStamp: '00:00:01'},
         { seconds: 11, timeStamp: '00:00:11' },
         { seconds: 60, timeStamp: '00:01:00' },
         { seconds: 61, timeStamp: '00:01:01' },

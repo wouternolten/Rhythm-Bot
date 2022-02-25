@@ -15,7 +15,7 @@ export function secondsToTimestamp(seconds: number): string {
     let minutes = Math.floor(secondsLeft / 60);
     secondsLeft -= minutes * 60;
 
-    return `${leftPad(hours, 2)}:${leftPad(minutes, 2)}:${leftPad(secondsLeft, 2)}`;
+    return `${leftPad(hours, 2)}:${leftPad(minutes, 2)}:${leftPad(Math.round(secondsLeft), 2)}`;
 }
 
 export function leftPad(integer: Number, amount: Number): string {
@@ -38,22 +38,6 @@ export function createErrorEmbed(message: string) {
 
 export function createInfoEmbed(title: string, message: string = '') {
     return new MessageEmbed().setColor('#0099ff').setTitle(title).setDescription(message);
-}
-
-export async function getPlayList(url: string): Promise<{ title: string, items: MediaItem[] } | undefined> {
-    let playList: ytpl.Result;
-
-    try {
-        playList = await ytpl(url);
-    } catch (error) {
-        console.error('Error when fetching playlist: ' + error);
-        return;
-    }
-
-    return {
-        title: playList.title,
-        items: playList.items.map(item => ({ type: 'youtube', url: item.shortUrl, name: item.title, duration: item.duration } as MediaItem))
-    };
 }
 
 export function isInteger(body: string): Boolean {

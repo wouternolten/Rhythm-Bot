@@ -1,4 +1,5 @@
-import { CommandMap } from "discord-bot-quickstart";
+import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
+import { CommandMap, Logger } from "discord-bot-quickstart";
 import { SuccessfulParsedMessage } from "discord-command-parser";
 import { Message } from "discord.js";
 import { IRhythmBotConfig } from "../bot";
@@ -30,7 +31,9 @@ const RICK_ROLL_ID = 'dQw4w9WgXcQ';
 export class CommandMapFactory implements ICommandMapFactory {
     constructor(
         private readonly player: MediaPlayer,
-        private readonly config: IRhythmBotConfig
+        private readonly config: IRhythmBotConfig,
+        private readonly spotifyAPIHelper: SpotifyAPIHelper,
+        private readonly logger: Logger
     ) {
 
     }
@@ -103,7 +106,7 @@ export class CommandMapFactory implements ICommandMapFactory {
             join: new JoinUserChannelCommand(this.player, this.config),
             list: new ListSongsCommand(this.player),
             move: new MoveSongCommand(this.player),
-            p: new SearchAndAddCommand(this.player),
+            p: new SearchAndAddCommand(this.player, this.spotifyAPIHelper, this.logger),
             pause: new SimplePlayerActCommand(this.player, 'pause'),
             play: new StartPlayingCommand(this.player),
             ping: new PingCommand(),

@@ -1,4 +1,3 @@
-import { Inject } from 'typedi';
 import axios, { AxiosRequestConfig } from 'axios';
 import winston from 'winston';
 
@@ -14,7 +13,6 @@ export class SpotifyAPIHelper {
         private readonly logger: winston.Logger
     ) {}
 
-    // TODO: FIX WHEN TRACK ARTIST CAN'T BE FOUND (example = Set Your Goals Ft. Hayley Williams - The Few That Remain)
     async getSpotifyIDForSong(track: string, artist?: string): Promise<string> {
         if (track === '') {
             return Promise.reject('Invalid track passed');
@@ -44,6 +42,10 @@ export class SpotifyAPIHelper {
         const result = await axios.get(API_BASE_URL + totalQuery, requestOptions);
 
         if (!result.data?.tracks?.items[0]?.id) {
+            if (artist) {
+                return this.getSpotifyIDForSong(`${artist} ${track}`);
+            }
+
             if (track.indexOf(" ") !== -1) {
                 return this.getSpotifyIDForSong(track.slice(0, track.lastIndexOf(" ")), artist);
             }
@@ -52,6 +54,37 @@ export class SpotifyAPIHelper {
         }
 
         return result.data.tracks.items[0].id;
+    }
+
+    
+    async getTracksFromPlaylist(playListId: string): Promise<string[]> {
+        if (playListId === '') {
+            return Promise.reject('Empty playlistId given.');
+        }
+
+        if (/[^\w]+/.test(playListId) === true) {
+            return Promise.reject('Invalid playlistId given');
+        }
+
+        const token = await this.getAccessToken();
+
+        const requestOptions = {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            }
+        } as AxiosRequestConfig;
+
+        try {
+            return await axios.get(
+                `${API_BASE_URL}/playlists/${playListId}/tracks?limit=50&fields=items(track(name,artists))`,
+                requestOptions
+            ).then(({ data }) => data.items.map(item => `${item.track.artists[0].name} - ${item.track.name}`));
+        } catch (errorFetchingTracksFromPlayList) {
+            this.logger.error({ errorFetchingTracksFromPlayList });
+
+            throw errorFetchingTracksFromPlayList;
+        }
     }
 
     async getRecommendationForTrack(spotifyId: string): Promise<string> {

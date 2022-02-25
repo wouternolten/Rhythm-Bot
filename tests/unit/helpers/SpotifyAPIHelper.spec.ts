@@ -11,6 +11,7 @@ const CLIENT_SECRET = 'secret';
 const TRACK_STRING = 'Never gonna give you up';
 const ARTIST_STRING = 'Rick Astley';
 const TRACK_ID = '4cOdK2wGLETKBW3PvgPWqT';
+const PLAYLIST_ID = '37i9dQZF1E8NRjNUGTUFgD';
 
 const TOKEN_RESPONSE = {
     data: {
@@ -20,7 +21,8 @@ const TOKEN_RESPONSE = {
 
 let helper: SpotifyAPIHelper;
 const logger = {
-    debug: jest.fn()
+    debug: jest.fn(),
+    error: jest.fn()
 } as unknown as Logger;
 
 beforeEach(() => {
@@ -251,3 +253,106 @@ describe('Test fetching data for id', () => {
         });
     });
 })
+
+describe('Playlist', () => {
+    it('Should return a rejected promise when empty playlist id given', async () => {
+        expect.assertions(1);
+
+        try {
+            await helper.getTracksFromPlaylist('');
+        } catch (error) {
+            expect(error).toBeDefined();
+        }
+    });
+
+    it('Should return a rejected promise when invalid playlist id given', async () => {
+        expect.assertions(1);
+
+        try {
+            await helper.getTracksFromPlaylist('37i9dQZF1E8NRjNUGTUFgD?si=b4c228270ebf4606');
+        } catch (error) {
+            expect(error).toBeDefined();
+        }
+    });
+
+    it('Should return a rejected promise when token api is unreachable', async () => {
+        axios.post = jest.fn().mockRejectedValue('Error');
+
+        expect.assertions(1);
+
+        try {
+            await helper.getTracksFromPlaylist(PLAYLIST_ID);
+        } catch (error) {
+            expect(error).toEqual('Error');
+        }
+    });
+
+    it('Should return a rejected promise when no access token is found', async () => {
+        axios.post = jest.fn().mockResolvedValue({});
+
+        expect.assertions(1);
+
+        try {
+            await helper.getTracksFromPlaylist(PLAYLIST_ID);
+        } catch (error) {
+            expect(error).toEqual('No access token found');
+        }
+    });
+
+    describe('When token retrieving succeeds', () => {
+        beforeEach(() => {
+            axios.post = jest.fn().mockResolvedValue(TOKEN_RESPONSE)
+        });
+
+        it('Should log error and reject promise when axios throws error', async () => {
+            expect.assertions(2);
+            
+            axios.get = jest.fn().mockRejectedValue('my error');
+
+            try {
+                await helper.getTracksFromPlaylist(PLAYLIST_ID);
+            } catch (error) {
+                expect(error).toEqual('my error');
+                expect(logger.error).toBeCalled();
+            }
+        });
+
+        it('Should log error and reject when axios returns invalid data', async () => {
+            expect.assertions(2);
+            
+            axios.get = jest.fn().mockResolvedValue('invalid data');
+
+            try {
+                await helper.getTracksFromPlaylist(PLAYLIST_ID);
+            } catch (error) {
+                expect(error).toBeDefined();
+                expect(logger.error).toBeCalled();
+            }
+        });
+
+        it('Should return artist - title string array when found', async () => {
+            expect.assertions(1);
+
+            axios.get = jest.fn().mockResolvedValue({
+                data: {
+                    items: [
+                        {
+                            track: {
+                                artists: [
+                                    {
+                                        name: 'Rick Astley'
+                                    }
+                                ],
+                                name: 'Never gonna give you up'
+                            }
+                        }
+                    ]
+                }
+            });
+
+            const result = await helper.getTracksFromPlaylist(PLAYLIST_ID);
+
+            expect(result[0]).toEqual('Rick Astley - Never gonna give you up');
+        });
+    });
+});

@@ -113,12 +113,12 @@ describe('Valid constructor parameters', () => {
         expect(commandFunction).not.toBeCalled();
     });
 
-    it('Should log error and return when parsing fails on handle message', () => {
-        mockParseReturnValue.mockReturnValue({ success: false });
+    it('Should return when parsing fails on handle message', () => {
+        mockParseReturnValue.mockReturnValue({ success: false, command: "cmd" });
 
         bot.handleMessage(message);
 
-        expect(logger.error).toBeCalled();
+        expect(commandFunction).not.toBeCalled();
     });
 
     it('Should return when no handlers found', () => {
