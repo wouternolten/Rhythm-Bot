@@ -159,7 +159,7 @@ describe('Playing', () => {
 
         expect.assertions(1);
 
-        mediaPlayer.queue.enqueue(item);
+        mediaPlayer.addMedia(item, true);
         await mediaPlayer.setConnection(voiceChannel);
 
         mediaPlayer.play();
@@ -183,7 +183,7 @@ describe('Playing', () => {
         } as unknown as StreamDispatcher;
 
         beforeEach(() => {
-            mediaPlayer.queue.enqueue(VALID_ITEM);
+            mediaPlayer.addMedia(VALID_ITEM, true);
             mediaTypeProvider.get = jest.fn().mockReturnValue(mediaType);
             mediaPlayer.setConnection(voiceChannel);
             connection.play = jest.fn(() => dispatcher);
