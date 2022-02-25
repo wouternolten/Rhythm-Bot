@@ -38,8 +38,6 @@ export class RhythmBot {
         let parsed = parse(msg, this.config.command.symbol);
 
         if (!parsed.success) {
-            this.logger.error('Unable to handle message due to parsing errors');
-
             return;
         }
 
