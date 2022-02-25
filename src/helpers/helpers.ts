@@ -15,7 +15,7 @@ export function secondsToTimestamp(seconds: number): string {
     let minutes = Math.floor(secondsLeft / 60);
     secondsLeft -= minutes * 60;
 
-    return `${leftPad(hours, 2)}:${leftPad(minutes, 2)}:${leftPad(secondsLeft, 2)}`;
+    return `${leftPad(hours, 2)}:${leftPad(minutes, 2)}:${leftPad(Math.round(secondsLeft), 2)}`;
 }
 
 export function leftPad(integer: Number, amount: Number): string {
