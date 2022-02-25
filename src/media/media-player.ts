@@ -25,7 +25,8 @@ export class MediaPlayer {
         private readonly config: IRhythmBotConfig,
         private readonly status: BotStatus, // TODO: Make subscription-driven. (Command, don't ask)
         private readonly logger: Logger,
-        private readonly mediaTypeProvider: IMediaTypeProvider
+        private readonly mediaTypeProvider: IMediaTypeProvider,
+        private readonly spotifyApiHelper: SpotifyAPIHelper
     ) { }
 
     async addMedia(item: MediaItem, silent = false): Promise<void> {
@@ -332,12 +333,6 @@ export class MediaPlayer {
         if (!this.config.youtube || !this.config.spotify) {
             return;
         }
-        
-        const helper = new SpotifyAPIHelper(
-            this.config.spotify.clientId,
-            this.config.spotify.clientSecret,
-            this.logger
-        );
 
         const lettersAndSpacesRegex = /[^\w\s\-]+/gm;
 
@@ -370,8 +365,8 @@ export class MediaPlayer {
             searchArtist = artist;
         }
 
-        const spotifyId: string = await helper.getSpotifyIDForSong(searchTrack, searchArtist || undefined);
-        const recommendation: string = await helper.getRecommendationForTrack(spotifyId);
+        const spotifyId: string = await this.spotifyApiHelper.getSpotifyIDForSong(searchTrack, searchArtist || undefined);
+        const recommendation: string = await this.spotifyApiHelper.getRecommendationForTrack(spotifyId);
         const videos = await yts({ query: recommendation, pages: 1 }).then((res) => res.videos);
         
         if (videos === null || videos.length === 0) {
@@ -469,6 +464,7 @@ export class MediaPlayer {
 
         if (channel && channel.type === 'voice') {
             this.connection = await channel.join();
+            return;
         }
         
         return Promise.reject(`User isn't in a voice channel!`);

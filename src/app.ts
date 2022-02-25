@@ -14,6 +14,7 @@ import { config as dotenv } from 'dotenv';
 import { IRhythmBotConfig, RhythmBot } from './bot';
 import { WelcomeTuneBot } from './bot/welcometunebot';
 import winston, { createLogger, transports, format } from 'winston';
+import { SpotifyAPIHelper } from './helpers/SpotifyAPIHelper';
 
 const { Console, File } = transports;
 const { combine, timestamp, printf } = format;
@@ -58,10 +59,26 @@ dotenv();
         consoleReader.listen();
 
         Container.set('consoleReader', consoleReader);
-
-        const mediaPlayer = new MediaPlayer(config, botStatus, Container.get('logger'), mediaTypeProvider);
         const logger: Logger = Container.get('logger') as Logger;
-        const commandMapFactory: ICommandMapFactory = new CommandMapFactory(mediaPlayer, config);
+
+        const spotifyApiHelper: SpotifyAPIHelper = new SpotifyAPIHelper(
+            config.spotify.clientId,
+            config.spotify.clientSecret,
+            logger
+        );
+
+        const mediaPlayer = new MediaPlayer(
+            config,
+            botStatus,
+            Container.get('logger'),
+            mediaTypeProvider,
+            spotifyApiHelper
+        );
+
+        const commandMapFactory: ICommandMapFactory = new CommandMapFactory(
+            mediaPlayer,
+            config,
+        );
 
         const musicBot = new RhythmBot(
             config,
