@@ -20,13 +20,15 @@ beforeEach(() => {
 });
 
 
-it('Should return null when empty search string provided', async () => {
-    const result = await youtubeAPIHelper.getMediaItemForSearchString('');
-    expect(result).toBeNull();
-});
+it.each(['getMediaItemForSearchString', 'getMediaItemsForSearchString'])
+    ('Should return null when empty search string provided', async (functionName: string) => {
+        const result = await youtubeAPIHelper[functionName]('');
+        
+        expect(result).toBeNull();
+    });
 
 it.each([null, undefined, []])
-    ('Should return null when empty search results returned', async (value) => {
+    ('Should return null when empty search results returned', async (value: null | undefined | []) => {
         (youtube.search as jest.Mock).mockResolvedValue(value);
 
         const result = await youtubeAPIHelper.getMediaItemForSearchString('The best videos ever');

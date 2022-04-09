@@ -13,6 +13,20 @@ export class YoutubeAPIHelper implements IMediaItemHelper {
             return null;
         }
         
+        const returnValue = await this.getMediaItemsForSearchString(searchString, 1);
+
+        if (!Array.isArray(returnValue)) {
+            return null;
+        }
+
+        return returnValue[0];
+    }
+
+    async getMediaItemsForSearchString(searchString: string, limit: number): Promise<MediaItem[] | null> {
+        if (searchString === '') {
+            return null;
+        }
+
         try {
             const youtubeSearchResults = await youtube.search(searchString);
             
@@ -20,14 +34,15 @@ export class YoutubeAPIHelper implements IMediaItemHelper {
                 return null;
             }
 
-            const video = youtubeSearchResults[0];
-
-            return {
-                type: MEDIA_TYPE_YOUTUBE,
-                url: video.snippet.url,
-                name: video.snippet.title,
-                duration: video.duration_raw
-            } as MediaItem;
+            return youtubeSearchResults
+                .slice(0, limit)
+                .map(video => ({
+                        type: MEDIA_TYPE_YOUTUBE,
+                        url: video.snippet.url,
+                        name: video.snippet.title,
+                        duration: video.duration_raw
+                    } as MediaItem)
+                );
         } catch (errorSearchingYoutube) {
             this.logger.error(JSON.stringify({ errorSearchingYoutube }));
             return null;
