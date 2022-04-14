@@ -1,3 +1,4 @@
+import { IMediaItemHelper } from './../helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
 import { CommandMap, Logger } from "discord-bot-quickstart";
 import { SuccessfulParsedMessage } from "discord-command-parser";
@@ -33,6 +34,7 @@ export class CommandMapFactory implements ICommandMapFactory {
         private readonly player: MediaPlayer,
         private readonly config: IRhythmBotConfig,
         private readonly spotifyAPIHelper: SpotifyAPIHelper,
+        private readonly mediaItemHelper: IMediaItemHelper,
         private readonly logger: Logger
     ) {
 
@@ -106,7 +108,7 @@ export class CommandMapFactory implements ICommandMapFactory {
             join: new JoinUserChannelCommand(this.player, this.config),
             list: new ListSongsCommand(this.player),
             move: new MoveSongCommand(this.player),
-            p: new SearchAndAddCommand(this.player, this.spotifyAPIHelper, this.logger),
+            p: new SearchAndAddCommand(this.player, this.spotifyAPIHelper, this.mediaItemHelper, this.logger),
             pause: new SimplePlayerActCommand(this.player, 'pause'),
             play: new StartPlayingCommand(this.player),
             ping: new PingCommand(),
@@ -115,7 +117,7 @@ export class CommandMapFactory implements ICommandMapFactory {
             remove: new RemoveSongCommand(this.player),
             repeat: new ToggleRepeatModeCommand(this.config),
             rick: new ForcePlayVideoCommand(this.player, RICK_ROLL_ID),
-            search: new SearchCommand(this.player, this.config),
+            search: new SearchCommand(this.player, this.mediaItemHelper, this.config),
             shuffle: new SimplePlayerActCommand(this.player, 'shuffle'),
             skip: new SimplePlayerActCommand(this.player, 'skip'),
             stop: new SimplePlayerActCommand(this.player, 'stop'),

@@ -5,9 +5,9 @@ import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { ICommand } from './ICommand';
 import { createErrorEmbed, createInfoEmbed } from '../helpers';
-import yts from 'yt-search';
 import { MediaItem } from 'src/media';
 import ytpl from 'ytpl';
+import { IMediaItemHelper } from 'src/helpers/IMediaItemHelper';
 
 const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
 const SPOTIFY_REGEX = /spotify\.com/;
@@ -16,7 +16,8 @@ export class SearchAndAddCommand implements ICommand {
     constructor(
         private readonly player: MediaPlayer,
         private readonly spotifyAPIHelper: SpotifyAPIHelper,
-        private readonly logger: Logger
+        private readonly mediaItemHelper: IMediaItemHelper,
+        private readonly logger: Logger,
     ) { }
     
     async execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): Promise<void> {
@@ -79,13 +80,13 @@ export class SearchAndAddCommand implements ICommand {
         try {
             playListItems = await this.spotifyAPIHelper.getTracksFromPlaylist(playListId)
         } catch (errorGettingTracksFromPlaylist) {
-            this.logger.error({ errorGettingTracksFromPlaylist });
+            this.logger.error(JSON.stringify({ errorGettingTracksFromPlaylist }));
             msg.channel.send(createErrorEmbed('Error when trying get tracks from playlist'));
 
             return;
         }
 
-        Promise.all(playListItems.map(async (playListItem: string) => {
+        await Promise.all(playListItems.map(async (playListItem: string) => {
             try {
                 await this.searchForVideo(playListItem, msg, true);
             } catch (error) { }
@@ -107,7 +108,7 @@ export class SearchAndAddCommand implements ICommand {
         try {
             playList = await this.getPlayList(query);
         } catch (errorWhenFetchingPlayList) {
-            this.logger.error({ errorWhenFetchingPlayList });
+            this.logger.error(JSON.stringify({ errorWhenFetchingPlayList }));
             msg.channel.send(createErrorEmbed('Error when fetching playlist'));
             throw errorWhenFetchingPlayList;
         }
@@ -126,28 +127,22 @@ export class SearchAndAddCommand implements ICommand {
     }
 
     private async searchForVideo(query: string, msg: Message, silent = false): Promise<void> {
-        let videos;
+        let mediaItem;
 
         try {
-            videos = await yts({ query, pages: 1 }).then((res) => res.videos);
-        } catch (searchResultError) {
-            this.logger.error({ searchResultError });
-            msg.channel.send(createErrorEmbed('Error when fetching search results'));
-            throw searchResultError;
-        }
-        
-        if (!videos || !Array.isArray(videos) || videos.length === 0) {
-            msg.channel.send(createInfoEmbed(`No songs found`));
+            mediaItem = await this.mediaItemHelper.getMediaItemForSearchString(query);
+        } catch (errorGettingMediaItemForSearchString) {
+            this.logger.error(JSON.stringify({ errorGettingMediaItemForSearchString }));
+            msg.channel.send(createErrorEmbed('Error when fetching media item'));
             return;
         }
 
-        await this.player.addMedia({
-            type: 'youtube',
-            url: videos[0].url,
-            requestor: msg.author.username,
-            name: videos[0].title,
-            duration: videos[0].timestamp
-        }, silent);
+        if (mediaItem) {
+            await this.player.addMedia({
+                ...mediaItem,
+                requestor: msg.author.username
+            }, silent);
+        }
     }
 
     private async getPlayList(url: string): Promise<{ title: string, items: MediaItem[] }> {

@@ -1,11 +1,25 @@
+import { MediaItem } from './../../../src/media/media-item.model';
+import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import { Message, SuccessfulParsedMessage, Logger } from 'discord-bot-quickstart';
 import { MediaPlayer } from '../../../src/media';
 import { SearchAndAddCommand } from './../../../src/command/SearchAndAddCommand';
 import { createErrorEmbed, createInfoEmbed } from '../../../src/helpers';
 
+jest.mock('../../../src/helpers');
+
+jest.mock('ytpl', () => {
+    const originalModule = jest.requireActual('ytpl');
+
+    return {
+        __esModule: true,
+        ...originalModule,
+        default: () => mockYtplReturnValue
+    }
+});
+
 let searchAndAddCommand: SearchAndAddCommand;
-let mockYtplReturnValue, mockYtsReturnValue;
+let mockYtplReturnValue;//, mockYtsReturnValue;
 let player = {
     addMedia: jest.fn(),
     isPlaying: jest.fn(),
@@ -18,6 +32,10 @@ let logger = {
     error: jest.fn(),
     info: jest.fn()
 } as unknown as Logger;
+
+let mediaItemHelper = {
+    getMediaItemForSearchString: jest.fn()
+} as unknown as IMediaItemHelper;
 
 const RICK_ASTLEY = 'RICK_ASTLEY';
 const NEVER_GONNA_GIVE_YOU_UP_SPOTIFY_RADIO = 'https://open.spotify.com/playlist/37i9dQZF1E8NRjNUGTUFgD?si=70798392132d446d';
@@ -32,31 +50,9 @@ const MESSAGE = {
     }
 } as unknown as Message;
 
-jest.mock('../../../src/helpers');
-
-jest.mock('ytpl', () => {
-    const originalModule = jest.requireActual('ytpl');
-
-    return {
-        __esModule: true,
-        ...originalModule,
-        default: () => mockYtplReturnValue
-    }
-});
-
-jest.mock('yt-search', () => {
-    const originalModule = jest.requireActual('yt-search');
-
-    return {
-        __esModule: true,
-        ...originalModule,
-        default: () => mockYtsReturnValue
-    }
-});
-
 beforeEach(() => {
     jest.clearAllMocks();
-    searchAndAddCommand = new SearchAndAddCommand(player, spotifyAPIHelper, logger);
+    searchAndAddCommand = new SearchAndAddCommand(player, spotifyAPIHelper, mediaItemHelper, logger);
 })
 
 it('Should return when no body given', async () => {
@@ -181,42 +177,39 @@ describe('Search terms', () => {
     it('Should return when search videos errors out', async () => {
         expect.assertions(1);
         
-        mockYtsReturnValue = Promise.reject('Error');
+        mediaItemHelper.getMediaItemForSearchString = jest.fn(() => Promise.reject('Error'));
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
         expect(createErrorEmbed).toBeCalled();
     });
 
-    it.each([undefined, {}, []])('Should return when no video result found', async (videos) => {
+    it('Should return when no video result found', async () => {
         expect.assertions(1);
 
-        mockYtsReturnValue = Promise.resolve({ videos });
+         mediaItemHelper.getMediaItemForSearchString = jest.fn(() => Promise.resolve(null));
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(createInfoEmbed).toBeCalled();
+        expect(player.addMedia).not.toBeCalled();
     });
 
     it('Should add found video to player', async () => {
         const video = {
+            type: 'youtube',
             url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             title: 'The best video ever',
-            timestamp: '69:42'
-        };
+            duration: '69:42'
+        } as MediaItem;
 
         expect.assertions(1);
-
-        mockYtsReturnValue = Promise.resolve({ videos: [video] });
+        mediaItemHelper.getMediaItemForSearchString = jest.fn(() => Promise.resolve(video));
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
         expect(player.addMedia).toHaveBeenCalledWith({
-            type: 'youtube',
-            url: video.url,
-            requestor: RICK_ASTLEY,
-            name: video.title,
-            duration: video.timestamp
+            ...video,
+            requestor: RICK_ASTLEY
         }, false);
     });
 });
@@ -250,14 +243,15 @@ describe('Spotify playlist', () => {
 
     it('Should not quit when one track not found', async () => {
         const video = {
+            type: 'youtube',
             url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             title: 'The best video ever',
-            timestamp: '69:42'
-        };
+            duration: '69:42'
+        } as MediaItem;
 
         expect.assertions(1);
 
-        mockYtsReturnValue = Promise.resolve({ videos: [video] });
+        mediaItemHelper.getMediaItemForSearchString = jest.fn(() => Promise.resolve(video));
         spotifyAPIHelper.getTracksFromPlaylist = jest.fn().mockResolvedValue(['The best song ever']);
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
