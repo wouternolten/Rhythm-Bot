@@ -4,5 +4,6 @@ export interface MediaItem {
     requestor?: string;
     name?: string;
     duration?: string;
+    imageUrl?: string;
     begin?: string | number | Date;
 }
