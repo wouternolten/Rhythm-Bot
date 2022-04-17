@@ -40,7 +40,8 @@ export class YoutubeAPIHelper implements IMediaItemHelper {
                         type: MEDIA_TYPE_YOUTUBE,
                         url: video.snippet.url,
                         name: video.snippet.title,
-                        duration: video.duration_raw
+                        duration: video.duration_raw,
+                        imageUrl: video.snippet?.thumbnails?.url
                     } as MediaItem)
                 );
         } catch (errorSearchingYoutube) {

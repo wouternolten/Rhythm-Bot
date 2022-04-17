@@ -27,7 +27,15 @@ it.each(['getMediaItemForSearchString', 'getMediaItemsForSearchString'])
         expect(result).toBeNull();
     });
 
-it.each([null, undefined, []])
+
+it.each(['getMediaItemForSearchString', 'getMediaItemsForSearchString'])
+    ('Should return null when empty search string provided', async (functionName: string) => {
+        const result = await youtubeAPIHelper[functionName]('');
+        
+        expect(result).toBeNull();
+    });
+
+it.each([null, undefined])
     ('Should return null when empty search results returned', async (value: null | undefined | []) => {
         (youtube.search as jest.Mock).mockResolvedValue(value);
 
@@ -35,6 +43,14 @@ it.each([null, undefined, []])
 
         expect(result).toBeNull();
     });
+
+it('Should return null when empty array search results returned', async () => {
+        (youtube.search as jest.Mock).mockResolvedValue([]);
+
+        const result = await youtubeAPIHelper.getMediaItemForSearchString('The best videos ever');
+
+        expect(result).toBeNull();
+});
 
 it('Should return first result given', async () => {
     (youtube.search as jest.Mock).mockResolvedValue([
