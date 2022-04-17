@@ -1,3 +1,4 @@
+import { IMediaItemHelper } from './../helpers/IMediaItemHelper';
 import { IMediaTypeProvider } from './../mediatypes/IMediaTypeProvider';
 import { IRhythmBotConfig } from '../bot/bot-config';
 import { BotStatus } from '../bot/bot-status';
@@ -6,7 +7,6 @@ import { MediaItem } from './media-item.model';
 import { createEmbed, createErrorEmbed, createInfoEmbed } from '../helpers';
 import { Logger, TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher, Message, VoiceChannel } from 'discord-bot-quickstart';
 import { Readable } from 'stream';
-import yts from 'yt-search';
 import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';
 
 // TODO: Why does the playerp stop for a millisecond when searching?
@@ -26,7 +26,8 @@ export class MediaPlayer {
         private readonly status: BotStatus, // TODO: Make subscription-driven. (Command, don't ask)
         private readonly logger: Logger,
         private readonly mediaTypeProvider: IMediaTypeProvider,
-        private readonly spotifyApiHelper: SpotifyAPIHelper
+        private readonly spotifyApiHelper: SpotifyAPIHelper,
+        private readonly mediaItemHelper: IMediaItemHelper
     ) { }
 
     async addMedia(item: MediaItem, silent = false): Promise<void> {
@@ -126,7 +127,7 @@ export class MediaPlayer {
 
         if (!type) {
             this.channel.send(createErrorEmbed(`Invalid type for item. See logs`));
-            this.logger.error({ message: 'Invalid type for item', erroredItem: item });
+            this.logger.error(JSON.stringify({ message: 'Invalid type for item', erroredItem: item }));
             return;
         }
 
@@ -276,7 +277,7 @@ export class MediaPlayer {
         });
         this.dispatcher.on('error', (err) => {
             this.skip();
-            this.logger.error(err);
+            this.logger.error(JSON.stringify(err));
             this.channel.send(createErrorEmbed(`Error Playing Song: ${err}`));
         });
         this.dispatcher.on('close', () => {
@@ -367,19 +368,16 @@ export class MediaPlayer {
 
         const spotifyId: string = await this.spotifyApiHelper.getSpotifyIDForSong(searchTrack, searchArtist || undefined);
         const recommendation: string = await this.spotifyApiHelper.getRecommendationForTrack(spotifyId);
-        const videos = await yts({ query: recommendation, pages: 1 }).then((res) => res.videos);
+        const nextVideo: MediaItem | null = await this.mediaItemHelper.getMediaItemForSearchString(recommendation);
         
-        if (videos === null || videos.length === 0) {
+        if (nextVideo === null) {
             this.logger.info(`No songs found for recommendation.`);
             return;
         }
 
         await this.addMedia({
-            type: 'youtube',
-            url: videos[0].url,
-            requestor: 'Auto play',
-            name: videos[0].title,
-            duration: videos[0].timestamp
+            ...nextVideo,
+            requestor: 'Auto play'
         }, true);
 
         if (!this.isPlaying()) {

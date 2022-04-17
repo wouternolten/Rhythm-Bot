@@ -1,3 +1,4 @@
+import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import { IMediaTypeProvider } from './../../../src/mediatypes/IMediaTypeProvider';
 import { MessageEmbed, VoiceConnection } from 'discord.js';
@@ -64,6 +65,11 @@ const connection = {
     play: jest.fn()
 } as unknown as VoiceConnection;
 
+const mediaItemHelper = {
+    getMediaItemForSearchString: jest.fn(),
+    getMediaItemsForSearchString: jest.fn()
+} as IMediaItemHelper;
+
 const voiceChannel = {
     type: 'voice',
     join: () => Promise.resolve(connection)
@@ -79,7 +85,7 @@ beforeEach(() => {
         get: jest.fn()
     } as IMediaTypeProvider;
 
-    mediaPlayer = new MediaPlayer(config, status, logger, mediaTypeProvider, spotifyAPIHelper);
+    mediaPlayer = new MediaPlayer(config, status, logger, mediaTypeProvider, spotifyAPIHelper, mediaItemHelper);
     mediaPlayer.setChannel(channel);
 })
 
