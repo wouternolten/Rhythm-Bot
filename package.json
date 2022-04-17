@@ -50,7 +50,6 @@
         "@types/jest": "^27.4.0",
         "@types/jsonfile": "^5.0.1",
         "@types/minimist": "^1.2.0",
-        "@types/moment": "^2.13.0",
         "@types/node": "^12.12.48",
         "@types/source-map-support": "^0.5.4",
         "@types/uuid": "^8.3.1",
