@@ -1,3 +1,4 @@
+import { YoutubeAPIHelper } from './helpers/YoutubeAPIHelper';
 import { ICommandMapFactory } from './command/ICommandMapFactory';
 import { CommandMapFactory } from './command/CommandMapFactory';
 import { MediaPlayer } from '../src/media';
@@ -15,6 +16,7 @@ import { IRhythmBotConfig, RhythmBot } from './bot';
 import { WelcomeTuneBot } from './bot/welcometunebot';
 import winston, { createLogger, transports, format } from 'winston';
 import { SpotifyAPIHelper } from './helpers/SpotifyAPIHelper';
+import { IMediaItemHelper } from './helpers/IMediaItemHelper';
 
 const { Console, File } = transports;
 const { combine, timestamp, printf } = format;
@@ -66,19 +68,23 @@ dotenv();
             config.spotify.clientSecret,
             logger
         );
+        
+        const youtubeAPIHelper: IMediaItemHelper = new YoutubeAPIHelper(logger);
 
         const mediaPlayer = new MediaPlayer(
             config,
             botStatus,
             Container.get('logger'),
             mediaTypeProvider,
-            spotifyApiHelper
+            spotifyApiHelper,
+            youtubeAPIHelper
         );
 
         const commandMapFactory: ICommandMapFactory = new CommandMapFactory(
             mediaPlayer,
             config,
             spotifyApiHelper,
+            youtubeAPIHelper,
             Container.get('logger')
         );
 
@@ -146,4 +152,3 @@ async function createContainer(config: IRhythmBotConfig): Promise<void> {
         ]
     }) as winston.Logger);
 }
-
