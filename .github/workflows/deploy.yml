@@ -27,14 +27,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set TAG_NAME
-        id: set_tag_name
-        run: echo "::set-output name=tag_name::$(date +%s)"
-        
-      - name: Create a docker image
-        run: |
-          cd src/
-          docker build -t rpi-cd-tutorial:${{ steps.set_tag_name.outputs.tag_name }} .
   deploy:
     runs-on: self-hosted
     needs: build
@@ -45,7 +37,10 @@ jobs:
         uses: actions/checkout@v2
       
       - name: Kill npm
-        run: pkill npm || true
+        run: echo "Killing NPM" && pkill npm || true
+
+      - name: Install dependencies
+        run: echo "Installing dependencies" && npm install
         
       - name: Run npm
-        run: npm start
+        run: echo "Booting up bot..." && npm start
