@@ -1,0 +1,56 @@
+name: CI pipeline
+
+on:
+  pull_request:
+    branches: [ wouters-main ]
+
+defaults:
+  run:
+    shell: bash # Run arguments are executed using /bin/sh by default
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Install packages required for node-gyp
+        run: |
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
+        sudo apt-get update && \
+        sudo apt-get install gcc-snapshot -y && \
+        sudo apt-get update && \
+        sudo apt-get install gcc-6 g++-6 -y && \
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 60 --slave 
+        /usr/bin/g++ g++ /usr/bin/g++-6 && \
+        sudo apt-get install gcc-4.8 g++-4.8 -y && \
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 60 --slave 
+        /usr/bin/g++ g++ /usr/bin/g++-4.8;
+      
+      - name: Read .nvmrc for Node.js version
+        id: node-version
+        run: |
+          version=`cat .nvmrc | xargs`
+          echo "::set-output name=version::$version"
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.1.5
+        with:
+          node-version: ${{ steps.node-version.outputs.version }}
+      
+      - name: Cache NPM packages
+        id: npm-cache
+        uses: actions/cache@v2.1.6
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-js-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install NPM packages
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm install --no-progress --frozen-lockfile
+      
+      - name: Run Unit tests
+        run: npm test
+        if: ${{ always() }}
