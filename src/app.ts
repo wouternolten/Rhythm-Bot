@@ -3,7 +3,7 @@ import { ICommandMapFactory } from './command/ICommandMapFactory';
 import { CommandMapFactory } from './command/CommandMapFactory';
 import { MediaPlayer } from '../src/media';
 import { BotStatus } from './bot/bot-status';
-import { Client, Message, MessageReaction, User } from 'discord.js';
+import { Client, Message, MessageReaction, User, VoiceState } from 'discord.js';
 import 'reflect-metadata';
 import * as path from 'path';
 import { IMediaTypeProvider } from './mediatypes/IMediaTypeProvider';
@@ -92,20 +92,7 @@ dotenv();
         client.on('error', (error: Error) => logger.error({ clientError: error }));
 
         if (config.useWelcomeBot) {
-            const cloneConfig = {
-                ...config,
-                discord: {
-                    token: process.env.WELCOME_BOT_TOKEN,
-                    log: config.discord.log
-                }
-            } as IRhythmBotConfig;
-
-            const welcomeBot = new WelcomeTuneBot(cloneConfig);
-            
-            welcomeBot.connect().then(() => {
-                welcomeBot.logger.debug('Rhythm Bot Online');
-                welcomeBot.listen();
-            });
+            createWelcomeBot(config, commandMapFactory);
         }
     } catch (error) {
         console.error(error);
@@ -124,4 +111,36 @@ async function createContainer(config: IRhythmBotConfig): Promise<void> {
             new File({ filename: path.basename(config.directory.logs), dirname: path.dirname(config.directory.logs), maxsize: 1e+7 })
         ]
     }) as Logger);
+}
+
+async function createWelcomeBot(config: IRhythmBotConfig, commandMapFactory: ICommandMapFactory) { 
+    const cloneConfig = {
+        ...config,
+        discord: {
+            token: process.env.WELCOME_BOT_TOKEN,
+            log: config.discord.log
+        }
+    } as IRhythmBotConfig;
+
+    const client: Client = new Client();
+
+    try {
+        await client.login(cloneConfig.discord.token);
+    } catch (error) {
+        console.error({ clientLoginError: error });
+        process.exit(1);
+    }
+
+    const welcomeBot = new WelcomeTuneBot(
+        cloneConfig,
+        commandMapFactory.createWelcomeBotCommandsMap(),
+        client,
+        Container.get('logger')
+    );
+
+    client.on('voiceStateUpdate', (oldVoiceState: VoiceState, newVoiceState: VoiceState) => {
+        welcomeBot.handleVoiceStateUpdate(oldVoiceState, newVoiceState)
+    });
+
+    client.on('message', (msg: Message) => welcomeBot.handleMessage(msg));
 }

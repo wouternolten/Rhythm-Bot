@@ -5,12 +5,10 @@ import { IRhythmBotConfig } from './bot-config';
 import { createInfoEmbed } from '../helpers';
 import { CommandMap } from '../helpers/CommandMap';
 import { PlayAOEFileCommand } from '../command/PlayAOEFileCommand';
-import { SuccessfulParsedMessage } from 'discord-command-parser';
+import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message, Client, VoiceState, VoiceConnection } from 'discord.js';
-import { ParsedArgs } from 'minimist';
 import { projectDirectory } from '../helpers/ProjectDirectory';
-import { IBot } from 'discord-bot-quickstart';
-import { Interface } from 'readline';
+import { Logger } from 'winston';
 
 const TWO_SECONDS = 2000;
 
@@ -18,81 +16,62 @@ type SoundMap = {
     soundFiles: { [username: string]: string };
 }
 
-export class WelcomeTuneBot extends IBot<IRhythmBotConfig> {
+export class WelcomeTuneBot {
     constructor(
-        config: IRhythmBotConfig
+        private readonly config: IRhythmBotConfig,
+        private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>,
+        private readonly client: Client,
+        private readonly logger: Logger
     ) {
-        super(config, <IRhythmBotConfig>{
-            discord: {
-                log: true,
-            },
-            command: {
-                symbol: '!',
-            },
-            directory: {
-                plugins: './plugins',
-                logs: '../bot.log',
-            },
-        });
+
     }
 
-    onRegisterDiscordCommands(map: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>): void {
-        const commandMap: { [key: string]: ICommand } = {
-            horn: new PlaySoundFileCommand('airhorn_four.wav'),
-            badumtss: new PlaySoundFileCommand('badum_tss.wav'),
-            aoe: new PlayAOEFileCommand()
-        };
+    handleMessage(msg: Message): void {
+        if (!this.config.command?.symbol) {
+            this.logger.error('Symbol handle message not set.');
 
-        const descriptions = Object
-            .keys(commandMap)
-            .map((key) => '`' + key + '`: ' + commandMap[key].getDescription())
-            .join('\n');
-        
-        const helpCommand = {
-            execute: (cmd: SuccessfulParsedMessage<Message>, msg: Message): void => { msg.channel.send("Commands: \n\n" + descriptions) }
-        } as unknown as ICommand;
+            return;
+        }
 
-        commandMap.help = helpCommand;
+        if (msg.author.id === this.client.user.id) {
+            return;
+        }
 
-        Object.keys(commandMap).forEach(key => {
-            map.on(key, async (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                const channel = msg.member.voice.channel;
+        let parsed = parse(msg, this.config.command.symbol);
 
-                if (!channel || channel.type !== 'voice') {
-                    msg.channel.send(createInfoEmbed(`User isn't in a voice channel!`));
-                    return;
-                }
+        if (!parsed.success) {
+            return;
+        }
 
-                commandMap[key].execute(cmd, msg);
-            })
+        let handlers = this.commands.get(parsed.command);
+
+        if (!handlers) {
+            return;
+        }
+
+        this.logger.debug(`Bot Command: ${msg.content}`);
+        handlers.forEach(handle => {
+            handle(parsed as SuccessfulParsedMessage<Message>, msg);
         });
     }
-
-    parsedMessage(msg: SuccessfulParsedMessage<Message>) {}
-
-    onClientCreated(client: Client): void {
-        client.on('voiceStateUpdate', (oldVoiceState: VoiceState, newVoiceState: VoiceState) => {
-            if (oldVoiceState.channelID) {
-                return;
-            }
-
-            const soundMap = this.getSoundMap();
-
-            if (!soundMap || !soundMap[newVoiceState.member.user.username]) {
-                return;
-            }
-
-            setTimeout(() => {
-                newVoiceState.channel.join().then(async (connection: VoiceConnection) => {
-                    connection.play(`${process.cwd()}\\data\\sounds\\${soundMap[newVoiceState.member.user.username]}`);
-                })
-            }, TWO_SECONDS);
-        });
-    }
-
-    onReady(client: Client): void {}
-    onRegisterConsoleCommands(map: CommandMap<(args: ParsedArgs, rl: Interface) => void>): void { }
     
+    handleVoiceStateUpdate(oldVoiceState: VoiceState, newVoiceState: VoiceState) {
+        if (oldVoiceState.channelID) {
+            return;
+        }
+
+        const soundMap = this.getSoundMap();
+
+        if (!soundMap || !soundMap[newVoiceState.member.user.username]) {
+            return;
+        }
+
+        setTimeout(() => {
+            newVoiceState.channel.join().then(async (connection: VoiceConnection) => {
+                connection.play(`${process.cwd()}\\data\\sounds\\${soundMap[newVoiceState.member.user.username]}`);
+            })
+        }, TWO_SECONDS);
+    }
     
     private getSoundMap(): SoundMap | undefined {
         const configPath = projectDirectory('../bot-config.json');
