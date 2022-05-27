@@ -1,10 +1,11 @@
 import { MediaItem } from './../../../src/media/media-item.model';
 import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
-import { Message, SuccessfulParsedMessage, Logger } from 'discord-bot-quickstart';
+import { Message, SuccessfulParsedMessage } from 'discord-bot-quickstart';
 import { MediaPlayer } from '../../../src/media';
 import { SearchAndAddCommand } from './../../../src/command/SearchAndAddCommand';
 import { createErrorEmbed, createInfoEmbed } from '../../../src/helpers';
+import { mockLogger } from '../../mocks/mockLogger';
 
 jest.mock('../../../src/helpers');
 
@@ -28,10 +29,7 @@ let player = {
 
 let spotifyAPIHelper = {} as unknown as SpotifyAPIHelper;
 
-let logger = {
-    error: jest.fn(),
-    info: jest.fn()
-} as unknown as Logger;
+let logger = mockLogger();
 
 let mediaItemHelper = {
     getMediaItemForSearchString: jest.fn()

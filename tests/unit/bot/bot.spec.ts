@@ -2,8 +2,8 @@ import { MediaPlayer } from './../../../src/media';
 import { IRhythmBotConfig } from './../../../src/bot/bot-config';
 import { RhythmBot } from './../../../src/bot/bot';
 import { Message, User, MessageReaction } from 'discord.js';
-import { Logger } from 'winston';
 import { CommandMap, SuccessfulParsedMessage } from 'discord-bot-quickstart';
+import { mockLogger } from '../../mocks/mockLogger';
 
 const mockParseReturnValue = jest.fn();
 
@@ -49,11 +49,7 @@ const mediaPlayer = {
     setChannel: jest.fn()
 } as unknown as MediaPlayer;
 
-const logger = {
-    error: jest.fn(),
-    debug: jest.fn(),
-    warning: jest.fn()
-} as unknown as Logger;
+const logger = mockLogger();
 
 // I'm not mocking the commandMap, because, unlike the parse function, it's a simple key / value object.
 const commands = new CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>();

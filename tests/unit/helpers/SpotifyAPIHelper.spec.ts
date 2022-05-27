@@ -1,6 +1,6 @@
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
-import { Logger } from 'winston';
 import axios from 'axios';
+import { mockLogger } from '../../mocks/mockLogger';
 
 jest.mock('axios');
 jest.mock('typedi');
@@ -20,10 +20,7 @@ const TOKEN_RESPONSE = {
 };
 
 let helper: SpotifyAPIHelper;
-const logger = {
-    debug: jest.fn(),
-    error: jest.fn()
-} as unknown as Logger;
+const logger = mockLogger();
 
 beforeEach(() => {
     helper = new SpotifyAPIHelper(CLIENT_ID, CLIENT_SECRET, logger)

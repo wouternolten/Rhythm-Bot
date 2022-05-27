@@ -1,6 +1,6 @@
-import { Logger } from 'discord-bot-quickstart';
 import { Readable } from 'stream';
 import ytdl from 'ytdl-core';
+import { mockLogger } from '../../mocks/mockLogger';
 import { MediaItem } from './../../../src/media/media-item.model';
 import { YoutubeMediaType } from './../../../src/mediatypes/YoutubeMediaType';
 
@@ -40,9 +40,7 @@ const MEDIA_ITEM = {
 
 let youtubeMediaType: YoutubeMediaType;
 
-const logger = {
-    info: jest.fn()
-} as unknown as Logger;
+const logger = mockLogger();
 
 beforeEach(() => {
     youtubeMediaType = new YoutubeMediaType(logger);

@@ -1,4 +1,4 @@
-import { Logger } from 'discord-bot-quickstart';
+import { Logger } from 'winston';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
 import { MediaPlayer } from '../media/media-player';
 import { SuccessfulParsedMessage } from 'discord-command-parser';

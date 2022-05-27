@@ -1,5 +1,5 @@
 import { MEDIA_TYPE_YOUTUBE } from './../mediatypes/MediaType';
-import { Logger } from "discord-bot-quickstart";
+import { Logger } from 'winston';
 import { MediaItem } from "src/media";
 import { IMediaItemHelper } from "./IMediaItemHelper";
 import * as youtube from 'youtube-search-without-api-key';
