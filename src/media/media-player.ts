@@ -5,7 +5,7 @@ import { BotStatus } from '../bot/bot-status';
 import { MediaQueue } from './media-queue';
 import { MediaItem } from './media-item.model';
 import { createEmbed, createErrorEmbed, createInfoEmbed } from '../helpers';
-import { TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher, Message, VoiceChannel } from 'discord-bot-quickstart';
+import { TextChannel, DMChannel, NewsChannel, VoiceConnection, StreamDispatcher, Message, VoiceChannel } from 'discord.js';
 import { Logger } from 'winston';
 import { Readable } from 'stream';
 import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';

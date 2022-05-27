@@ -3,7 +3,7 @@ import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import { IMediaTypeProvider } from './../../../src/mediatypes/IMediaTypeProvider';
 import { MessageEmbed, VoiceConnection } from 'discord.js';
 import { MediaItem } from './../../../src/media/media-item.model';
-import { TextChannel, StreamDispatcher, VoiceChannel } from 'discord-bot-quickstart';
+import { TextChannel, StreamDispatcher, VoiceChannel } from 'discord.js';
 import { BotStatus } from './../../../src/bot/bot-status';
 import { IRhythmBotConfig } from '../../../src/bot/bot-config';
 import { IMediaType, MediaPlayer } from '../../../src/media';

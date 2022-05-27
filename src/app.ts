@@ -10,13 +10,13 @@ import * as path from 'path';
 import { IMediaTypeProvider } from './mediatypes/IMediaTypeProvider';
 import { Container } from 'typedi';
 import { MediaTypeProvider } from './mediatypes/MediaTypeProvider';
-import { requireFile, projectDir, writeJson } from 'discord-bot-quickstart';
 import { config as dotenv } from 'dotenv';
 import { IRhythmBotConfig, RhythmBot } from './bot';
 import { WelcomeTuneBot } from './bot/welcometunebot';
 import { createLogger, transports, format, Logger } from 'winston';
 import { SpotifyAPIHelper } from './helpers/SpotifyAPIHelper';
 import { IMediaItemHelper } from './helpers/IMediaItemHelper';
+import { projectDir, writeJson, requireFile } from 'discord-bot-quickstart';
 
 const { Console, File } = transports;
 const { combine, timestamp, printf } = format;

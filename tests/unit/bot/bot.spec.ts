@@ -2,7 +2,7 @@ import { MediaPlayer } from './../../../src/media';
 import { IRhythmBotConfig } from './../../../src/bot/bot-config';
 import { RhythmBot } from './../../../src/bot/bot';
 import { Message, User, MessageReaction } from 'discord.js';
-import { SuccessfulParsedMessage } from 'discord-bot-quickstart';
+import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { CommandMap } from './../../../src/helpers/CommandMap';
 import { mockLogger } from '../../mocks/mockLogger';
 
