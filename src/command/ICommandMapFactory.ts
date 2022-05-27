@@ -1,6 +1,6 @@
-import { CommandMap } from "discord-bot-quickstart";
 import { SuccessfulParsedMessage } from "discord-command-parser";
 import { Message } from "discord.js";
+import { CommandMap } from "../helpers/CommandMap";
 
 export interface ICommandMapFactory {
     createMusicBotCommandsMap(): CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;

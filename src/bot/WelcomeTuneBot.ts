@@ -3,9 +3,9 @@ import * as fs from 'fs';
 import { ICommand } from '../command';
 import { IRhythmBotConfig } from './bot-config';
 import { createInfoEmbed } from '../helpers';
+import { CommandMap } from '../helpers/CommandMap';
 import {
     IBot,
-    CommandMap,
     Client,
     ParsedArgs,
     Interface,

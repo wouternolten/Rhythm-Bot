@@ -1,6 +1,4 @@
-import { MediaItem } from './../media/media-item.model';
 import { MessageEmbed } from 'discord.js';
-import ytpl from 'ytpl';
 
 export function secondsToTimestamp(seconds: number): string {
     if (seconds < 0) {
