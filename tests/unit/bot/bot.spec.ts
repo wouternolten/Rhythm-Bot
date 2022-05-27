@@ -82,7 +82,7 @@ describe('Invalid config', () => {
     it('Should log warning and return when no emoji set on handleReaction', () => {
         bot.handleReaction({} as unknown as MessageReaction, botUser);
 
-        expect(logger.warning).toBeCalled();
+        expect(logger.error).toBeCalled();
     });
 });
 
