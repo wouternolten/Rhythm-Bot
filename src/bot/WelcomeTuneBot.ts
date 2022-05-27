@@ -5,10 +5,11 @@ import { IRhythmBotConfig } from './bot-config';
 import { createInfoEmbed } from '../helpers';
 import { CommandMap } from '../helpers/CommandMap';
 import { PlayAOEFileCommand } from '../command/PlayAOEFileCommand';
-import { IBot, Interface, projectDir, requireFile } from 'discord-bot-quickstart';
+import { IBot, Interface, requireFile } from 'discord-bot-quickstart';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message, Client, VoiceState, VoiceConnection } from 'discord.js';
 import { ParsedArgs } from 'minimist';
+import { projectDirectory } from '../helpers/ProjectDirectory';
 
 const TWO_SECONDS = 2000;
 
@@ -93,12 +94,12 @@ export class WelcomeTuneBot extends IBot<IRhythmBotConfig> {
     
     
     private getSoundMap(): SoundMap | undefined {
-        const configPath = projectDir('../bot-config.json');
+        const configPath = projectDirectory('../bot-config.json');
         
         if (!fs.existsSync(configPath)) {
             return;
         }
-        delete require.cache[projectDir('../bot-config.json')];
+        delete require.cache[projectDirectory('../bot-config.json')];
         const soundMap = requireFile(configPath).soundFiles;
 
         if (!soundMap) {

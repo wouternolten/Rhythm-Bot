@@ -5,7 +5,6 @@ import { MediaPlayer } from '../src/media';
 import { BotStatus } from './bot/bot-status';
 import { Client, Message, MessageReaction, User } from 'discord.js';
 import 'reflect-metadata';
-import * as fs from 'fs';
 import * as path from 'path';
 import { IMediaTypeProvider } from './mediatypes/IMediaTypeProvider';
 import { Container } from 'typedi';
@@ -16,7 +15,7 @@ import { WelcomeTuneBot } from './bot/welcometunebot';
 import { createLogger, transports, format, Logger } from 'winston';
 import { SpotifyAPIHelper } from './helpers/SpotifyAPIHelper';
 import { IMediaItemHelper } from './helpers/IMediaItemHelper';
-import { projectDir, writeJson, requireFile } from 'discord-bot-quickstart';
+import { getConfig } from './helpers/GetConfig';
 
 const { Console, File } = transports;
 const { combine, timestamp, printf } = format;
@@ -112,22 +111,6 @@ dotenv();
         console.error(error);
     }
 })();
-
-async function getConfig(configName: string): Promise<IRhythmBotConfig> {
-    const configPath = projectDir(configName);
-
-    if (!fs.existsSync(configPath)) {
-        await writeJson({ discord: { token: '<BOT-TOKEN>' }, useWelcomeBot: false }, configPath);
-    }
-
-    const config: IRhythmBotConfig = requireFile(configPath);
-
-    if (!!config && config.discord.token === '<BOT-TOKEN>') {
-        return Promise.reject('Invalid Token for the music bot - Create valid token in the Discord Developer Portal');
-    }
-
-    return config;
-}
 
 async function createContainer(config: IRhythmBotConfig): Promise<void> {
     Container.set('logger', createLogger({
