@@ -52,7 +52,7 @@ export class RhythmBot {
 
     async handleReaction(reaction: MessageReaction, user: User): Promise<void> {
         if (!this.config.emojis) {
-            this.logger.warning('Emojis not set for reactions. Not handling reaction');
+            this.logger.error('Emojis not set for reactions. Not handling reaction');
 
             return;
         }
