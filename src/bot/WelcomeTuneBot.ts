@@ -4,19 +4,11 @@ import { ICommand } from '../command';
 import { IRhythmBotConfig } from './bot-config';
 import { createInfoEmbed } from '../helpers';
 import { CommandMap } from '../helpers/CommandMap';
-import {
-    IBot,
-    Client,
-    ParsedArgs,
-    Interface,
-    SuccessfulParsedMessage,
-    Message,
-    VoiceConnection,
-    VoiceState,
-    projectDir,
-    requireFile,
-} from 'discord-bot-quickstart';
 import { PlayAOEFileCommand } from '../command/PlayAOEFileCommand';
+import { IBot, Interface, projectDir, requireFile } from 'discord-bot-quickstart';
+import { SuccessfulParsedMessage } from 'discord-command-parser';
+import { Message, Client, VoiceState, VoiceConnection } from 'discord.js';
+import { ParsedArgs } from 'minimist';
 
 const TWO_SECONDS = 2000;
 

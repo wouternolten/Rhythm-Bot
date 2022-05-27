@@ -1,12 +1,8 @@
 import { MediaPlayer } from '../media';
 import { IRhythmBotConfig } from './bot-config';
-import {
-    SuccessfulParsedMessage,
-    Message
-} from 'discord-bot-quickstart';
 import { Logger } from 'winston';
-import { parse } from 'discord-command-parser';
-import { MessageReaction, User } from 'discord.js';
+import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
+import { Message, MessageReaction, User } from 'discord.js';
 import { CommandMap } from '../helpers/CommandMap';
 
 export class RhythmBot {

@@ -1,5 +1,5 @@
 import { MEDIA_TYPE_YOUTUBE } from './../../../src/mediatypes/MediaType';
-import { SuccessfulParsedMessage } from 'discord-bot-quickstart';
+import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { SearchCommand } from './../../../src/command/SearchCommand';
 import { MediaPlayer } from './../../../src/media';
 import { IRhythmBotConfig } from './../../../src/bot/bot-config';
