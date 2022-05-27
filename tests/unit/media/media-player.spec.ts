@@ -8,8 +8,8 @@ import { BotStatus } from './../../../src/bot/bot-status';
 import { IRhythmBotConfig } from '../../../src/bot/bot-config';
 import { IMediaType, MediaPlayer } from '../../../src/media';
 import { Readable } from 'stream';
-import { Logger } from 'winston';
 import { MediaTypeNotFoundError } from '../../../src/mediatypes/MediaTypeNotFoundError';
+import { mockLogger } from '../../mocks/mockLogger';
 
 const ITEM_TYPE = 'youtube';
 const ITEM_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
@@ -56,10 +56,7 @@ const channel: TextChannel = {
     send: jest.fn()
 } as unknown as TextChannel;
 
-const logger: Logger = {
-    debug: jest.fn(),
-    error: jest.fn()
-} as unknown as Logger;
+const logger = mockLogger();
 
 const connection = {
     play: jest.fn()

@@ -5,11 +5,11 @@ import ytpl from 'ytpl';
 import { IMediaType } from './../media/media-type.model';
 import { secondsToTimestamp } from '../helpers';
 import { Inject, Service } from 'typedi';
-import winston from 'winston';
+import { Logger } from 'winston';
 
 @Service()
 export class YoutubeMediaType implements IMediaType {
-    constructor(@Inject('logger') private readonly logger: winston.Logger) {}
+    constructor(@Inject('logger') private readonly logger: Logger) {}
     
     getType(): string {
         return 'youtube'; 

@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import winston from 'winston';
+import { Logger } from 'winston';
 
 const API_BASE_URL = 'https://api.spotify.com/v1';
 const ACCOUNT_BASE_URL = 'https://accounts.spotify.com';
@@ -10,7 +10,7 @@ export class SpotifyAPIHelper {
     constructor(
         private readonly clientId: string,
         private readonly clientSecret: string,
-        private readonly logger: winston.Logger
+        private readonly logger: Logger
     ) {}
 
     async getSpotifyIDForSong(track: string, artist?: string): Promise<string> {

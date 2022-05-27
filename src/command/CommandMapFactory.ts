@@ -1,6 +1,7 @@
 import { IMediaItemHelper } from './../helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
-import { CommandMap, Logger } from "discord-bot-quickstart";
+import { CommandMap } from "discord-bot-quickstart";
+import { Logger } from 'winston';
 import { SuccessfulParsedMessage } from "discord-command-parser";
 import { Message } from "discord.js";
 import { IRhythmBotConfig } from "../bot";

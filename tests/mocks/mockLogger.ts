@@ -1,4 +1,4 @@
-import { Logger } from 'discord-bot-quickstart';
+import { Logger } from 'winston';
 
 export function mockLogger(): Logger {
     return {

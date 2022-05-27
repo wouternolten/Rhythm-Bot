@@ -10,11 +10,11 @@ import * as path from 'path';
 import { IMediaTypeProvider } from './mediatypes/IMediaTypeProvider';
 import { Container } from 'typedi';
 import { MediaTypeProvider } from './mediatypes/MediaTypeProvider';
-import { requireFile, projectDir, writeJson, ConsoleReader, ParsedArgs, Interface, Logger } from 'discord-bot-quickstart';
+import { requireFile, projectDir, writeJson, ConsoleReader, ParsedArgs, Interface } from 'discord-bot-quickstart';
 import { config as dotenv } from 'dotenv';
 import { IRhythmBotConfig, RhythmBot } from './bot';
 import { WelcomeTuneBot } from './bot/welcometunebot';
-import winston, { createLogger, transports, format } from 'winston';
+import { createLogger, transports, format, Logger } from 'winston';
 import { SpotifyAPIHelper } from './helpers/SpotifyAPIHelper';
 import { IMediaItemHelper } from './helpers/IMediaItemHelper';
 
@@ -150,5 +150,5 @@ async function createContainer(config: IRhythmBotConfig): Promise<void> {
             new Console(),
             new File({ filename: path.basename(config.directory.logs), dirname: path.dirname(config.directory.logs), maxsize: 1e+7 })
         ]
-    }) as winston.Logger);
+    }) as Logger);
 }
