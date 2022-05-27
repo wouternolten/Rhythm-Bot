@@ -1,6 +1,6 @@
 import { IMediaItemHelper } from './../helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
-import { CommandMap } from "discord-bot-quickstart";
+import { CommandMap } from "../helpers/CommandMap";
 import { Logger } from 'winston';
 import { SuccessfulParsedMessage } from "discord-command-parser";
 import { Message } from "discord.js";
