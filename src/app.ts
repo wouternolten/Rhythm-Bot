@@ -10,7 +10,7 @@ import * as path from 'path';
 import { IMediaTypeProvider } from './mediatypes/IMediaTypeProvider';
 import { Container } from 'typedi';
 import { MediaTypeProvider } from './mediatypes/MediaTypeProvider';
-import { requireFile, projectDir, writeJson, ConsoleReader, ParsedArgs, Interface } from 'discord-bot-quickstart';
+import { requireFile, projectDir, writeJson } from 'discord-bot-quickstart';
 import { config as dotenv } from 'dotenv';
 import { IRhythmBotConfig, RhythmBot } from './bot';
 import { WelcomeTuneBot } from './bot/welcometunebot';
@@ -39,7 +39,6 @@ dotenv();
         await createContainer(config);
 
         const mediaTypeProvider = Container.get(MediaTypeProvider) as IMediaTypeProvider;
-        const consoleReader = new ConsoleReader(Container.get('logger'));
         
         const client: Client = new Client();
 
@@ -51,16 +50,7 @@ dotenv();
         }
 
         const botStatus = new BotStatus(client.user);
-        consoleReader
-            .commands
-            .on('exit', (args: ParsedArgs, rl: Interface) => {
-                client.destroy();
-                rl.close();
-            });
         
-        consoleReader.listen();
-        
-        Container.set('consoleReader', consoleReader);
         const logger: Logger = Container.get('logger') as Logger;
 
         const spotifyApiHelper: SpotifyAPIHelper = new SpotifyAPIHelper(
