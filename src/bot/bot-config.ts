@@ -1,6 +1,4 @@
-import { IBotConfig } from 'discord-bot-quickstart';
-
-export interface IRhythmBotConfig extends IBotConfig {
+export interface IRhythmBotConfig {
     auto?: {
         deafen?: boolean;
         pause?: boolean;
@@ -33,4 +31,15 @@ export interface IRhythmBotConfig extends IBotConfig {
         clientId: string;
         clientSecret: string;
     }
+        command?: {
+        symbol?: string;
+    };
+    discord: {
+        token: string;
+        log?: boolean;
+    };
+    directory: {
+        plugins?: string;
+        logs: string;
+    };
 }
