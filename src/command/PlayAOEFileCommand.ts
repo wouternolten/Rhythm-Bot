@@ -32,7 +32,6 @@ export class PlayAOEFileCommand implements ICommand {
         }
 
         msg.member.voice.channel.join().then((connection: VoiceConnection) => {
-            console.log('Playing');
             connection.play(`${AOE_SOUND_DIRECTORY}\\${fileName}`);
         });
     }

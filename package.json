@@ -22,7 +22,6 @@
         "@mikro-orm/sqlite": "^4.5.9",
         "axios": "^0.25.0",
         "bufferutil": "^4.0.1",
-        "discord-bot-quickstart": "0.0.15",
         "discord-command-parser": "^1.5.3",
         "discord.js": "^12.5.1",
         "dotenv": "^10.0.0",
