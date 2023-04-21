@@ -1,10 +1,6 @@
-import { PlaySoundFileCommand } from './../command/PlaySoundFileCommand';
 import * as fs from 'fs';
-import { ICommand } from '../command';
 import { IRhythmBotConfig } from './bot-config';
-import { createInfoEmbed } from '../helpers';
 import { CommandMap } from '../helpers/CommandMap';
-import { PlayAOEFileCommand } from '../command/PlayAOEFileCommand';
 import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message, Client, VoiceState, VoiceConnection } from 'discord.js';
 import { projectDirectory } from '../helpers/ProjectDirectory';
@@ -27,32 +23,37 @@ export class WelcomeTuneBot {
     }
 
     handleMessage(msg: Message): void {
-        if (!this.config.command?.symbol) {
-            this.logger.error('Symbol handle message not set.');
+        try {
+            if (!this.config.command?.symbol) {
+                this.logger.error('Symbol handle message not set.');
 
-            return;
+                return;
+            }
+
+            if (msg.author.id === this.client.user.id) {
+                return;
+            }
+
+            let parsed = parse(msg, this.config.command.symbol);
+
+            if (!parsed.success) {
+                return;
+            }
+
+            let handlers = this.commands.get(parsed.command);
+
+            if (!handlers) {
+                return;
+            }
+
+            this.logger.debug(`Welcome tune bot command: ${msg.content}`);
+            
+            handlers.forEach(handle => {
+                handle(parsed as SuccessfulParsedMessage<Message>, msg);
+            });
+        } catch (error) {
+            console.log({ handleMessageCatchError: error });
         }
-
-        if (msg.author.id === this.client.user.id) {
-            return;
-        }
-
-        let parsed = parse(msg, this.config.command.symbol);
-
-        if (!parsed.success) {
-            return;
-        }
-
-        let handlers = this.commands.get(parsed.command);
-
-        if (!handlers) {
-            return;
-        }
-
-        this.logger.debug(`Bot Command: ${msg.content}`);
-        handlers.forEach(handle => {
-            handle(parsed as SuccessfulParsedMessage<Message>, msg);
-        });
     }
     
     handleVoiceStateUpdate(oldVoiceState: VoiceState, newVoiceState: VoiceState) {
@@ -67,9 +68,14 @@ export class WelcomeTuneBot {
         }
 
         setTimeout(() => {
-            newVoiceState.channel.join().then(async (connection: VoiceConnection) => {
-                connection.play(`${process.cwd()}\\data\\sounds\\${soundMap[newVoiceState.member.user.username]}`);
-            })
+            newVoiceState.channel.join()
+                .then(async (connection: VoiceConnection) => {
+                    connection.play(`${process.cwd()}\\data\\sounds\\${soundMap[newVoiceState.member.user.username]}`);
+                })
+                .catch((error) => {
+                    console.log('Error when handling voice update: ');
+                    console.error(error);
+                })
         }, TWO_SECONDS);
     }
     

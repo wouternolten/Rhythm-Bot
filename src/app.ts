@@ -25,6 +25,10 @@ const lineFormat = printf(({ level, message, timestamp }) => {
 
 dotenv();
 
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught exception: ', err);
+});
+
 (async () => {
     try {
         let config: IRhythmBotConfig;
@@ -39,7 +43,9 @@ dotenv();
 
         const mediaTypeProvider = Container.get(MediaTypeProvider) as IMediaTypeProvider;
         
-        const client: Client = new Client();
+        const client: Client = new Client({
+
+        });
 
         try {
             await client.login(config.discord.token);
@@ -85,7 +91,10 @@ dotenv();
             commandMapFactory.createMusicBotCommandsMap()
         );
 
-        client.on('message', (msg: Message) => musicBot.handleMessage(msg));
+        client.on('message', (msg: Message) => {
+            logger.debug('Getting message');
+            musicBot.handleMessage(msg);
+        });
         client.on('messageReactionAdd', (reaction: MessageReaction, user: User) => musicBot.handleReaction(reaction, user));
         client.on('ready', () => logger.debug('Bot online'));
         client.on('disconnect', () => logger.debug('Bot Disconnected'));
@@ -131,6 +140,8 @@ async function createWelcomeBot(config: IRhythmBotConfig, commandMapFactory: ICo
         process.exit(1);
     }
 
+    client.on('debug', console.log);
+
     const welcomeBot = new WelcomeTuneBot(
         cloneConfig,
         commandMapFactory.createWelcomeBotCommandsMap(),
@@ -142,5 +153,7 @@ async function createWelcomeBot(config: IRhythmBotConfig, commandMapFactory: ICo
         welcomeBot.handleVoiceStateUpdate(oldVoiceState, newVoiceState)
     });
 
-    client.on('message', (msg: Message) => welcomeBot.handleMessage(msg));
+    client.on('message', (msg: Message) => {
+        welcomeBot.handleMessage(msg)
+    });
 }

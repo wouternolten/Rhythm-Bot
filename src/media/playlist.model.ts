@@ -1,4 +1,4 @@
-import { Entity, Property, PrimaryKey, OneToMany, Collection } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { MediaItem } from './media-item.model';
 
 @Entity()
