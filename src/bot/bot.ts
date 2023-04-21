@@ -4,6 +4,8 @@ import { Logger } from 'winston';
 import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message, MessageReaction, User } from 'discord.js';
 import { CommandMap } from '../helpers/CommandMap';
+import { timeStamp } from 'console';
+import { maxHeaderSize } from 'http';
 
 export class RhythmBot {
     constructor(
@@ -40,6 +42,7 @@ export class RhythmBot {
         let handlers = this.commands.get(parsed.command);
 
         if (!handlers) {
+            this.logger.debug('Handlers not found');
             return;
         }
 

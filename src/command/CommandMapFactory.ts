@@ -65,7 +65,11 @@ export class CommandMapFactory implements ICommandMapFactory {
                     }
                 }
 
-                commandMap[key].execute(cmd, msg);
+                try {
+                    commandMap[key].execute(cmd, msg);
+                } catch (error) {
+                    this.logger.debug(`Error when executing command: ${error.message}`);
+                }
             })
         });
 
@@ -87,7 +91,11 @@ export class CommandMapFactory implements ICommandMapFactory {
                     return;
                 }
 
-                commandMap[key].execute(cmd, msg);
+                try {
+                    commandMap[key].execute(cmd, msg);
+                } catch (error) {
+                    this.logger.debug(`Error when executing command: ${error.message}`);
+                }
             })
         });
 
