@@ -12,23 +12,15 @@ import {
     ICommand,
     AutoPlayNextVideoCommand,
     SimplePlayerActCommand,
-    JoinUserChannelCommand,
     ListSongsCommand,
     MoveSongCommand,
     SearchAndAddCommand,
-    StartPlayingCommand,
     PingCommand,
     RemoveSongCommand,
-    ToggleRepeatModeCommand,
-    ForcePlayVideoCommand,
-    SearchCommand,
-    TimeCommand,
-    VolumeCommand
+    SearchCommand
 } from ".";
 import { PlayAOEFileCommand } from "./PlayAOEFileCommand";
 import { PlaySoundFileCommand } from "./PlaySoundFileCommand";
-
-const RICK_ROLL_ID = 'dQw4w9WgXcQ';
 
 export class CommandMapFactory implements ICommandMapFactory {
     constructor(
@@ -114,24 +106,17 @@ export class CommandMapFactory implements ICommandMapFactory {
         return {
             autoplay: new AutoPlayNextVideoCommand(this.player),
             clear: new SimplePlayerActCommand(this.player, 'clear'),
-            join: new JoinUserChannelCommand(this.player, this.config),
             list: new ListSongsCommand(this.player),
             move: new MoveSongCommand(this.player),
             p: new SearchAndAddCommand(this.player, this.spotifyAPIHelper, this.mediaItemHelper, this.logger),
             pause: new SimplePlayerActCommand(this.player, 'pause'),
-            play: new StartPlayingCommand(this.player),
             ping: new PingCommand(),
             q: new ListSongsCommand(this.player),
             queue: new ListSongsCommand(this.player),
             remove: new RemoveSongCommand(this.player),
-            repeat: new ToggleRepeatModeCommand(this.config),
-            rick: new ForcePlayVideoCommand(this.player, RICK_ROLL_ID),
             search: new SearchCommand(this.player, this.mediaItemHelper, this.config),
-            shuffle: new SimplePlayerActCommand(this.player, 'shuffle'),
             skip: new SimplePlayerActCommand(this.player, 'skip'),
             stop: new SimplePlayerActCommand(this.player, 'stop'),
-            time: new TimeCommand(this.player),
-            volume: new VolumeCommand(this.player),
         };
     }
 
