@@ -59,8 +59,7 @@ process.on('uncaughtException', (err) => {
         const logger: Logger = Container.get('logger') as Logger;
 
         const spotifyApiHelper: SpotifyAPIHelper = new SpotifyAPIHelper(
-            config.spotify.clientId,
-            config.spotify.clientSecret,
+            config,
             logger
         );
         
