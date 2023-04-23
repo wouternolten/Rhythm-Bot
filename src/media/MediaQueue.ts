@@ -1,4 +1,4 @@
-import { MediaItem } from './media-item.model';
+import { MediaItem } from './MediaItem';
 
 export class MediaQueue extends Array<MediaItem> {
     get first(): MediaItem {

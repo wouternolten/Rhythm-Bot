@@ -1,4 +1,4 @@
-import { MediaItem } from './../../../src/media/media-item.model';
+import { MediaItem } from './../../../src/media/MediaItem';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import { SongRecommender } from './../../../src/media/SongRecommender';
 import { mock, MockProxy } from 'jest-mock-extended';

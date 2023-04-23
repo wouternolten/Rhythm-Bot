@@ -1,4 +1,4 @@
-import { IRhythmBotConfig } from 'src/bot';
+import { IRhythmBotConfig } from '../bot/IRhythmBotConfig';
 import axios, { AxiosRequestConfig } from 'axios';
 import { Logger } from 'winston';
 

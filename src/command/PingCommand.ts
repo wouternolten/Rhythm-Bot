@@ -10,7 +10,7 @@ export class PingCommand implements ICommand {
         let phrases = pingPhrases.slice();
         
         if (msg.guild) {
-            phrases = phrases.concat(msg.guild.emojis.cache.array().map((x) => x.name));
+            phrases = phrases.concat(msg.guild.emojis.cache.map((x) => x.name));
         }
 
         msg.channel.send(random(phrases));

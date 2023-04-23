@@ -1,5 +1,5 @@
 import { Readable } from 'stream';
-import { MediaItem } from './media-item.model';
+import { MediaItem } from './MediaItem';
 
 export interface IMediaType {
     getPlaylist(item: MediaItem): Promise<MediaItem[]>;

@@ -1,25 +1,31 @@
-import { MediaPlayer } from '../media';
-import { IRhythmBotConfig } from './bot-config';
+import { ICommandMapFactory } from '../command/ICommandMapFactory';
+import { MediaPlayer } from '../media/MediaPlayer';
+import { IRhythmBotConfig } from './IRhythmBotConfig';
 import { Logger } from 'winston';
 import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
-import { Message, MessageReaction, User } from 'discord.js';
+import { Message, MessageReaction, User, NewsChannel, Client } from 'discord.js';
 import { CommandMap } from '../helpers/CommandMap';
-import { timeStamp } from 'console';
-import { maxHeaderSize } from 'http';
 
 export class RhythmBot {
+    private readonly user: User;
+    private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
+
+    // TODO: Clean up constructor.
     constructor(
         private readonly config: IRhythmBotConfig,
-        private readonly user: User,
+        client: Client,
         private readonly player: MediaPlayer,
         private readonly logger: Logger,
-        private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>
+        commandMapFactory: ICommandMapFactory
     ) {
+        this.user = client.user;
+        this.commands = commandMapFactory.createMusicBotCommandsMap();
     }
 
     parsedMessage(msg: SuccessfulParsedMessage<Message>) {
         // TODO: Split functionality; the player should not update a channel; another class should be responsible for this.
-        this.player.setChannel(msg.message.channel);
+        console.log('Parsed message');
+        this.player.setChannel(msg.message.channel as NewsChannel);
     }
 
     handleMessage(msg: Message): void {

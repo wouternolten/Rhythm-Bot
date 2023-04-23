@@ -1,4 +1,8 @@
-import { MessageEmbed } from 'discord.js';
+import { EmbedBuilder, RGBTuple } from "@discordjs/builders";
+
+const darkBlue: RGBTuple = [0, 153, 255];
+const darkOrange: RGBTuple = [255, 51, 0];
+const electricPurple: RGBTuple = [166, 0, 255];
 
 export function secondsToTimestamp(seconds: number): string {
     if (seconds < 0) {
@@ -16,7 +20,7 @@ export function secondsToTimestamp(seconds: number): string {
     return `${leftPad(hours, 2)}:${leftPad(minutes, 2)}:${leftPad(Math.round(secondsLeft), 2)}`;
 }
 
-export function leftPad(integer: Number, amount: Number): string {
+export function leftPad(integer: number, amount: number): string {
     let paddedInt: string = integer.toString();
 
     while (paddedInt.length < amount) {
@@ -27,15 +31,21 @@ export function leftPad(integer: Number, amount: Number): string {
 }
 
 export function createEmbed() {
-    return new MessageEmbed().setColor('#a600ff');
+    return new EmbedBuilder().setColor(electricPurple);
 }
 
 export function createErrorEmbed(message: string) {
-    return new MessageEmbed().setColor('#ff3300').setTitle('Error').setDescription(message);
+    return { embeds: [new EmbedBuilder().setColor(darkOrange).setTitle('Error').setDescription(message)] };
 }
 
 export function createInfoEmbed(title: string, message: string = '') {
-    return new MessageEmbed().setColor('#0099ff').setTitle(title).setDescription(message);
+    const infoEmbed = new EmbedBuilder().setColor(darkBlue).setTitle(title);
+
+    if (message) {
+        infoEmbed.setDescription(message);
+    }
+
+    return { embeds: [infoEmbed] };
 }
 
 export function isInteger(body: string): Boolean {

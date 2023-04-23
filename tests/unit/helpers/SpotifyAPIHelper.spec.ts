@@ -1,4 +1,4 @@
-import { IRhythmBotConfig } from './../../../src/bot';
+import { IRhythmBotConfig } from './../../../src/RhythmBot';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import axios from 'axios';
 import { mockLogger } from '../../mocks/mockLogger';

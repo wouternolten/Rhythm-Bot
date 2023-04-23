@@ -2,9 +2,9 @@ import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import { IMediaTypeProvider } from './../../../src/mediatypes/IMediaTypeProvider';
 import { MessageEmbed, VoiceConnection } from 'discord.js';
-import { MediaItem } from './../../../src/media/media-item.model';
+import { MediaItem } from './../../../src/media/MediaItem';
 import { TextChannel, StreamDispatcher, VoiceChannel } from 'discord.js';
-import { BotStatus } from './../../../src/bot/bot-status';
+import { BotStatus } from './../../../src/bot/BotStatus';
 import { IRhythmBotConfig } from '../../../src/bot/bot-config';
 import { IMediaType, MediaPlayer } from '../../../src/media';
 import { Readable } from 'stream';
@@ -31,7 +31,6 @@ let mediaPlayer: MediaPlayer;
 const config: IRhythmBotConfig = {
     stream: {
         seek: 1,
-        volume: 1,
         bitrate: 1,
         forwardErrorCorrection: true,
         packetLossPercentage: 1,

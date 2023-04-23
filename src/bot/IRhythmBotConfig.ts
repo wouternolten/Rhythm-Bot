@@ -8,12 +8,12 @@ export interface IRhythmBotConfig {
     queue?: {
         announce?: boolean;
         repeat?: boolean;
+        autoPlay?: boolean;
     };
     stream?: {
         seek?: number;
         packetLossPercentage?: number;
         forwardErrorCorrection?: boolean;
-        volume?: number;
         bitrate?: number | 'auto';
     };
     emojis?: {
@@ -36,6 +36,7 @@ export interface IRhythmBotConfig {
     };
     discord: {
         token: string;
+        welcomeBotToken: string;
         log?: boolean;
     };
     directory: {

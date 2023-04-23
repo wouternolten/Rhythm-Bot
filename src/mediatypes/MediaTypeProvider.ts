@@ -1,13 +1,13 @@
-import { IMediaType } from './../media/media-type.model';
+import { IMediaType } from './../media/MediaType';
 import { MediaTypeNotFoundError } from './MediaTypeNotFoundError';
-import { YoutubeMediaType } from './YoutubeMediaType';
 import { IMediaTypeProvider } from './IMediaTypeProvider';
-import { Container, Service } from 'typedi';
+import container from '../../etc/container';
+import tokens from '../../etc/tokens';
+import { Token } from 'containor';
 
-@Service()
 export class MediaTypeProvider implements IMediaTypeProvider {
-    private MEDIA_TYPES = {
-        'youtube': YoutubeMediaType
+    private MEDIA_TYPES: { [key: string]: Token<IMediaType>} = {
+        'youtube': tokens.youtubeMediaType
     };
 
     get(type: string): IMediaType {
@@ -15,7 +15,7 @@ export class MediaTypeProvider implements IMediaTypeProvider {
             throw new MediaTypeNotFoundError(`Media type ${type} not found.`);
         }
 
-        const returnType = Container.get(this.MEDIA_TYPES[type]) as IMediaType;
+        const returnType = container.get(this.MEDIA_TYPES[type]) as IMediaType;
 
         if (!returnType) {
             throw new MediaTypeNotFoundError(`Media type ${type} not found in DI container.`);

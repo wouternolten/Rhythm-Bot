@@ -18,13 +18,15 @@
     },
     "dependencies": {
         "@discordjs/opus": "^0.5.3",
+        "@discordjs/voice": "^0.16.0",
         "@mikro-orm/core": "^4.5.9",
         "@mikro-orm/migrations": "^4.5.9",
         "@mikro-orm/sqlite": "^4.5.9",
         "axios": "^0.25.0",
         "bufferutil": "^4.0.1",
+        "containor": "^6.1.0",
         "discord-command-parser": "^1.5.3",
-        "discord.js": "^12.5.1",
+        "discord.js": "^14.9.0",
         "dotenv": "^10.0.0",
         "erlpack": "^0.1.3",
         "ffmpeg-static": "^4.2.7",
@@ -32,7 +34,7 @@
         "minimist": "^1.2.3",
         "sodium": "^3.0.2",
         "source-map-support": "^0.5.20",
-        "typedi": "^0.10.0",
+        "typescript": "^5.0.4",
         "utf-8-validate": "^5.0.2",
         "uuid": "^8.3.2",
         "winston": "^3.3.3",
@@ -56,10 +58,10 @@
         "@types/yt-search": "^2.3.0",
         "babel-jest": "^27.4.6",
         "jest": "^27.4.7",
+        "jest-mock-extended": "^3.0.4",
         "nodemon": "^2.0.13",
         "prettier": "^2.4.1",
         "ts-node": "^10.2.1",
-        "tsconfig-paths": "^3.11.0",
-        "typescript": "^3.9.6"
+        "tsconfig-paths": "^3.11.0"
     }
 }

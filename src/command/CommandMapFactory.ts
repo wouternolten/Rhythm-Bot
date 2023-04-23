@@ -1,30 +1,29 @@
+import { IMediaFilePlayer } from './../media/MediaFilePlayer';
 import { IMediaItemHelper } from './../helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
 import { CommandMap } from "../helpers/CommandMap";
 import { Logger } from 'winston';
 import { SuccessfulParsedMessage } from "discord-command-parser";
 import { Message } from "discord.js";
-import { IRhythmBotConfig } from "../bot";
-import { createInfoEmbed, createErrorEmbed } from "../helpers";
-import { MediaPlayer } from "../media";
-import {
-    ICommandMapFactory,
-    ICommand,
-    AutoPlayNextVideoCommand,
-    SimplePlayerActCommand,
-    ListSongsCommand,
-    MoveSongCommand,
-    SearchAndAddCommand,
-    PingCommand,
-    RemoveSongCommand,
-    SearchCommand
-} from ".";
+import { IRhythmBotConfig } from "../bot/IRhythmBotConfig";
+import { MediaPlayer } from "../media/MediaPlayer";
 import { PlayAOEFileCommand } from "./PlayAOEFileCommand";
 import { PlaySoundFileCommand } from "./PlaySoundFileCommand";
+import { ICommandMapFactory } from './ICommandMapFactory';
+import { AutoPlayNextVideoCommand } from './AutoPlayNextVideoCommand';
+import { ICommand } from './ICommand';
+import { ListSongsCommand } from './ListSongsCommand';
+import { MoveSongCommand } from './MoveSongCommand';
+import { PingCommand } from './PingCommand';
+import { RemoveSongCommand } from './RemoveSongCommand';
+import { SearchAndAddCommand } from './SearchAndAddCommand';
+import { SearchCommand } from './SearchCommand';
+import { SimplePlayerActCommand } from './SimplePlayerActCommand';
 
 export class CommandMapFactory implements ICommandMapFactory {
     constructor(
         private readonly player: MediaPlayer,
+        private readonly mediaFilePlayer: IMediaFilePlayer,
         private readonly config: IRhythmBotConfig,
         private readonly spotifyAPIHelper: SpotifyAPIHelper,
         private readonly mediaItemHelper: IMediaItemHelper,
@@ -41,25 +40,10 @@ export class CommandMapFactory implements ICommandMapFactory {
 
         Object.keys(commandMap).forEach(key => {
             map.on(key, async (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                const channel = msg.member.voice.channel;
-
-                if (!channel || channel.type !== 'voice') {
-                    msg.channel.send(createInfoEmbed(`User isn't in a voice channel!`));
-                    return;
-                }
-
-                if (!this.player.isConnected()) {
-                    try {
-                        await this.player.connectToMessageChannel(msg);
-                    } catch (error) {
-                        msg.channel.send(createErrorEmbed(`Error: player ${msg.member.nickname} is not in a voice channel`));
-                        return;
-                    }
-                }
-
                 try {
                     commandMap[key].execute(cmd, msg);
                 } catch (error) {
+                    this.logger.debug(error);
                     this.logger.debug(`Error when executing command: ${error.message}`);
                 }
             })
@@ -68,21 +52,15 @@ export class CommandMapFactory implements ICommandMapFactory {
         return map;
     }
 
+    // TODO: DI INJECTION!?
     createWelcomeBotCommandsMap(): CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void> {
         const map = new CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>();
 
-        let commandMap = this.buildWelcomeBotCommands();
+        let commandMap = this.buildWelcomeBotCommands(this.mediaFilePlayer);
         commandMap = this.addHelpCommand(commandMap);
 
         Object.keys(commandMap).forEach(key => {
             map.on(key, async (cmd: SuccessfulParsedMessage<Message>, msg: Message) => {
-                const channel = msg.member.voice.channel;
-
-                if (!channel || channel.type !== 'voice') {
-                    msg.channel.send(createInfoEmbed(`User isn't in a voice channel!`));
-                    return;
-                }
-
                 try {
                     commandMap[key].execute(cmd, msg);
                 } catch (error) {
@@ -94,11 +72,11 @@ export class CommandMapFactory implements ICommandMapFactory {
         return map;
     }
 
-    private buildWelcomeBotCommands(): { [key: string]: ICommand } {
+    private buildWelcomeBotCommands(mediaPlayer: IMediaFilePlayer): { [key: string]: ICommand } {
         return {
-            horn: new PlaySoundFileCommand('airhorn_four.wav'),
-            badumtss: new PlaySoundFileCommand('badum_tss.wav'),
-            aoe: new PlayAOEFileCommand()
+            horn: new PlaySoundFileCommand('airhorn_four.wav', mediaPlayer),
+            badumtss: new PlaySoundFileCommand('badum_tss.wav', mediaPlayer),
+            aoe: new PlayAOEFileCommand(mediaPlayer)
         };
     }
 

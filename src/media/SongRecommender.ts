@@ -1,6 +1,6 @@
-import { IMediaItemHelper } from 'src/helpers/IMediaItemHelper';
-import { SpotifyAPIHelper } from 'src/helpers/SpotifyAPIHelper';
-import { MediaItem } from './media-item.model';
+import { IMediaItemHelper } from '../helpers/IMediaItemHelper';
+import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';
+import { MediaItem } from './MediaItem';
 import { Logger } from 'winston';
 
 export interface ISongRecommender {
@@ -15,6 +15,7 @@ export class SongRecommender implements ISongRecommender {
     ) { }
 
     public async recommendNextSong(lastPlayedSong: MediaItem): Promise<MediaItem | null> {
+        console.log(lastPlayedSong);
         if (!lastPlayedSong.name) {
             return null;
         }

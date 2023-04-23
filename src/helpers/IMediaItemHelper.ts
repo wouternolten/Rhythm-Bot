@@ -1,4 +1,4 @@
-import { MediaItem } from "src/media";
+import { MediaItem } from "../media/MediaItem";
 
 export interface IMediaItemHelper {
     getMediaItemForSearchString(searchString: string): Promise<MediaItem | null>;

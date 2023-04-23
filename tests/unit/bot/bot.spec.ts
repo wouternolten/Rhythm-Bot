@@ -1,6 +1,6 @@
 import { MediaPlayer } from './../../../src/media';
 import { IRhythmBotConfig } from './../../../src/bot/bot-config';
-import { RhythmBot } from './../../../src/bot/bot';
+import { RhythmBot } from './../../../src/bot/RhythmBot';
 import { Message, User, MessageReaction } from 'discord.js';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { CommandMap } from './../../../src/helpers/CommandMap';
