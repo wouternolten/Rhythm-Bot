@@ -1,6 +1,6 @@
 import { MEDIA_TYPE_YOUTUBE } from './../mediatypes/MediaType';
 import { Logger } from 'winston';
-import { MediaItem } from "src/media";
+import { MediaItem } from "../media/MediaItem";
 import { IMediaItemHelper } from "./IMediaItemHelper";
 import * as youtube from 'youtube-search-without-api-key';
 
@@ -9,6 +9,7 @@ export class YoutubeAPIHelper implements IMediaItemHelper {
     }
 
     async getMediaItemForSearchString(searchString: string): Promise<MediaItem | null> {
+        console.log('asjdfhkjasdfkj');
         if (searchString === '') {
             return null;
         }

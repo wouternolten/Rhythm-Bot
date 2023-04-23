@@ -1,8 +1,10 @@
+import { ICommandMapFactory } from './../command/ICommandMapFactory';
+import { IMediaFilePlayer } from './../media/MediaFilePlayer';
 import * as fs from 'fs';
-import { IRhythmBotConfig } from './bot-config';
+import { IRhythmBotConfig } from './IRhythmBotConfig';
 import { CommandMap } from '../helpers/CommandMap';
 import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
-import { Message, Client, VoiceState, VoiceConnection } from 'discord.js';
+import { Message, Client, VoiceState } from 'discord.js';
 import { projectDirectory } from '../helpers/ProjectDirectory';
 import { Logger } from 'winston';
 
@@ -13,14 +15,17 @@ type SoundMap = {
 }
 
 export class WelcomeTuneBot {
+    private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
+
     constructor(
         private readonly config: IRhythmBotConfig,
-        private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>,
+        private readonly mediaPlayer: IMediaFilePlayer,
+        commandsFactory: ICommandMapFactory,
         private readonly client: Client,
         private readonly logger: Logger
     ) {
-
-    }
+        this.commands = commandsFactory.createWelcomeBotCommandsMap();
+     }
 
     handleMessage(msg: Message): void {
         try {
@@ -47,7 +52,6 @@ export class WelcomeTuneBot {
             }
 
             this.logger.debug(`Welcome tune bot command: ${msg.content}`);
-            
             handlers.forEach(handle => {
                 handle(parsed as SuccessfulParsedMessage<Message>, msg);
             });
@@ -57,7 +61,7 @@ export class WelcomeTuneBot {
     }
     
     handleVoiceStateUpdate(oldVoiceState: VoiceState, newVoiceState: VoiceState) {
-        if (oldVoiceState.channelID) {
+        if (oldVoiceState.channelId) {
             return;
         }
 
@@ -68,14 +72,10 @@ export class WelcomeTuneBot {
         }
 
         setTimeout(() => {
-            newVoiceState.channel.join()
-                .then(async (connection: VoiceConnection) => {
-                    connection.play(`${process.cwd()}\\data\\sounds\\${soundMap[newVoiceState.member.user.username]}`);
-                })
-                .catch((error) => {
-                    console.log('Error when handling voice update: ');
-                    console.error(error);
-                })
+            this.mediaPlayer.playFile(
+                `${process.cwd()}\\data\\sounds\\${soundMap[newVoiceState.member.user.username]}`,
+                newVoiceState
+            );
         }, TWO_SECONDS);
     }
     

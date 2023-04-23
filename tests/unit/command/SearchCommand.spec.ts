@@ -11,7 +11,6 @@ jest.mock('../../../src/helpers');
 
 const player = {
     addMedia: jest.fn(),
-    isPlaying: jest.fn(),
     play: jest.fn()
 } as unknown as MediaPlayer;
 
@@ -67,24 +66,11 @@ it.each([undefined, null, ''])
 describe('Youtube search', () => {
     it('Should directly add media and play if input is a YT url', async () => {
         const cmd = { body: NEVER_GONNA_GIVE_YOU_UP_YOUTUBE_LINK } as SuccessfulParsedMessage<Message>;
-
-        (player.isPlaying as jest.Mock).mockReturnValue(false);
-
+        
         await searchCommand.execute(cmd, MESSAGE);
 
         expect(player.addMedia).toBeCalled();
         expect(player.play).toBeCalled();
-    });
-
-    it('Should directly add media and play if input is a YT url but player is already playing', async () => {
-        const cmd = { body: NEVER_GONNA_GIVE_YOU_UP_YOUTUBE_LINK } as SuccessfulParsedMessage<Message>;
-
-        (player.isPlaying as jest.Mock).mockReturnValue(true);
-
-        await searchCommand.execute(cmd, MESSAGE);
-
-        expect(player.addMedia).toBeCalled();
-        expect(player.play).not.toBeCalled();
     });
 });
 

@@ -1,7 +1,7 @@
 import { MediaTypeNotFoundError } from './../../../src/mediatypes/MediaTypeNotFoundError';
 import { MediaTypeProvider } from './../../../src/mediatypes/MediaTypeProvider';
-import { IMediaType } from '../../../src/media/media-type.model';
-import { MediaItem } from '../../../src/media/media-item.model';
+import { IMediaType } from '../../../src/media/MediaType';
+import { MediaItem } from '../../../src/media/MediaItem';
 
 const mockGetReturnValue = jest.fn();
 

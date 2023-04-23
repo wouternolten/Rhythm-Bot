@@ -1,3 +1,4 @@
+import { IRhythmBotConfig } from './../../../src/RhythmBot';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import axios from 'axios';
 import { mockLogger } from '../../mocks/mockLogger';
@@ -7,6 +8,13 @@ jest.mock('typedi');
 
 const CLIENT_ID = 'id';
 const CLIENT_SECRET = 'secret';
+
+const config = {
+    spotify: {
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET
+    }
+} as unknown as IRhythmBotConfig;
 
 const TRACK_STRING = 'Never gonna give you up';
 const ARTIST_STRING = 'Rick Astley';
@@ -23,7 +31,7 @@ let helper: SpotifyAPIHelper;
 const logger = mockLogger();
 
 beforeEach(() => {
-    helper = new SpotifyAPIHelper(CLIENT_ID, CLIENT_SECRET, logger)
+    helper = new SpotifyAPIHelper(config, logger)
 });
 
 describe('Test fetching data for search string', () => {

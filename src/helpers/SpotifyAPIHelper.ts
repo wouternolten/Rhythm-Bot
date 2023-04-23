@@ -1,3 +1,4 @@
+import { IRhythmBotConfig } from '../bot/IRhythmBotConfig';
 import axios, { AxiosRequestConfig } from 'axios';
 import { Logger } from 'winston';
 
@@ -8,10 +9,10 @@ export class SpotifyAPIHelper {
     private token?: string = null;
 
     constructor(
-        private readonly clientId: string,
-        private readonly clientSecret: string,
+        private readonly config: IRhythmBotConfig,
         private readonly logger: Logger
-    ) {}
+    ) {
+    }
 
     async getSpotifyIDForSong(track: string, artist?: string): Promise<string> {
         if (track === '') {
@@ -122,7 +123,9 @@ export class SpotifyAPIHelper {
             return this.token;
         }
 
-        const base64Auth = new Buffer(this.clientId + ':' + this.clientSecret).toString('base64');
+        const { spotify } = this.config;
+
+        const base64Auth = new Buffer(spotify.clientId + ':' + spotify.clientSecret).toString('base64');
 
         return axios.post(
             ACCOUNT_BASE_URL + '/api/token',

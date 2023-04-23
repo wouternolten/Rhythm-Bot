@@ -1,27 +1,13 @@
-import { YoutubeAPIHelper } from './helpers/YoutubeAPIHelper';
-import { ICommandMapFactory } from './command/ICommandMapFactory';
-import { CommandMapFactory } from './command/CommandMapFactory';
-import { MediaPlayer } from '../src/media';
-import { BotStatus } from './bot/bot-status';
-import { Client, Message, MessageReaction, User, VoiceState } from 'discord.js';
+import { ChannelType, Message, MessageReaction, TextChannel, User, VoiceState } from 'discord.js';
 import 'reflect-metadata';
-import * as path from 'path';
-import { IMediaTypeProvider } from './mediatypes/IMediaTypeProvider';
-import { Container } from 'typedi';
-import { MediaTypeProvider } from './mediatypes/MediaTypeProvider';
 import { config as dotenv } from 'dotenv';
-import { IRhythmBotConfig, RhythmBot } from './bot';
-import { WelcomeTuneBot } from './bot/welcometunebot';
-import { createLogger, transports, format, Logger } from 'winston';
-import { SpotifyAPIHelper } from './helpers/SpotifyAPIHelper';
-import { IMediaItemHelper } from './helpers/IMediaItemHelper';
-import { getConfig } from './helpers/GetConfig';
+import { Logger } from 'winston';
+import { MediaPlayer } from '../src/media/MediaPlayer';
+import { RhythmBot } from './bot/RhythmBot';
+import container from '../etc/container';
+import tokens from '../etc/tokens';
 
-const { Console, File } = transports;
-const { combine, timestamp, printf } = format;
-const lineFormat = printf(({ level, message, timestamp }) => {
-    return `[${timestamp}] (${level}): ${message}`;
-});
+let musicBotCreated = false;
 
 dotenv();
 
@@ -31,129 +17,139 @@ process.on('uncaughtException', (err) => {
 
 (async () => {
     try {
-        let config: IRhythmBotConfig;
+        await initialiseClients();
 
-        try {
-            config = await getConfig('../bot-config.json');
-        } catch (error) {
-            console.error({ configError: error });
-            process.exit(1);
-        }
-        await createContainer(config);
-
-        const mediaTypeProvider = Container.get(MediaTypeProvider) as IMediaTypeProvider;
-        
-        const client: Client = new Client({
-
-        });
-
-        try {
-            await client.login(config.discord.token);
-        } catch (error) {
-            console.error({ clientLoginError: error });
-            process.exit(1);
-        }
-
-        const botStatus = new BotStatus(client.user);
-        
-        const logger: Logger = Container.get('logger') as Logger;
-
-        const spotifyApiHelper: SpotifyAPIHelper = new SpotifyAPIHelper(
-            config.spotify.clientId,
-            config.spotify.clientSecret,
-            logger
-        );
-        
-        const youtubeAPIHelper: IMediaItemHelper = new YoutubeAPIHelper(logger);
-
-        const mediaPlayer = new MediaPlayer(
-            config,
-            botStatus,
-            Container.get('logger'),
-            mediaTypeProvider,
-            spotifyApiHelper,
-            youtubeAPIHelper
-        );
-
-        const commandMapFactory: ICommandMapFactory = new CommandMapFactory(
-            mediaPlayer,
-            config,
-            spotifyApiHelper,
-            youtubeAPIHelper,
-            Container.get('logger')
-        );
-
-        const musicBot = new RhythmBot(
-            config,
-            client.user,
-            mediaPlayer,
-            logger,
-            commandMapFactory.createMusicBotCommandsMap()
-        );
-
-        client.on('message', (msg: Message) => {
-            logger.debug('Getting message');
-            musicBot.handleMessage(msg);
-        });
-        client.on('messageReactionAdd', (reaction: MessageReaction, user: User) => musicBot.handleReaction(reaction, user));
-        client.on('ready', () => logger.debug('Bot online'));
-        client.on('disconnect', () => logger.debug('Bot Disconnected'));
-        client.on('error', (error: Error) => logger.error({ clientError: error }));
-
-        if (config.useWelcomeBot) {
-            createWelcomeBot(config, commandMapFactory);
-        }
+        // clients.welcomeBot.client.on('voiceStateUpdate', async (oldState) => {
+        //     if (!musicBotCreated) {
+        //         logger.debug('voiceStateUpdate for welcome bot');
+        //         createWelcomeBot(oldState);
+        //         musicBotCreated = true;
+        //     }
+        // });
     } catch (error) {
         console.error(error);
     }
 })();
 
-async function createContainer(config: IRhythmBotConfig): Promise<void> {
-    Container.set('logger', createLogger({
-        level: 'silly',
-        format: combine(
-            timestamp(),
-            lineFormat
-        ),
-        transports: [
-            new Console(),
-            new File({ filename: path.basename(config.directory.logs), dirname: path.dirname(config.directory.logs), maxsize: 1e+7 })
-        ]
-    }) as Logger);
-}
-
-async function createWelcomeBot(config: IRhythmBotConfig, commandMapFactory: ICommandMapFactory) { 
-    const cloneConfig = {
-        ...config,
-        discord: {
-            token: process.env.WELCOME_BOT_TOKEN,
-            log: config.discord.log
-        }
-    } as IRhythmBotConfig;
-
-    const client: Client = new Client();
+async function initialiseClients(): Promise<void> {
+    const config = container.get(tokens.config);
+    const musicBotClient = container.get(tokens.musicBotClient);
+    const welcomeBotClient = container.get(tokens.welcomeBotClient);
+    const logger = container.get(tokens.logger);
 
     try {
-        await client.login(cloneConfig.discord.token);
+        await musicBotClient.login(config.discord.token)
+        await welcomeBotClient.login(config.discord.welcomeBotToken)
     } catch (error) {
         console.error({ clientLoginError: error });
         process.exit(1);
     }
 
-    client.on('debug', console.log);
+    musicBotClient.on('voiceStateUpdate', async (oldState) => {
+        if (!musicBotCreated) {
+            logger.debug('voiceStateUpdate for music bot');
+            initMusicBot(oldState);
+            musicBotCreated = true;
+        }
+    });
+}
 
-    const welcomeBot = new WelcomeTuneBot(
-        cloneConfig,
-        commandMapFactory.createWelcomeBotCommandsMap(),
-        client,
-        Container.get('logger')
-    );
+// async function createWelcomeBot(
+//     config: IRhythmBotConfig, 
+//     commandMapFactory: ICommandMapFactory,
+//     logger: Logger
+// ) { 
+//     const cloneConfig = {
+//         ...config,
+//         discord: {
+//             token: process.env.WELCOME_BOT_TOKEN,
+//             log: config.discord.log
+//         }
+//     } as IRhythmBotConfig;
+        
+//     const client: Client = createClient();
 
-    client.on('voiceStateUpdate', (oldVoiceState: VoiceState, newVoiceState: VoiceState) => {
-        welcomeBot.handleVoiceStateUpdate(oldVoiceState, newVoiceState)
+//     client.on('debug', async (message: string) => { logger.debug(message) });
+
+//     try {
+//         await client.login(cloneConfig.discord.token);
+//     } catch (error) {
+//         logger.error({ clientLoginError: error });
+//         process.exit(1);
+//     }
+
+//     const mediaV2audioPlayer = createAudioPlayer();
+    
+//     mediaV2audioPlayer.on('debug', (message) => {
+//         logger.debug(`V2 debug: ${message}`);
+//     })
+
+//     const mediaPlayer: IMediaFilePlayer = new MediaFilePlayer(
+//         mediaV2audioPlayer,
+//         logger,
+//         client.user.id
+//     );
+
+//     const welcomeBot = new WelcomeTuneBot(
+//         cloneConfig,
+//         mediaPlayer,
+//         commandMapFactory.createWelcomeBotCommandsMap(mediaPlayer),
+//         client,
+//         Container.get('logger')
+//     );
+
+//     client.on('voiceStateUpdate', async (oldVoiceState: VoiceState, newVoiceState: VoiceState) => {
+//         logger.debug('voiceStateUpdate');
+//         welcomeBot.handleVoiceStateUpdate(oldVoiceState, newVoiceState)
+//     });
+
+//     client.on('messageCreate', async (msg: Message) => {
+//         logger.debug('message');
+//         welcomeBot.handleMessage(msg)
+//     });
+
+//     client.on('interactionCreate', async (interaction) => {
+//         logger.debug('Interaction');
+//         console.log(interaction);
+//     })
+    
+//     client.on('ready', async () => { logger.debug('Welcome bot online') });
+//     client.on('disconnect', async () => { logger.debug('Welcome bot Disconnected') });
+//     client.on('error', async (error: Error) => { logger.error({ welcomeBotClientError: error }) });
+// }
+
+function initMusicBot(state: VoiceState): void {
+    const { client } = state;
+    const channel = state.guild.channels.cache.filter(
+        cacheChannel => cacheChannel.name.toLowerCase().startsWith('rhythm') &&
+        cacheChannel.isTextBased()
+    ).first();
+
+    console.log({ channel, channels: state.guild.channels.cache });
+
+    container.share(tokens.mediaPlayer, (): MediaPlayer => new MediaPlayer(
+        container.get(tokens.config),
+        container.get(tokens.botStatus),
+        container.get(tokens.logger),
+        container.get(tokens.mediaTypeProvider),
+        container.get(tokens.songRecommender),
+        channel as TextChannel,
+        container.get(tokens.musicBotAudioPlayerFactory).createSubscribedAudioPlayer(state)
+    ));
+
+    const mediaPlayer: MediaPlayer = container.get(tokens.mediaPlayer);
+    const musicBot: RhythmBot = container.get(tokens.rhythmBot);
+    const logger: Logger = container.get(tokens.logger);
+
+    mediaPlayer.createAudioPlayer(state);
+            
+    client.on('messageCreate', (msg: Message) => {
+        logger.debug('Getting message');
+        musicBot.handleMessage(msg);
     });
 
-    client.on('message', (msg: Message) => {
-        welcomeBot.handleMessage(msg)
-    });
+    client.on('messageReactionAdd', (reaction: MessageReaction, user: User) => musicBot.handleReaction(reaction, user));
+    client.on('ready', async () => { logger.debug('Music bot online') });
+    client.on('disconnect', async () => { logger.debug('Music bot Disconnected') });
+    client.on('error', async (error: Error) => { logger.error({ musicBotClientError: error }) });
 }

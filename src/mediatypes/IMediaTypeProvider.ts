@@ -1,4 +1,4 @@
-import { IMediaType } from '../media/media-type.model';
+import { IMediaType } from '../media/MediaType';
 
 export interface IMediaTypeProvider {
     /**

@@ -1,12 +1,18 @@
+import { IMediaFilePlayer } from './../media/MediaFilePlayer';
+import { createAudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
-import { Message, VoiceConnection } from 'discord.js';
+import { Message } from 'discord.js';
 import fs from 'fs';
-import { ICommand } from '.';
-import { isInteger, leftPad } from '../helpers';
+import { ICommand } from './ICommand';
+import { isInteger, leftPad } from '../helpers/helpers';
 
 const AOE_SOUND_DIRECTORY = `${process.cwd()}\\data\\sounds\\age_taunts`;
 
 export class PlayAOEFileCommand implements ICommand {
+    public constructor(
+        private mediaPlayer: IMediaFilePlayer
+    ) { }
+    
     async execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): Promise<void> {
         let { body } = cmd;
 
@@ -31,9 +37,7 @@ export class PlayAOEFileCommand implements ICommand {
             return;
         }
 
-        msg.member.voice.channel.join().then((connection: VoiceConnection) => {
-            connection.play(`${AOE_SOUND_DIRECTORY}\\${fileName}`);
-        });
+        return this.mediaPlayer.playFile(`${AOE_SOUND_DIRECTORY}\\${fileName}`, msg.member.voice);
     }
 
     getDescription(): string {

@@ -1,15 +1,14 @@
 import ytdl, { getInfo } from 'ytdl-core';
-import { MediaItem } from './../media/media-item.model';
+import { MediaItem } from './../media/MediaItem';
 import { Readable } from 'stream';
 import ytpl from 'ytpl';
-import { IMediaType } from './../media/media-type.model';
-import { secondsToTimestamp } from '../helpers';
-import { Inject, Service } from 'typedi';
+import { IMediaType } from './../media/MediaType';
+import { secondsToTimestamp } from '../helpers/helpers';
 import { Logger } from 'winston';
 
-@Service()
+ 
 export class YoutubeMediaType implements IMediaType {
-    constructor(@Inject('logger') private readonly logger: Logger) {}
+    constructor(private readonly logger: Logger) {}
     
     getType(): string {
         return 'youtube'; 

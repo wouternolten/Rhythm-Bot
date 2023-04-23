@@ -1,11 +1,11 @@
 import { Logger } from 'winston';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
-import { MediaPlayer } from '../media/media-player';
+import { MediaPlayer } from '../media/MediaPlayer';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { ICommand } from './ICommand';
-import { createErrorEmbed, createInfoEmbed } from '../helpers';
-import { MediaItem } from 'src/media';
+import { createErrorEmbed, createInfoEmbed } from '../helpers/helpers';
+import { MediaItem } from '../media/MediaItem';
 import ytpl from 'ytpl';
 import { IMediaItemHelper } from 'src/helpers/IMediaItemHelper';
 
@@ -27,6 +27,8 @@ export class SearchAndAddCommand implements ICommand {
             msg.channel.send(createInfoEmbed(`No songs found`));
             return;
         }
+
+        console.log(1);
 
         if (YOUTUBE_REGEX.test(query)) {
             if (query.indexOf('&list=') !== -1) {
@@ -58,9 +60,8 @@ export class SearchAndAddCommand implements ICommand {
             }
         }
 
-        if (!this.player.isPlaying()) {
-            this.player.play();
-        }
+        console.log('Playing');
+        this.player.play();
     }
 
     getDescription(): string {

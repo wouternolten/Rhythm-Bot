@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
 import ytdl from 'ytdl-core';
 import { mockLogger } from '../../mocks/mockLogger';
-import { MediaItem } from './../../../src/media/media-item.model';
+import { MediaItem } from './../../../src/media/MediaItem';
 import { YoutubeMediaType } from './../../../src/mediatypes/YoutubeMediaType';
 
 const URL = 'some_url';

@@ -1,4 +1,4 @@
-import { MediaItem } from './../../../src/media/media-item.model';
+import { MediaItem } from './../../../src/media/MediaItem';
 import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 import { MediaPlayer } from '../../../src/media';
@@ -24,7 +24,6 @@ let searchAndAddCommand: SearchAndAddCommand;
 let mockYtplReturnValue;//, mockYtsReturnValue;
 let player = {
     addMedia: jest.fn(),
-    isPlaying: jest.fn(),
     play: jest.fn()
 } as unknown as MediaPlayer;
 
@@ -98,36 +97,8 @@ describe('Playlist', () => {
         expect(createErrorEmbed).toBeCalled();
     });
 
-    it('Should add media to player', async () => {
-        expect.assertions(1);
-
-        player.isPlaying = jest.fn().mockReturnValue(true);
-
-        mockYtplReturnValue = Promise.resolve({
-            title: 'Rick astley playlist',
-            items: [
-                {
-                    name: 'first item',
-                    shortUrl: 'url',
-                    duration: '12345'
-                },
-                {
-                    name: 'second item',
-                    shortUrl: 'url',
-                    duration: '12345'
-                }
-            ]
-        });
-
-        await searchAndAddCommand.execute(CMD, MESSAGE);
-
-        expect(player.addMedia).toBeCalledTimes(2);
-    });
-
     it('Should add media to player and play', async () => {
         expect.assertions(2);
-
-        player.isPlaying = jest.fn().mockReturnValue(false);
 
         mockYtplReturnValue = Promise.resolve({
             title: 'Rick astley playlist',
