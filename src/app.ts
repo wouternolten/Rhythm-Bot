@@ -27,7 +27,7 @@ process.on('uncaughtException', (err) => {
         //     }
         // });
     } catch (error) {
-        console.error(error);
+        container.get(tokens.logger).error(error);
     }
 })();
 
@@ -41,7 +41,7 @@ async function initialiseClients(): Promise<void> {
         await musicBotClient.login(config.discord.token)
         await welcomeBotClient.login(config.discord.welcomeBotToken)
     } catch (error) {
-        console.error({ clientLoginError: error });
+        logger.error({ clientLoginError: error });
         process.exit(1);
     }
 
@@ -125,8 +125,6 @@ function initMusicBot(state: VoiceState): void {
         cacheChannel.isTextBased()
     ).first();
 
-    console.log({ channel, channels: state.guild.channels.cache });
-
     container.share(tokens.mediaPlayer, (): MediaPlayer => new MediaPlayer(
         container.get(tokens.config),
         container.get(tokens.botStatus),
@@ -140,8 +138,6 @@ function initMusicBot(state: VoiceState): void {
     const mediaPlayer: MediaPlayer = container.get(tokens.mediaPlayer);
     const musicBot: RhythmBot = container.get(tokens.rhythmBot);
     const logger: Logger = container.get(tokens.logger);
-
-    mediaPlayer.createAudioPlayer(state);
             
     client.on('messageCreate', (msg: Message) => {
         logger.debug('Getting message');

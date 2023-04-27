@@ -1,19 +1,19 @@
-import { Client } from 'discord.js';
-import { SongRecommender } from './../src/media/SongRecommender';
-import { MediaFilePlayer } from './../src/media/MediaFilePlayer';
-import { YoutubeAPIHelper } from './../src/helpers/YoutubeAPIHelper';
-import { SpotifyAPIHelper } from './../src/helpers/SpotifyAPIHelper';
-import { AudioPlayerFactory } from './../src/helpers/AudioPlayerFactory';
-import { CommandMapFactory } from './../src/command/CommandMapFactory';
-import { WelcomeTuneBot } from './../src/bot/WelcomeTuneBot';
-import { RhythmBot } from '../src/bot/RhythmBot';
-import { Logger } from 'winston';
 import { token } from 'containor';
-import { IRhythmBotConfig } from '../src/bot/IRhythmBotConfig';
+import { Client, ClientUser } from 'discord.js';
+import { Logger } from 'winston';
 import { BotStatus } from '../src/bot/BotStatus';
+import { IRhythmBotConfig } from '../src/bot/IRhythmBotConfig';
+import { RhythmBot } from '../src/bot/RhythmBot';
 import { MediaPlayer } from '../src/media/MediaPlayer';
 import { MediaTypeProvider } from '../src/mediatypes/MediaTypeProvider';
 import { YoutubeMediaType } from '../src/mediatypes/YoutubeMediaType';
+import { WelcomeTuneBot } from './../src/bot/WelcomeTuneBot';
+import { CommandMapFactory } from './../src/command/CommandMapFactory';
+import { AudioPlayerFactory } from './../src/helpers/AudioPlayerFactory';
+import { SpotifyAPIHelper } from './../src/helpers/SpotifyAPIHelper';
+import { YoutubeAPIHelper } from './../src/helpers/YoutubeAPIHelper';
+import { MediaFilePlayer } from './../src/media/MediaFilePlayer';
+import { SongRecommender } from './../src/media/SongRecommender';
 
 export default {
     logger: token<Logger>('logger'),
@@ -21,6 +21,7 @@ export default {
 
     // Clients
     musicBotClient: token<Client>('musicBotClient'),
+    musicBotClientUser: token<ClientUser>('musicBotClientUser'),
     welcomeBotClient: token<Client>('welcomeBotClient'),
 
     // Bots

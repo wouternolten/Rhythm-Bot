@@ -1,5 +1,5 @@
-import { Token, Container, Module } from 'containor';
-import { Client, GatewayIntentBits } from 'discord.js';
+import { Container, Module, Token } from 'containor';
+import { Client, ClientUser, GatewayIntentBits } from 'discord.js';
 import tokens from '../tokens';
 
 export default class ClientModule implements Module {
@@ -19,7 +19,7 @@ export default class ClientModule implements Module {
 
                 return this.musicBot;
             }
-        )
+        );
 
         container.add(
             tokens.welcomeBotClient,
@@ -30,6 +30,11 @@ export default class ClientModule implements Module {
 
                 return this.welcomeBot
             }
+        );
+
+        container.add(
+            tokens.musicBotClientUser,
+            (): ClientUser => container.get(tokens.musicBotClient).user
         );
     }
 

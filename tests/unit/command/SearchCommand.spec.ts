@@ -1,11 +1,11 @@
 import { MEDIA_TYPE_YOUTUBE } from './../../../src/mediatypes/MediaType';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { SearchCommand } from './../../../src/command/SearchCommand';
-import { MediaPlayer } from './../../../src/media';
-import { IRhythmBotConfig } from './../../../src/bot/bot-config';
+import { MediaPlayer } from './../../../src/media/MediaPlayer';
 import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { Message, MessageEmbed } from 'discord.js';
-import { createEmbed, createInfoEmbed } from '../../../src/helpers';
+import { createEmbed, createInfoEmbed } from '../../../src/helpers/helpers';
+import { IRhythmBotConfig } from '../../../src/bot/IRhythmBotConfig';
 
 jest.mock('../../../src/helpers');
 

@@ -56,7 +56,7 @@ export class WelcomeTuneBot {
                 handle(parsed as SuccessfulParsedMessage<Message>, msg);
             });
         } catch (error) {
-            console.log({ handleMessageCatchError: error });
+            this.logger.error({ handleMessageCatchError: error });
         }
     }
     

@@ -28,8 +28,6 @@ export class SearchAndAddCommand implements ICommand {
             return;
         }
 
-        console.log(1);
-
         if (YOUTUBE_REGEX.test(query)) {
             if (query.indexOf('&list=') !== -1) {
                 try {
@@ -60,7 +58,6 @@ export class SearchAndAddCommand implements ICommand {
             }
         }
 
-        console.log('Playing');
         this.player.play();
     }
 

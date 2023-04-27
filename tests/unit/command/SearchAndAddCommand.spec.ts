@@ -1,9 +1,9 @@
 import { MediaItem } from './../../../src/media/MediaItem';
 import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
-import { MediaPlayer } from '../../../src/media';
+import { MediaPlayer } from '../../../src/media/MediaPlayer';
 import { SearchAndAddCommand } from './../../../src/command/SearchAndAddCommand';
-import { createErrorEmbed, createInfoEmbed } from '../../../src/helpers';
+import { createErrorEmbed, createInfoEmbed } from '../../../src/helpers/helpers';
 import { mockLogger } from '../../mocks/mockLogger';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';

@@ -76,7 +76,7 @@ export class CommandMapFactory implements ICommandMapFactory {
         return {
             horn: new PlaySoundFileCommand('airhorn_four.wav', mediaPlayer),
             badumtss: new PlaySoundFileCommand('badum_tss.wav', mediaPlayer),
-            aoe: new PlayAOEFileCommand(mediaPlayer)
+            aoe: new PlayAOEFileCommand(mediaPlayer, this.logger)
         };
     }
 

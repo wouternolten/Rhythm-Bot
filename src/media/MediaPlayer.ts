@@ -100,38 +100,30 @@ export class MediaPlayer {
     // Queue changing methods
     // --------------------------------------------------------------------------
     async addMedia(item: MediaItem, silent = false): Promise<void> {
-        console.log('Hoi');
         if (!item.name || !item.duration) {
             let type = undefined;
             try {
-                console.log('Hoi 1');
                 type = this.mediaTypeProvider.get(item.type);
             } catch (error) {
-                console.log('Hoi 2');
                 return Promise.reject(`Error when fetching media type: ${error}`);
             }
 
             if (!type) {
-                console.log('Hoi 3');
                 return Promise.reject('Unknown Media Type!');
             }
 
             try {
-                console.log('Hoi 4');
                 const details = await type.getDetails(item);
 
-                console.log('Hoi 5');
                 item.name = details.name;
                 item.duration = details.duration;
             } catch (error) {
-                console.log('Hoi 6');
                 const errorMessage = 'Error when getting details for item';
                 this.logger.error(`${errorMessage}: \n ${JSON.stringify({ item, error })}`);
                 return Promise.reject(errorMessage);
             }
         }
 
-        console.log('Hoi 7');
         this.queue.enqueue(item);
         this.determineStatus();
 
@@ -139,8 +131,6 @@ export class MediaPlayer {
             return;
         }
 
-        console.log('Hoi 8');
-        console.log(this.channel);
         this.channel.send({
             embeds: [
                 createEmbed()
@@ -160,8 +150,6 @@ export class MediaPlayer {
                     )
             ]
         });
-
-        console.log('Hoi 9');
     }
 
     at(idx: number) {
@@ -241,11 +229,6 @@ export class MediaPlayer {
         }
     }
 
-    // NOT A SINGLETON?
-    setChannel(channel: TextChannel | DMChannel | NewsChannel): void {
-        console.log(channel);
-    }
-
     toggleAutoPlay(): void {
         this.autoPlay = !this.autoPlay;
     }
@@ -260,11 +243,6 @@ export class MediaPlayer {
 
     getQueue(): MediaItem[] {
         return [...this.queue];
-    }
-
-    // TODO: Remove this functionality. Where to put it...
-    createAudioPlayer(voiceState: VoiceState) {
-        console.log('Audioplayer!');
     }
 
     // --------------------------------------------------------------------------
@@ -295,7 +273,6 @@ export class MediaPlayer {
     
     private async playFirstItemFromQueue(): Promise<void>
     {
-        console.log('first item from queue');
         if (!this.isInState(PlayerState.Idle)) {
             this.logger.error('PlayerState should be idle to play!');
             return;
