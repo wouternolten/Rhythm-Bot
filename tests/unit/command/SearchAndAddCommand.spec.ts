@@ -8,7 +8,7 @@ import { mockLogger } from '../../mocks/mockLogger';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 
-jest.mock('../../../src/helpers');
+jest.mock('../../../src/helpers/helpers');
 
 jest.mock('ytpl', () => {
     const originalModule = jest.requireActual('ytpl');

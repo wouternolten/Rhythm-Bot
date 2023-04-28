@@ -89,7 +89,7 @@ describe('recommendNextSong()', () => {
         const expected = {
             name: "Some uber awesome name",
             url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        };
+        } as MediaItem;
 
         spotifyApiHelper.getSpotifyIDForSong.mockResolvedValue('123');
         spotifyApiHelper.getRecommendationForTrack.mockResolvedValue('some-string');

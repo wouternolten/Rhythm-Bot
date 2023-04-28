@@ -1,4 +1,4 @@
-import { secondsToTimestamp } from "../../../src/helpers";
+import { secondsToTimestamp } from "../../../src/helpers/helpers";
 
 describe('Seconds to timestamp', () => {
     const secondsToTimeStampTest: { seconds: number, timeStamp: string }[] = [
