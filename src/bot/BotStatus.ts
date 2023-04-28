@@ -1,10 +1,11 @@
-import { Client, ClientUser, PresenceStatusData } from 'discord.js';
+import { ClientUser, PresenceStatusData } from 'discord.js';
+import { Logger } from 'winston';
 
 export class BotStatus {
-    private readonly user: ClientUser;
-    
-    constructor(client: Client) {
-        this.user = client.user;
+    constructor(
+        private readonly user: ClientUser,
+        private readonly logger: Logger
+    ) {
     }
 
     setBanner(status: string) {
@@ -13,7 +14,7 @@ export class BotStatus {
                 activities: [{ name: status }],
             });
         } catch (error) {
-            console.error(error);
+            this.logger.error(error);
         }
     }
 

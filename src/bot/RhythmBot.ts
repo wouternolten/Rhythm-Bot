@@ -7,27 +7,19 @@ import { Message, MessageReaction, User, NewsChannel, Client } from 'discord.js'
 import { CommandMap } from '../helpers/CommandMap';
 
 export class RhythmBot {
-    private readonly user: User;
     private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
 
     // TODO: Clean up constructor.
     constructor(
         private readonly config: IRhythmBotConfig,
-        client: Client,
+        private readonly user: User,
         private readonly player: MediaPlayer,
         private readonly logger: Logger,
         commandMapFactory: ICommandMapFactory
     ) {
-        this.user = client.user;
         this.commands = commandMapFactory.createMusicBotCommandsMap();
     }
-
-    parsedMessage(msg: SuccessfulParsedMessage<Message>) {
-        // TODO: Split functionality; the player should not update a channel; another class should be responsible for this.
-        console.log('Parsed message');
-        this.player.setChannel(msg.message.channel as NewsChannel);
-    }
-
+    
     handleMessage(msg: Message): void {
         if (!this.config.command?.symbol) {
             this.logger.error('Symbol handle message not set.');
@@ -53,7 +45,6 @@ export class RhythmBot {
         }
 
         this.logger.debug(`Bot Command: ${msg.content}`);
-        this.parsedMessage(parsed);
         handlers.forEach(handle => {
             handle(parsed as SuccessfulParsedMessage<Message>, msg);
         });
@@ -85,10 +76,6 @@ export class RhythmBot {
         }
     
         const embed = reaction.message.embeds[0];
-
-        if (!embed) {
-            return;
-        }
         
         if (reaction.emoji.name === this.config.emojis.addSong && embed.url) {
             this.logger.debug(`Emoji Click: Adding Media: ${embed.url}`);

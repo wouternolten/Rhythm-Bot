@@ -1,13 +1,13 @@
 import { MEDIA_TYPE_YOUTUBE } from './../../../src/mediatypes/MediaType';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { SearchCommand } from './../../../src/command/SearchCommand';
-import { MediaPlayer } from './../../../src/media';
-import { IRhythmBotConfig } from './../../../src/bot/bot-config';
+import { MediaPlayer } from './../../../src/media/MediaPlayer';
 import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
-import { Message, MessageEmbed } from 'discord.js';
-import { createEmbed, createInfoEmbed } from '../../../src/helpers';
+import { EmbedBuilder, Message } from 'discord.js';
+import { createEmbed, createInfoEmbed } from '../../../src/helpers/helpers';
+import { IRhythmBotConfig } from '../../../src/bot/IRhythmBotConfig';
 
-jest.mock('../../../src/helpers');
+jest.mock('../../../src/helpers/helpers');
 
 const player = {
     addMedia: jest.fn(),
@@ -99,7 +99,7 @@ describe('Keyword search', () => {
         };
 
         (createEmbed as jest.Mock).mockImplementation(() => {
-            return new MessageEmbed().setColor('#a600ff');
+            return new EmbedBuilder().setColor('#a600ff');
         });
         
         (MESSAGE.channel.send as jest.Mock).mockResolvedValue(placedMessage);

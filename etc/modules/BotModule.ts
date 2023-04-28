@@ -28,7 +28,10 @@ export default class BotModule implements Module {
             return config;
         });
 
-        container.add(tokens.botStatus, BotStatus, [tokens.musicBotClient]);
+        container.add(tokens.botStatus, BotStatus, [
+            tokens.musicBotClientUser,
+            tokens.logger
+        ]);
 
         container.add(tokens.welcomeTuneBot, WelcomeTuneBot, [
             tokens.config,
@@ -40,7 +43,7 @@ export default class BotModule implements Module {
 
         container.add(tokens.rhythmBot, RhythmBot, [
             tokens.config,
-            tokens.musicBotClient,
+            tokens.musicBotClientUser,
             tokens.mediaPlayer,
             tokens.logger,
             tokens.commandMapFactory

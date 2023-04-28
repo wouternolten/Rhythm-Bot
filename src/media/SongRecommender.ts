@@ -15,7 +15,6 @@ export class SongRecommender implements ISongRecommender {
     ) { }
 
     public async recommendNextSong(lastPlayedSong: MediaItem): Promise<MediaItem | null> {
-        console.log(lastPlayedSong);
         if (!lastPlayedSong.name) {
             return null;
         }

@@ -9,7 +9,6 @@ export class YoutubeAPIHelper implements IMediaItemHelper {
     }
 
     async getMediaItemForSearchString(searchString: string): Promise<MediaItem | null> {
-        console.log('asjdfhkjasdfkj');
         if (searchString === '') {
             return null;
         }

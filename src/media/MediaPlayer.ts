@@ -1,17 +1,15 @@
-import { ISongRecommender } from './SongRecommender';
-import { createAudioResource, StreamType } from '@discordjs/voice';
-import { AudioPlayerStatus } from '@discordjs/voice';
-import { AudioPlayer } from '@discordjs/voice';
-import { IMediaTypeProvider } from '../mediatypes/IMediaTypeProvider';
-import { IRhythmBotConfig } from '../bot/IRhythmBotConfig';
-import { BotStatus } from '../bot/BotStatus';
-import { MediaQueue } from './MediaQueue';
-import { MediaItem } from './MediaItem';
-import { createEmbed, createErrorEmbed, createInfoEmbed } from '../helpers/helpers';
-import { TextChannel, DMChannel, NewsChannel, VoiceState, GuildBasedChannel } from 'discord.js';
-import { Logger } from 'winston';
+import { AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType } from '@discordjs/voice';
+import { DMChannel, NewsChannel, TextChannel } from 'discord.js';
 import { Readable } from 'stream';
-import { AudioPlayerFactory } from 'src/helpers/AudioPlayerFactory';
+import { Logger } from 'winston';
+import { BotStatus } from '../bot/BotStatus';
+import { IRhythmBotConfig } from '../bot/IRhythmBotConfig';
+import { createEmbed, createErrorEmbed, createInfoEmbed } from '../helpers/helpers';
+import { IMediaTypeProvider } from '../mediatypes/IMediaTypeProvider';
+import { MediaItem } from './MediaItem';
+import { MediaQueue } from './MediaQueue';
+import type { IMediaType } from './MediaType';
+import { ISongRecommender } from './SongRecommender';
 
 enum PlayerState {
     Playing = 'playing',
@@ -58,7 +56,7 @@ export class MediaPlayer {
             return;
         }
 
-        if (this.queue.length == 0) {
+        if (this.queue.length === 0) {
             if (!this.autoPlay || !this.lastPlayedSong) {
                 this.channel.send(createInfoEmbed(`Queue is empty! Add some songs!`));
                 return;
@@ -67,71 +65,77 @@ export class MediaPlayer {
             await this.findNextSongToPlay(this.lastPlayedSong);
         }
 
-        this.playFirstItemFromQueue();
+        
+        if (this.queue.length > 0) {
+            this.playFirstItemFromQueue();
+        }
     } 
 
-    stop() {
+    stop(): void {
         if (this.state === PlayerState.Idle) {
             return;
         }
 
-        this.setPlayerState(PlayerState.Idle);
+        const previousPlayerState = this.state;
 
-        // TODO: what happens when 'stop' returns false
-        this.audioPlayer.stop();
+        if (this.audioPlayer.stop()) {
+            this.setPlayerState(PlayerState.Idle);
 
-        this.channel.send(createInfoEmbed(`⏹️ "${this.queue.first.name}" stopped`));
-        this.determineStatus();
+            if (this.queue.first) {
+                this.channel.send(createInfoEmbed(`⏹️ "${this.queue.first.name}" stopped`));
+            }
+
+            this.determineStatus();
+        } else {
+            this.logger.error('Failed to stop player.');
+            this.setPlayerState(previousPlayerState);
+        }
     }
 
-    pause() {
-        if (this.state === PlayerState.Paused) {
+    pause(): void {
+        if (this.state !== PlayerState.Playing) {
             return;
         }
 
-        // TODO: what happens when 'pause' returns false
-        this.audioPlayer.pause();
-        this.setPlayerState(PlayerState.Paused);
-        this.determineStatus();
-        this.channel.send(createInfoEmbed(`⏸️ "${this.queue.first.name}" paused`));
+        if (this.audioPlayer.pause()) {
+            this.setPlayerState(PlayerState.Paused);
+
+            if (this.queue.first) {
+                this.channel.send(createInfoEmbed(`⏸️ "${this.queue.first.name}" paused`));
+            }
+
+            this.determineStatus();
+        }
     }
 
     // --------------------------------------------------------------------------
     // Queue changing methods
     // --------------------------------------------------------------------------
     async addMedia(item: MediaItem, silent = false): Promise<void> {
-        console.log('Hoi');
         if (!item.name || !item.duration) {
-            let type = undefined;
+            let type: IMediaType | undefined;
             try {
-                console.log('Hoi 1');
                 type = this.mediaTypeProvider.get(item.type);
             } catch (error) {
-                console.log('Hoi 2');
                 return Promise.reject(`Error when fetching media type: ${error}`);
             }
 
             if (!type) {
-                console.log('Hoi 3');
                 return Promise.reject('Unknown Media Type!');
             }
 
             try {
-                console.log('Hoi 4');
                 const details = await type.getDetails(item);
 
-                console.log('Hoi 5');
                 item.name = details.name;
                 item.duration = details.duration;
             } catch (error) {
-                console.log('Hoi 6');
                 const errorMessage = 'Error when getting details for item';
                 this.logger.error(`${errorMessage}: \n ${JSON.stringify({ item, error })}`);
                 return Promise.reject(errorMessage);
             }
         }
 
-        console.log('Hoi 7');
         this.queue.enqueue(item);
         this.determineStatus();
 
@@ -139,8 +143,6 @@ export class MediaPlayer {
             return;
         }
 
-        console.log('Hoi 8');
-        console.log(this.channel);
         this.channel.send({
             embeds: [
                 createEmbed()
@@ -160,8 +162,6 @@ export class MediaPlayer {
                     )
             ]
         });
-
-        console.log('Hoi 9');
     }
 
     at(idx: number) {
@@ -221,31 +221,6 @@ export class MediaPlayer {
         }
     }
 
-    // Todo: move to subscription / listener events.
-    determineStatus() {
-        let item = this.queue.first;
-        if (!item) {
-            this.status.setBanner(`No Songs In Queue`);
-        }
-
-        switch (this.state) {
-            case PlayerState.Idle:
-                this.status.setBanner(`Up Next: "${item.name}" Requested by: ${item.requestor}`);
-                break;   
-            case PlayerState.Paused:
-                this.status.setBanner(`Paused: "${item.name}" Requested by: ${item.requestor}`);
-                break;
-            case PlayerState.Playing:
-                this.status.setBanner(`"${item.name}" ${this.queue.length > 1 ? `, Up Next "${this.queue[1].name}"` : ''}`);
-                break;
-        }
-    }
-
-    // NOT A SINGLETON?
-    setChannel(channel: TextChannel | DMChannel | NewsChannel): void {
-        console.log(channel);
-    }
-
     toggleAutoPlay(): void {
         this.autoPlay = !this.autoPlay;
     }
@@ -262,18 +237,19 @@ export class MediaPlayer {
         return [...this.queue];
     }
 
-    // TODO: Remove this functionality. Where to put it...
-    createAudioPlayer(voiceState: VoiceState) {
-        console.log('Audioplayer!');
-    }
-
     // --------------------------------------------------------------------------
     // Private  methods
     // --------------------------------------------------------------------------
     private async findNextSongToPlay(lastPlayedSong: MediaItem): Promise<void> {
-        const nextVideo = await this.songRecommender.recommendNextSong(lastPlayedSong);
+        let nextVideo: MediaItem | undefined | null; 
+        
+        try {
+            await this.songRecommender.recommendNextSong(lastPlayedSong);
+        } catch (e) {
+            this.logger.error(e);
+        }
 
-        if (nextVideo === null) {
+        if (!nextVideo) {
             this.logger.info(`No songs found for recommendation.`);
             return;
         }
@@ -295,7 +271,6 @@ export class MediaPlayer {
     
     private async playFirstItemFromQueue(): Promise<void>
     {
-        console.log('first item from queue');
         if (!this.isInState(PlayerState.Idle)) {
             this.logger.error('PlayerState should be idle to play!');
             return;
@@ -369,5 +344,26 @@ export class MediaPlayer {
         });
 
         this.autoPlay = !!this.config.queue?.autoPlay;
+    }
+
+    // Todo: move to subscription / listener events.
+    private determineStatus(): void {
+        let item = this.queue.first;
+        if (!item) {
+            this.status.setBanner(`No Songs In Queue`);
+            return;
+        }
+
+        switch (this.state) {
+            case PlayerState.Idle:
+                this.status.setBanner(`Up Next: "${item.name}" Requested by: ${item.requestor}`);
+                break;   
+            case PlayerState.Paused:
+                this.status.setBanner(`Paused: "${item.name}" Requested by: ${item.requestor}`);
+                break;
+            case PlayerState.Playing:
+                this.status.setBanner(`"${item.name}" ${this.queue.length > 1 ? `, Up Next "${this.queue[1].name}"` : ''}`);
+                break;
+        }
     }
 }
