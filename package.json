@@ -19,9 +19,6 @@
     "dependencies": {
         "@discordjs/opus": "^0.5.3",
         "@discordjs/voice": "^0.16.0",
-        "@mikro-orm/core": "^4.5.9",
-        "@mikro-orm/migrations": "^4.5.9",
-        "@mikro-orm/sqlite": "^4.5.9",
         "axios": "^0.25.0",
         "bufferutil": "^4.0.1",
         "containor": "^6.1.0",
