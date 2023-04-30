@@ -3,17 +3,18 @@ import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { SearchCommand } from './../../../src/command/SearchCommand';
 import { MediaPlayer } from './../../../src/media/MediaPlayer';
 import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
-import { EmbedBuilder, Message } from 'discord.js';
-import { createEmbed, createInfoEmbed } from '../../../src/helpers/helpers';
+import { Message } from 'discord.js';
 import { IRhythmBotConfig } from '../../../src/bot/IRhythmBotConfig';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { IQueueManager } from '../../../src/queue/QueueManager';
+import { IChannelManager } from '../../../src/channel/ChannelManager';
 
 jest.mock('../../../src/helpers/helpers');
 
 const player: MockProxy<MediaPlayer> = mock<MediaPlayer>();
 const mediaItemHelper: MockProxy<IMediaItemHelper> = mock<IMediaItemHelper>(); 
 const queueManager: MockProxy<IQueueManager> = mock<IQueueManager>();
+const channelManager: MockProxy<IChannelManager> = mock<IChannelManager>();
 
 const config = {
     emojis: {
@@ -28,9 +29,6 @@ const NEVER_GONNA_GIVE_YOU_UP_YOUTUBE_LINK = 'https://www.youtube.com/watch?v=dQ
 const NEVER_GONNA_GIVE_YOU_UP = 'Never gonna give you up';
 
 const MESSAGE = {
-    channel: {
-        send: jest.fn()
-    },
     author: {
         username: RICK_ASTLEY
     }
@@ -41,6 +39,7 @@ beforeEach(() => {
         player,
         mediaItemHelper,
         queueManager,
+        channelManager,
         config
     );
 });
@@ -56,7 +55,7 @@ it.each([undefined, null, ''])
 
         searchCommand.execute(cmd, MESSAGE);
 
-        expect(createInfoEmbed).toHaveBeenCalledWith('Please input a song.');
+        expect(channelManager.sendInfoMessage).toHaveBeenCalledWith('Please input a song.');
     });
 
 
@@ -75,35 +74,25 @@ describe('Keyword search', () => {
     const keywordCmd = { body: NEVER_GONNA_GIVE_YOU_UP } as SuccessfulParsedMessage<Message>;
 
     it('Should display a message when no results found', async () => {
-        (mediaItemHelper.getMediaItemsForSearchString as jest.Mock).mockReturnValue([]);
+        mediaItemHelper.getMediaItemsForSearchString.mockResolvedValue([]);
 
         await searchCommand.execute(keywordCmd, MESSAGE);
 
-        expect(createInfoEmbed).toBeCalled();
+        expect(channelManager.sendInfoMessage).toBeCalled();
     });
 
     it('Should add found videos to channel', async () => {
-        (mediaItemHelper.getMediaItemsForSearchString as jest.Mock)
-            .mockReturnValue([
-                {
-                    type: MEDIA_TYPE_YOUTUBE,
-                    url: NEVER_GONNA_GIVE_YOU_UP_YOUTUBE_LINK
-                } 
-            ]);
-        
-        const placedMessage = {
-            react: jest.fn()
-        };
+        const videos = [
+            {
+                type: MEDIA_TYPE_YOUTUBE,
+                url: NEVER_GONNA_GIVE_YOU_UP_YOUTUBE_LINK
+            }
+        ];
 
-        (createEmbed as jest.Mock).mockImplementation(() => {
-            return new EmbedBuilder().setColor('#a600ff');
-        });
-        
-        (MESSAGE.channel.send as jest.Mock).mockResolvedValue(placedMessage);
+        mediaItemHelper.getMediaItemsForSearchString.mockResolvedValue(videos);
         
         await searchCommand.execute(keywordCmd, MESSAGE);
 
-        expect(createEmbed).toBeCalled();
-        expect(placedMessage.react).toBeCalled();
+        expect(channelManager.sendSearchResults).toBeCalledWith(videos);
     });
 });

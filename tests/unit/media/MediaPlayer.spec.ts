@@ -14,6 +14,7 @@ import { IMediaType } from '../../../src/media/MediaType';
 import { createEmbed, createInfoEmbed } from '../../../src/helpers/helpers';
 import { EmbedBuilder } from '@discordjs/builders';
 import { clear } from 'console';
+import { QueueManager } from '../../../src/queue/QueueManager';
 
 const ITEM_TYPE = 'youtube';
 const ITEM_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
@@ -89,61 +90,7 @@ beforeEach(() => {
 })
 
 describe.skip('To add later', () => {
-    describe('Adding media', () => {
-        it('Should reject when mediaTypeProvider throws error', async () => {
-            expect.assertions(1);
-
-            mediaTypeProvider.get.mockImplementation(() => { throw new MediaTypeNotFoundError('MY ERROR') });
-
-            try {
-                await mediaPlayer.addMedia({} as MediaItem);
-            } catch (error) {
-                expect(error).toContain('MY ERROR');
-            }
-        });
-
-        it('Should reject when unnamed item and invalid type are given', async () => {
-            expect.assertions(1);
-
-            try {
-                await mediaPlayer.addMedia({} as MediaItem);
-            } catch (error) {
-                expect(error).toEqual('Unknown Media Type!');
-            }
-        });
-
-        it('Should reject when unnamed item details cannot be found', async () => {
-            const item = {
-                type: ITEM_TYPE
-            } as MediaItem;
-
-            const mediaType = {
-                getDetails: jest.fn().mockRejectedValue('Error')
-            } as unknown as IMediaType;
-
-            mediaTypeProvider.get.mockImplementation(() => mediaType);
-
-            expect.assertions(1);
-
-            try {
-                await mediaPlayer.addMedia(item);
-            } catch (error) {
-                expect(error).toEqual('Error when getting details for item');
-            }
-        });
-
-        it('Should send a message to the channel when not silent', async () => {
-            await mediaPlayer.addMedia(VALID_ITEM, false);
-
-            expect(channel.send).toBeCalled();
-        });
-    });
-
     describe('Playing', () => {
-        beforeEach(() => {
-            mediaPlayer.addMedia(VALID_ITEM, true);
-        });
-
         afterEach(() => {
             mediaPlayer.clear();
         });
@@ -177,40 +124,12 @@ describe.skip('To add later', () => {
 
             expect(createInfoEmbed).toHaveBeenCalledWith('Queue is empty! Add some songs!');
         });
-
-        describe('AutoPlay is on', () => {
-            beforeEach(() => {
-                if (mediaPlayer.getAutoPlay() === false) {
-                    mediaPlayer.toggleAutoPlay();
-                }
-            });
-
-            it('Should not play song when recommending songs fails', async () => {
-                mediaPlayer.clear();
-
-                songRecommender.recommendNextSong.mockRejectedValue(new Error());
-
-                await mediaPlayer.play();
-
-                expect(logger.error).toHaveBeenCalled();
-                expect(logger.info).toHaveBeenCalledWith(`No songs found for recommendation.`);
-                expect(audioPlayer).not.toHaveBeenCalled();
-            });
-
-            afterEach(() => {
-                if (mediaPlayer.getAutoPlay() === true) {
-                    mediaPlayer.toggleAutoPlay();
-                }
-            })
-        });
-
+        
         it('Should log when type is invalid of first queue item', async () => {
             const item = { ...VALID_ITEM };
             item.type = 'invalid type';
 
             expect.assertions(1);
-
-            mediaPlayer.addMedia(item, true);
 
             mediaPlayer.play();
 
@@ -302,10 +221,7 @@ describe.skip('To add later', () => {
     })
 });
 
-function simulateQueue(): void
-{
-    mediaPlayer.addMedia(VALID_ITEM, true);
-}
+// TODO: COMPLETELY REMOVE ADD MEDIA AND USE QUEUE MANAGER
 
 function simulatePausedState(): void
 {

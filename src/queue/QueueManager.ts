@@ -15,6 +15,8 @@ export interface IQueueManager {
     clear(): void;
     shuffle(): void;
     move(currentIndex: number, targetIndex: number): void;
+    getAutoPlay(): boolean;
+    setAutoPlay(audioPlay: boolean): void;
     getQueueLength(): number;
     getQueue(): MediaItem[];
     getLastPlayedSong(): MediaItem | undefined;

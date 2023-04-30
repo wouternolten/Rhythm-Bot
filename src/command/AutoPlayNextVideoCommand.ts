@@ -1,16 +1,18 @@
-import { MediaPlayer } from '../media/MediaPlayer';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
+import { IChannelManager } from 'src/channel/ChannelManager';
+import { IQueueManager } from 'src/queue/QueueManager';
 import { ICommand } from './ICommand';
-import { createInfoEmbed } from '../helpers/helpers';
 
 export class AutoPlayNextVideoCommand implements ICommand {
-    constructor(private readonly player: MediaPlayer) {}
+    constructor(
+        private readonly queueManager: IQueueManager,
+        private readonly channelManager: IChannelManager
+    ) { }
         
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
-        this.player.toggleAutoPlay();
-
-        msg.channel.send(createInfoEmbed(`Autoplay is currently ${this.player.getAutoPlay() ? 'on' : 'off'}`));
+        this.queueManager.setAutoPlay(!this.queueManager.getAutoPlay());
+        this.channelManager.sendInfoMessage(`Autoplay is currently ${this.queueManager.getAutoPlay() ? 'on' : 'off'}`);
     }
 
     getDescription(): string {

@@ -1,13 +1,15 @@
-import { TextChannel, DMChannel, NewsChannel } from "discord.js";
+import { TextChannel, DMChannel, NewsChannel, Message } from "discord.js";
 import { IRhythmBotConfig } from "src/bot/IRhythmBotConfig";
 import { createEmbed, createErrorEmbed, createInfoEmbed } from "./../helpers/helpers";
 import { MediaItem } from "./../media/MediaItem";
 
 export interface IChannelManager {
     sendInfoMessage(message: string): Promise<void>;
+    sendInfoMessageWithTitle(message: string, title: string): Promise<void>;
     sendErrorMessage(message: string): Promise<void>;
     sendTrackAddedMessage(item: MediaItem, position: number): Promise<void>;
     sendTrackPlayingMessage(item: MediaItem): Promise<void>;
+    sendSearchResults(items: MediaItem[]): Promise<void>;
 }
 
 export class ChannelManager implements IChannelManager {
@@ -18,6 +20,10 @@ export class ChannelManager implements IChannelManager {
     
     async sendInfoMessage(message: string): Promise<void> {
         await this.channel.send(createInfoEmbed(message));
+    }
+
+    async sendInfoMessageWithTitle(message: string, title: string): Promise<void> {
+        await this.channel.send(createInfoEmbed(title, message));
     }
 
     async sendErrorMessage(message: string): Promise<void> {
@@ -62,5 +68,24 @@ export class ChannelManager implements IChannelManager {
             message.react(this.config.emojis.pauseSong),
             message.react(this.config.emojis.skipSong)
         ]);
+    }
+
+    async sendSearchResults(items: MediaItem[]): Promise<void> {
+        await Promise.all(
+            items
+                .slice(0, 3)
+                .map((video) =>
+                    createEmbed()
+                        .setTitle(`${video.name}`)
+                        .addFields({ name: 'Duration', value: `${video.duration}`, inline: true })
+                        .setThumbnail(video.imageUrl)
+                        .setURL(video.url)
+                )
+                .map((embed) =>
+                    this.channel
+                        .send({ embeds: [embed] })
+                        .then((message: Message) => message.react(this.config.emojis.addSong))
+                )
+        );
     }
 }

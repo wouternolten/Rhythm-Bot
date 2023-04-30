@@ -1,14 +1,14 @@
-import { Logger } from 'winston';
-import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
-import { MediaPlayer } from '../media/MediaPlayer';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
-import { ICommand } from './ICommand';
-import { createErrorEmbed, createInfoEmbed } from '../helpers/helpers';
-import { MediaItem } from '../media/MediaItem';
-import ytpl from 'ytpl';
+import { IChannelManager } from 'src/channel/ChannelManager';
 import { IMediaItemHelper } from 'src/helpers/IMediaItemHelper';
 import { IQueueManager } from 'src/queue/QueueManager';
+import { Logger } from 'winston';
+import ytpl from 'ytpl';
+import { MediaItem } from '../media/MediaItem';
+import { MediaPlayer } from '../media/MediaPlayer';
+import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
+import { ICommand } from './ICommand';
 
 const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
 const SPOTIFY_REGEX = /spotify\.com/;
@@ -19,6 +19,7 @@ export class SearchAndAddCommand implements ICommand {
         private readonly spotifyAPIHelper: SpotifyAPIHelper,
         private readonly mediaItemHelper: IMediaItemHelper,
         private readonly queueManager: IQueueManager,
+        private readonly channelManager: IChannelManager,
         private readonly logger: Logger,
     ) { }
     
@@ -26,7 +27,7 @@ export class SearchAndAddCommand implements ICommand {
         const query = cmd.body;
 
         if (!query) {
-            msg.channel.send(createInfoEmbed(`No songs found`));
+            this.channelManager.sendInfoMessage(`No songs found`);
             return;
         }
 
@@ -71,7 +72,7 @@ export class SearchAndAddCommand implements ICommand {
         const playListId = this.getPlayListIdFromSpotifyQuery(query);
 
         if (!playListId) {
-            msg.channel.send(createInfoEmbed('Playlist not found.'));
+            this.channelManager.sendInfoMessage('Playlist not found.');
             return;
         }
 
@@ -81,7 +82,7 @@ export class SearchAndAddCommand implements ICommand {
             playListItems = await this.spotifyAPIHelper.getTracksFromPlaylist(playListId)
         } catch (errorGettingTracksFromPlaylist) {
             this.logger.error(JSON.stringify({ errorGettingTracksFromPlaylist }));
-            msg.channel.send(createErrorEmbed('Error when trying get tracks from playlist'));
+            this.channelManager.sendErrorMessage('Error when trying get tracks from playlist');
 
             return;
         }
@@ -94,7 +95,7 @@ export class SearchAndAddCommand implements ICommand {
             this.logger.info(`Added ${playListItem}`);
         }));
 
-        msg.channel.send(createInfoEmbed('Added spotify playlist'));
+        this.channelManager.sendInfoMessage('Added spotify playlist');
     }
 
     private getPlayListIdFromSpotifyQuery(query: string): string | null | undefined {
@@ -109,7 +110,7 @@ export class SearchAndAddCommand implements ICommand {
             playList = await this.getPlayList(query);
         } catch (errorWhenFetchingPlayList) {
             this.logger.error(JSON.stringify({ errorWhenFetchingPlayList }));
-            msg.channel.send(createErrorEmbed('Error when fetching playlist'));
+            this.channelManager.sendErrorMessage('Error when fetching playlist');
             throw errorWhenFetchingPlayList;
         }
 
@@ -123,7 +124,7 @@ export class SearchAndAddCommand implements ICommand {
             }, true);
         }
 
-        msg.channel.send(createInfoEmbed(`Playlist "${playList.title}" added`));
+        this.channelManager.sendInfoMessage(`Playlist "${playList.title}" added`);
     }
 
     private async searchForVideo(query: string, msg: Message, silent = false): Promise<void> {
@@ -133,7 +134,7 @@ export class SearchAndAddCommand implements ICommand {
             mediaItem = await this.mediaItemHelper.getMediaItemForSearchString(query);
         } catch (errorGettingMediaItemForSearchString) {
             this.logger.error(JSON.stringify({ errorGettingMediaItemForSearchString }));
-            msg.channel.send(createErrorEmbed('Error when fetching media item'));
+            this.channelManager.sendErrorMessage('Error when fetching media item');
             return;
         }
 

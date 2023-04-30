@@ -20,6 +20,7 @@ import { SearchAndAddCommand } from './SearchAndAddCommand';
 import { SearchCommand } from './SearchCommand';
 import { SimplePlayerActCommand } from './SimplePlayerActCommand';
 import { IQueueManager } from 'src/queue/QueueManager';
+import { IChannelManager } from 'src/channel/ChannelManager';
 
 export class CommandMapFactory implements ICommandMapFactory {
     constructor(
@@ -29,6 +30,7 @@ export class CommandMapFactory implements ICommandMapFactory {
         private readonly spotifyAPIHelper: SpotifyAPIHelper,
         private readonly mediaItemHelper: IMediaItemHelper,
         private readonly queueManager: IQueueManager,
+        private readonly channelManager: IChannelManager,
         private readonly logger: Logger
     ) {
 
@@ -84,17 +86,17 @@ export class CommandMapFactory implements ICommandMapFactory {
 
     private buildMusicBotCommands(): { [key: string]: ICommand } {
         return {
-            autoplay: new AutoPlayNextVideoCommand(this.player),
+            autoplay: new AutoPlayNextVideoCommand(this.queueManager, this.channelManager),
             clear: new SimplePlayerActCommand(this.player, 'clear'),
-            list: new ListSongsCommand(this.player),
-            move: new MoveSongCommand(this.player),
-            p: new SearchAndAddCommand(this.player, this.spotifyAPIHelper, this.mediaItemHelper, this.queueManager, this.logger),
+            list: new ListSongsCommand(this.queueManager, this.channelManager),
+            move: new MoveSongCommand(this.queueManager, this.channelManager),
+            p: new SearchAndAddCommand(this.player, this.spotifyAPIHelper, this.mediaItemHelper, this.queueManager, this.channelManager, this.logger),
             pause: new SimplePlayerActCommand(this.player, 'pause'),
-            ping: new PingCommand(),
-            q: new ListSongsCommand(this.player),
-            queue: new ListSongsCommand(this.player),
-            remove: new RemoveSongCommand(this.player),
-            search: new SearchCommand(this.player, this.mediaItemHelper, this.queueManager, this.config),
+            ping: new PingCommand(this.channelManager),
+            q: new ListSongsCommand(this.queueManager, this.channelManager),
+            queue: new ListSongsCommand(this.queueManager, this.channelManager),
+            remove: new RemoveSongCommand(this.queueManager),
+            search: new SearchCommand(this.player, this.mediaItemHelper, this.queueManager, this.channelManager, this.config),
             skip: new SimplePlayerActCommand(this.player, 'skip'),
             stop: new SimplePlayerActCommand(this.player, 'stop'),
         };
@@ -107,7 +109,7 @@ export class CommandMapFactory implements ICommandMapFactory {
             .join('\n');
         
         const helpCommand = {
-            execute: (cmd: SuccessfulParsedMessage<Message>, msg: Message): void => { msg.channel.send("Commands: \n\n" + descriptions) }
+            execute: (cmd: SuccessfulParsedMessage<Message>, msg: Message): void => { this.channelManager.sendInfoMessage("Commands: \n\n" + descriptions) }
         } as unknown as ICommand;
 
         return {
