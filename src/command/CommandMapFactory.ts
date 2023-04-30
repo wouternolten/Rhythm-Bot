@@ -19,6 +19,7 @@ import { RemoveSongCommand } from './RemoveSongCommand';
 import { SearchAndAddCommand } from './SearchAndAddCommand';
 import { SearchCommand } from './SearchCommand';
 import { SimplePlayerActCommand } from './SimplePlayerActCommand';
+import { IQueueManager } from 'src/queue/QueueManager';
 
 export class CommandMapFactory implements ICommandMapFactory {
     constructor(
@@ -27,6 +28,7 @@ export class CommandMapFactory implements ICommandMapFactory {
         private readonly config: IRhythmBotConfig,
         private readonly spotifyAPIHelper: SpotifyAPIHelper,
         private readonly mediaItemHelper: IMediaItemHelper,
+        private readonly queueManager: IQueueManager,
         private readonly logger: Logger
     ) {
 
@@ -86,7 +88,7 @@ export class CommandMapFactory implements ICommandMapFactory {
             clear: new SimplePlayerActCommand(this.player, 'clear'),
             list: new ListSongsCommand(this.player),
             move: new MoveSongCommand(this.player),
-            p: new SearchAndAddCommand(this.player, this.spotifyAPIHelper, this.mediaItemHelper, this.logger),
+            p: new SearchAndAddCommand(this.player, this.spotifyAPIHelper, this.mediaItemHelper, this.queueManager, this.logger),
             pause: new SimplePlayerActCommand(this.player, 'pause'),
             ping: new PingCommand(),
             q: new ListSongsCommand(this.player),

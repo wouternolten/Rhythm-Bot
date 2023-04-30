@@ -12,6 +12,7 @@ export default class CommandModule implements Module {
             tokens.config,
             tokens.spotifyApiHelper,
             tokens.youtubeApiHelper,
+            tokens.queueManager,
             tokens.logger
         ]);
     }   

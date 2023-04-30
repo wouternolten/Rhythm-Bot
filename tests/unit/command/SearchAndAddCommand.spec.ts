@@ -7,6 +7,8 @@ import { createErrorEmbed, createInfoEmbed } from '../../../src/helpers/helpers'
 import { mockLogger } from '../../mocks/mockLogger';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
+import { mock, MockProxy } from 'jest-mock-extended';
+import { IQueueManager } from '../../../src/queue/QueueManager';
 
 jest.mock('../../../src/helpers/helpers');
 
@@ -23,7 +25,6 @@ jest.mock('ytpl', () => {
 let searchAndAddCommand: SearchAndAddCommand;
 let mockYtplReturnValue;//, mockYtsReturnValue;
 let player = {
-    addMedia: jest.fn(),
     play: jest.fn()
 } as unknown as MediaPlayer;
 
@@ -48,9 +49,12 @@ const MESSAGE = {
     }
 } as unknown as Message;
 
+let queueManager: MockProxy<IQueueManager>;
+
 beforeEach(() => {
     jest.clearAllMocks();
-    searchAndAddCommand = new SearchAndAddCommand(player, spotifyAPIHelper, mediaItemHelper, logger);
+    queueManager = mock<IQueueManager>();
+    searchAndAddCommand = new SearchAndAddCommand(player, spotifyAPIHelper, mediaItemHelper, queueManager, logger);
 })
 
 it('Should return when no body given', async () => {
@@ -118,7 +122,7 @@ describe('Playlist', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(player.addMedia).toBeCalledTimes(2);
+        expect(queueManager.addMedia).toBeCalledTimes(2);
         expect(player.play).toBeCalled();
     });
 });
@@ -133,7 +137,7 @@ describe('Youtube video', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(player.addMedia).toBeCalled();
+        expect(queueManager.addMedia).toBeCalled();
         expect(player.play).toBeCalled();
     });
 });
@@ -161,7 +165,7 @@ describe('Search terms', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(player.addMedia).not.toBeCalled();
+        expect(queueManager.addMedia).not.toBeCalled();
     });
 
     it('Should add found video to player', async () => {
@@ -177,7 +181,7 @@ describe('Search terms', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(player.addMedia).toHaveBeenCalledWith({
+        expect(queueManager.addMedia).toHaveBeenCalledWith({
             ...video,
             requestor: RICK_ASTLEY
         }, false);

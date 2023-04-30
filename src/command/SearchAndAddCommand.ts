@@ -8,6 +8,7 @@ import { createErrorEmbed, createInfoEmbed } from '../helpers/helpers';
 import { MediaItem } from '../media/MediaItem';
 import ytpl from 'ytpl';
 import { IMediaItemHelper } from 'src/helpers/IMediaItemHelper';
+import { IQueueManager } from 'src/queue/QueueManager';
 
 const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
 const SPOTIFY_REGEX = /spotify\.com/;
@@ -17,6 +18,7 @@ export class SearchAndAddCommand implements ICommand {
         private readonly player: MediaPlayer,
         private readonly spotifyAPIHelper: SpotifyAPIHelper,
         private readonly mediaItemHelper: IMediaItemHelper,
+        private readonly queueManager: IQueueManager,
         private readonly logger: Logger,
     ) { }
     
@@ -36,7 +38,7 @@ export class SearchAndAddCommand implements ICommand {
                     return;
                 }
             } else {
-                await this.player.addMedia({
+                await this.queueManager.addMedia({
                     type: 'youtube',
                     url: cmd.body,
                     requestor: msg.author.username
@@ -112,7 +114,7 @@ export class SearchAndAddCommand implements ICommand {
         }
 
         for (const item of playList.items) {
-            await this.player.addMedia({
+            await this.queueManager.addMedia({
                 type: item.type,
                 name: item.name,
                 url: item.url,
@@ -136,7 +138,7 @@ export class SearchAndAddCommand implements ICommand {
         }
 
         if (mediaItem) {
-            await this.player.addMedia({
+            await this.queueManager.addMedia({
                 ...mediaItem,
                 requestor: msg.author.username
             }, silent);
