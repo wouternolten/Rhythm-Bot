@@ -1,10 +1,11 @@
+import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
+import { Message, MessageReaction, User } from 'discord.js';
+import { IQueueManager } from 'src/queue/QueueManager';
+import { Logger } from 'winston';
 import { ICommandMapFactory } from '../command/ICommandMapFactory';
+import { CommandMap } from '../helpers/CommandMap';
 import { MediaPlayer } from '../media/MediaPlayer';
 import { IRhythmBotConfig } from './IRhythmBotConfig';
-import { Logger } from 'winston';
-import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
-import { Message, MessageReaction, User, NewsChannel, Client } from 'discord.js';
-import { CommandMap } from '../helpers/CommandMap';
 
 export class RhythmBot {
     private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
@@ -14,6 +15,7 @@ export class RhythmBot {
         private readonly config: IRhythmBotConfig,
         private readonly user: User,
         private readonly player: MediaPlayer,
+        private readonly queueManager: IQueueManager,
         private readonly logger: Logger,
         commandMapFactory: ICommandMapFactory
     ) {
@@ -79,7 +81,7 @@ export class RhythmBot {
         
         if (reaction.emoji.name === this.config.emojis.addSong && embed.url) {
             this.logger.debug(`Emoji Click: Adding Media: ${embed.url}`);
-            this.player.addMedia({
+            this.queueManager.addMedia({
                 type: 'youtube',
                 url: embed.url,
                 requestor: user.username,

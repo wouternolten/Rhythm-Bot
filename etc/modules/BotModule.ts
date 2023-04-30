@@ -45,6 +45,7 @@ export default class BotModule implements Module {
             tokens.config,
             tokens.musicBotClientUser,
             tokens.mediaPlayer,
+            tokens.queueManager,
             tokens.logger,
             tokens.commandMapFactory
         ]);

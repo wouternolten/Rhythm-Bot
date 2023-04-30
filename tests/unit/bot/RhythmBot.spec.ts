@@ -1,9 +1,11 @@
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message, MessageReaction, User } from 'discord.js';
+import { mock, MockProxy } from 'jest-mock-extended';
 import { IRhythmBotConfig } from '../../../src/bot/IRhythmBotConfig';
 import { RhythmBot } from '../../../src/bot/RhythmBot';
 import { ICommandMapFactory } from '../../../src/command/ICommandMapFactory';
 import { CommandMap } from '../../../src/helpers/CommandMap';
+import { IQueueManager } from '../../../src/queue/QueueManager';
 import { mockLogger } from '../../mocks/mockLogger';
 import { MediaPlayer } from './../../../src/media/MediaPlayer';
 
@@ -43,7 +45,6 @@ const otherUser = {
 } as unknown as User;
 
 const mediaPlayer = {
-    addMedia: jest.fn(),
     stop: jest.fn(),
     play: jest.fn(),
     pause: jest.fn(),
@@ -65,12 +66,16 @@ const message = {
     author: otherUser
 } as unknown as Message;
 
+let queueManager: MockProxy<IQueueManager>;
+
 describe('Invalid config', () => {
     beforeEach(() => {
+        queueManager = mock<IQueueManager>();
         bot = new RhythmBot(
             {} as unknown as IRhythmBotConfig,
             botUser,
             mediaPlayer,
+            queueManager,
             logger,
             commandFactory
         );
@@ -91,12 +96,14 @@ describe('Invalid config', () => {
 
 describe('Valid constructor parameters', () => {
     beforeEach(() => {
+        queueManager = mock<IQueueManager>();
         jest.clearAllMocks();
 
         bot = new RhythmBot(
             config,
             botUser,
             mediaPlayer,
+            queueManager,
             logger,
             commandFactory
         );
@@ -233,7 +240,6 @@ describe('Valid constructor parameters', () => {
 
         describe('Reacting', () => {
             const emojiWithFunction = {
-                [config.emojis.addSong]: "addMedia",
                 [config.emojis.pauseSong]: "pause",
                 [config.emojis.playSong]: "play",
                 [config.emojis.skipSong]: "skip",
@@ -265,6 +271,31 @@ describe('Valid constructor parameters', () => {
                     expect(mediaPlayer[emojiWithFunction[emojiName]]).toBeCalled();
                     expect(reaction.users.remove).toBeCalled();
                 });
+            
+            it('Should perform action when add media emjo clicked', async () => {
+                const reaction = {
+                    partial: false,
+                    message: {
+                        author: {
+                            id: botUser.id
+                        },
+                        embeds: [{
+                            url: "some_url"
+                        }]
+                    },
+                    emoji: {
+                        name: config.emojis.addSong
+                    },
+                    users: {
+                        remove: jest.fn()
+                    }
+                } as unknown as MessageReaction;
+
+                await bot.handleReaction(reaction, otherUser);
+
+                expect(queueManager.addMedia).toBeCalled();
+                expect(reaction.users.remove).toBeCalled();
+            });
         });
     });
 });
