@@ -1,6 +1,7 @@
 import { mock, MockProxy } from 'jest-mock-extended';
 import { Logger } from 'winston';
 import { IRhythmBotConfig } from '../../../src/bot/IRhythmBotConfig';
+import { IChannelManager } from '../../../src/channel/ChannelManager';
 import { MediaItem } from '../../../src/media/MediaItem';
 import { IMediaType } from '../../../src/media/MediaType';
 import { ISongRecommender } from '../../../src/media/SongRecommender';
@@ -29,18 +30,21 @@ let configuration: MockProxy<IRhythmBotConfig>;
 let mediaTypeProver: MockProxy<MediaTypeProvider>;
 let logger: MockProxy<Logger>;
 let songRecommender: MockProxy<ISongRecommender>;
+let channelManager: MockProxy<IChannelManager>;
 
 beforeEach(() => {
     configuration = mock<IRhythmBotConfig>();
     mediaTypeProver = mock<MediaTypeProvider>();
     logger = mock<Logger>();
     songRecommender = mock<ISongRecommender>();
+    channelManager = mock<IChannelManager>();
 
     queueManager = new QueueManager(
         configuration,
         mediaTypeProver,
         logger,
-        songRecommender
+        songRecommender,
+        channelManager
     );
 });
 
@@ -56,6 +60,7 @@ describe('addMedia()', () => {
         await queueManager.addMedia(VALID_ITEM);
 
         expect(queueManager.at(0)).toEqual(VALID_ITEM);
+        expect(channelManager.sendTrackAddedMessage).toHaveBeenCalledWith(VALID_ITEM, 1);
     });
 
     it('Should reject when mediaType is not fetched', async () => {
@@ -117,7 +122,8 @@ describe('getNextSongToPlay()', () => {
                 configuration,
                 mediaTypeProver,
                 logger,
-                songRecommender
+                songRecommender,
+                channelManager
             );
         });
 
