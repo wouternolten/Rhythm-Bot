@@ -5,6 +5,7 @@ import { IMediaType } from "./../media/MediaType";
 import { ISongRecommender } from "./../media/SongRecommender";
 import { MediaTypeProvider } from "./../mediatypes/MediaTypeProvider";
 import { Logger } from "winston";
+import { IChannelManager } from "src/channel/ChannelManager";
 
 export interface IQueueManager {
     addMedia(item: MediaItem, silent?: boolean): Promise<void>;
@@ -28,7 +29,8 @@ export class QueueManager implements IQueueManager {
         readonly configuration: IRhythmBotConfig,
         private readonly mediaTypeProvider: MediaTypeProvider,
         private readonly logger: Logger,
-        private readonly songRecommender: ISongRecommender
+        private readonly songRecommender: ISongRecommender,
+        private readonly channelManager: IChannelManager
     ) {
         this.autoPlay = configuration.queue.autoPlay;
     }
@@ -56,7 +58,11 @@ export class QueueManager implements IQueueManager {
 
         this.queue.enqueue(item);
 
-        // TODO: ADD STATUS
+        if (silent) {
+            return;
+        }
+
+        this.channelManager.sendTrackAddedMessage(item, this.queue.indexOf(item) + 1);
     }
 
     async getNextSongToPlay(): Promise<MediaItem | undefined> {

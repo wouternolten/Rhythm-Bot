@@ -6,6 +6,7 @@ import { MediaPlayer } from '../src/media/MediaPlayer';
 import { RhythmBot } from './bot/RhythmBot';
 import container from '../etc/container';
 import tokens from '../etc/tokens';
+import { ChannelManager } from './channel/ChannelManager';
 
 let musicBotCreated = false;
 
@@ -124,6 +125,11 @@ function initMusicBot(state: VoiceState): void {
         cacheChannel => cacheChannel.name.toLowerCase().startsWith('rhythm') &&
         cacheChannel.isTextBased()
     ).first();
+
+    container.share(tokens.channelManager, (): ChannelManager => new ChannelManager(
+        container.get(tokens.config),
+        channel as TextChannel
+    ));
 
     container.share(tokens.mediaPlayer, (): MediaPlayer => new MediaPlayer(
         container.get(tokens.config),
