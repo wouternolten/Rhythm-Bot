@@ -6,18 +6,14 @@ import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { EmbedBuilder, Message } from 'discord.js';
 import { createEmbed, createInfoEmbed } from '../../../src/helpers/helpers';
 import { IRhythmBotConfig } from '../../../src/bot/IRhythmBotConfig';
+import { mock, MockProxy } from 'jest-mock-extended';
+import { IQueueManager } from '../../../src/queue/QueueManager';
 
 jest.mock('../../../src/helpers/helpers');
 
-const player = {
-    addMedia: jest.fn(),
-    play: jest.fn()
-} as unknown as MediaPlayer;
-
-const mediaItemHelper = {
-    getMediaItemsForSearchString: jest.fn(),
-    getMediaItemForSearchString: jest.fn()
-} as IMediaItemHelper;
+const player: MockProxy<MediaPlayer> = mock<MediaPlayer>();
+const mediaItemHelper: MockProxy<IMediaItemHelper> = mock<IMediaItemHelper>(); 
+const queueManager: MockProxy<IQueueManager> = mock<IQueueManager>();
 
 const config = {
     emojis: {
@@ -44,6 +40,7 @@ beforeEach(() => {
     searchCommand = new SearchCommand(
         player,
         mediaItemHelper,
+        queueManager,
         config
     );
 });
@@ -69,7 +66,7 @@ describe('Youtube search', () => {
         
         await searchCommand.execute(cmd, MESSAGE);
 
-        expect(player.addMedia).toBeCalled();
+        expect(queueManager.addMedia).toBeCalled();
         expect(player.play).toBeCalled();
     });
 });

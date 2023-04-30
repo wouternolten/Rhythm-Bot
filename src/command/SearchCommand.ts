@@ -5,6 +5,7 @@ import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { ICommand } from './ICommand';
 import { createEmbed, createInfoEmbed } from '../helpers/helpers';
+import { IQueueManager } from 'src/queue/QueueManager';
 
 const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
 
@@ -12,6 +13,7 @@ export class SearchCommand implements ICommand {
     constructor(
         private readonly player: MediaPlayer,
         private readonly mediaItemHelper: IMediaItemHelper,
+        private readonly queueManager: IQueueManager,
         private readonly config: IRhythmBotConfig
     ) { }
 
@@ -24,7 +26,7 @@ export class SearchCommand implements ICommand {
         } 
 
         if (YOUTUBE_REGEX.test(cmd.body)) {
-            await this.player.addMedia({
+            await this.queueManager.addMedia({
                 type: 'youtube',
                 url: cmd.body,
                 requestor: msg.author.username

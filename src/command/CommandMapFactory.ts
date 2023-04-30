@@ -94,7 +94,7 @@ export class CommandMapFactory implements ICommandMapFactory {
             q: new ListSongsCommand(this.player),
             queue: new ListSongsCommand(this.player),
             remove: new RemoveSongCommand(this.player),
-            search: new SearchCommand(this.player, this.mediaItemHelper, this.config),
+            search: new SearchCommand(this.player, this.mediaItemHelper, this.queueManager, this.config),
             skip: new SimplePlayerActCommand(this.player, 'skip'),
             stop: new SimplePlayerActCommand(this.player, 'stop'),
         };
