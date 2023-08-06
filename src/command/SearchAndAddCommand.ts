@@ -20,9 +20,9 @@ export class SearchAndAddCommand implements ICommand {
         private readonly mediaItemHelper: IMediaItemHelper,
         private readonly queueManager: IQueueManager,
         private readonly channelManager: IChannelManager,
-        private readonly logger: Logger,
-    ) { }
-    
+        private readonly logger: Logger
+    ) {}
+
     async execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): Promise<void> {
         const query = cmd.body;
 
@@ -34,15 +34,16 @@ export class SearchAndAddCommand implements ICommand {
         if (YOUTUBE_REGEX.test(query)) {
             if (query.indexOf('&list=') !== -1) {
                 try {
-                    await this.addYoutubePlayList(query, msg)
+                    await this.addYoutubePlayList(query, msg);
                 } catch (error) {
                     return;
                 }
             } else {
+                console.log(3);
                 await this.queueManager.addMedia({
                     type: 'youtube',
                     url: cmd.body,
-                    requestor: msg.author.username
+                    requestor: msg.author.username,
                 });
             }
         } else if (SPOTIFY_REGEX.test(query)) {
@@ -65,7 +66,7 @@ export class SearchAndAddCommand implements ICommand {
     }
 
     getDescription(): string {
-        return `search for a song and directly add it to the queue.`
+        return `search for a song and directly add it to the queue.`;
     }
 
     private async addSpotifyPlayList(query: string, msg: Message): Promise<void> {
@@ -79,7 +80,7 @@ export class SearchAndAddCommand implements ICommand {
         let playListItems;
 
         try {
-            playListItems = await this.spotifyAPIHelper.getTracksFromPlaylist(playListId)
+            playListItems = await this.spotifyAPIHelper.getTracksFromPlaylist(playListId);
         } catch (errorGettingTracksFromPlaylist) {
             this.logger.error(JSON.stringify({ errorGettingTracksFromPlaylist }));
             this.channelManager.sendErrorMessage('Error when trying get tracks from playlist');
@@ -87,13 +88,15 @@ export class SearchAndAddCommand implements ICommand {
             return;
         }
 
-        await Promise.all(playListItems.map(async (playListItem: string) => {
-            try {
-                await this.searchForVideo(playListItem, msg, true);
-            } catch (error) { }
-            
-            this.logger.info(`Added ${playListItem}`);
-        }));
+        await Promise.all(
+            playListItems.map(async (playListItem: string) => {
+                try {
+                    await this.searchForVideo(playListItem, msg, true);
+                } catch (error) {}
+
+                this.logger.info(`Added ${playListItem}`);
+            })
+        );
 
         this.channelManager.sendInfoMessage('Added spotify playlist');
     }
@@ -115,13 +118,16 @@ export class SearchAndAddCommand implements ICommand {
         }
 
         for (const item of playList.items) {
-            await this.queueManager.addMedia({
-                type: item.type,
-                name: item.name,
-                url: item.url,
-                duration: item.duration,
-                requestor: msg.author.username,
-            }, true);
+            await this.queueManager.addMedia(
+                {
+                    type: item.type,
+                    name: item.name,
+                    url: item.url,
+                    duration: item.duration,
+                    requestor: msg.author.username,
+                },
+                true
+            );
         }
 
         this.channelManager.sendInfoMessage(`Playlist "${playList.title}" added`);
@@ -139,14 +145,17 @@ export class SearchAndAddCommand implements ICommand {
         }
 
         if (mediaItem) {
-            await this.queueManager.addMedia({
-                ...mediaItem,
-                requestor: msg.author.username
-            }, silent);
+            await this.queueManager.addMedia(
+                {
+                    ...mediaItem,
+                    requestor: msg.author.username,
+                },
+                silent
+            );
         }
     }
 
-    private async getPlayList(url: string): Promise<{ title: string, items: MediaItem[] }> {
+    private async getPlayList(url: string): Promise<{ title: string; items: MediaItem[] }> {
         let playList: ytpl.Result;
 
         playList = await ytpl(url);
@@ -163,7 +172,10 @@ export class SearchAndAddCommand implements ICommand {
 
         return {
             title: playList.title,
-            items: playList.items.map(item => ({ type: 'youtube', url: item.shortUrl, name: item.title, duration: item.duration } as MediaItem))
+            items: playList.items.map(
+                (item) =>
+                    ({ type: 'youtube', url: item.shortUrl, name: item.title, duration: item.duration } as MediaItem)
+            ),
         };
     }
 }
