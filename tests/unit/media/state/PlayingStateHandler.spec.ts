@@ -1,10 +1,10 @@
 import { AudioPlayer } from '@discordjs/voice';
 import { mock } from 'jest-mock-extended';
-import PlayingStateHandler from './../../../../src/media/state/PlayingStateHandler';
-import { BotStatus } from './../../../../src/bot/BotStatus';
-import { IQueueManager } from './../../../../src/queue/QueueManager';
-import { IChannelManager } from './../../../../src/channel/ChannelManager';
 import { getValidMediaItem } from '../../../fixtures/mediaItemFixtures';
+import { BotStatus } from './../../../../src/bot/BotStatus';
+import { IChannelManager } from './../../../../src/channel/ChannelManager';
+import PlayingStateHandler from './../../../../src/media/state/PlayingStateHandler';
+import { IQueueManager } from './../../../../src/queue/QueueManager';
 
 let handler: PlayingStateHandler;
 
@@ -14,7 +14,7 @@ const queueManager = mock<IQueueManager>();
 const channelManager = mock<IChannelManager>();
 
 beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
 
     handler = new PlayingStateHandler(status, audioPlayer, queueManager, channelManager);
 });

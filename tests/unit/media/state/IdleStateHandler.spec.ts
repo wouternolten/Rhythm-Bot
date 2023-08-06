@@ -22,7 +22,7 @@ const queueManager = mock<IQueueManager>();
 const channelManager = mock<IChannelManager>();
 
 beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
 
     handler = new IdleStateHandler(status, logger, mediaTypeProvider, audioPlayer, queueManager, channelManager);
 });
