@@ -1,18 +1,18 @@
-import { IRhythmBotConfig } from "./../bot/IRhythmBotConfig";
-import { MediaItem } from "./../media/MediaItem";
-import { MediaQueue } from "./../media/MediaQueue";
-import { IMediaType } from "./../media/MediaType";
-import { ISongRecommender } from "./../media/SongRecommender";
-import { MediaTypeProvider } from "./../mediatypes/MediaTypeProvider";
-import { Logger } from "winston";
-import { IChannelManager } from "src/channel/ChannelManager";
+import { IRhythmBotConfig } from './../bot/IRhythmBotConfig';
+import { MediaItem } from './../media/MediaItem';
+import { MediaQueue } from './../media/MediaQueue';
+import { IMediaType } from './../media/MediaType';
+import { ISongRecommender } from './../media/SongRecommender';
+import { MediaTypeProvider } from './../mediatypes/MediaTypeProvider';
+import { Logger } from 'winston';
+import { IChannelManager } from 'src/channel/ChannelManager';
 
 export interface IQueueManager {
     addMedia(item: MediaItem, silent?: boolean): Promise<void>;
     getNextSongToPlay(): Promise<MediaItem | undefined>;
+    clear(): void;
     at(index: number): MediaItem;
     remove(item: MediaItem): void;
-    clear(): void;
     shuffle(): void;
     move(currentIndex: number, targetIndex: number): void;
     getAutoPlay(): boolean;
@@ -77,7 +77,7 @@ export class QueueManager implements IQueueManager {
             return undefined;
         }
 
-        const nextSong = await this.findNextSongToPlay(this.lastFetchedSong)
+        const nextSong = await this.findNextSongToPlay(this.lastFetchedSong);
 
         if (nextSong) {
             this.lastFetchedSong = nextSong;
@@ -94,12 +94,12 @@ export class QueueManager implements IQueueManager {
         this.queue.dequeue(item);
     }
 
-    clear(): void {
-        this.queue.clear();
-    }
-
     shuffle(): void {
         this.queue.shuffle();
+    }
+
+    clear(): void {
+        this.queue.clear();
     }
 
     move(currentIndex: number, targetIndex: number): void {
@@ -130,10 +130,10 @@ export class QueueManager implements IQueueManager {
     getLastPlayedSong(): MediaItem | undefined {
         return this.lastFetchedSong;
     }
-    
+
     private async findNextSongToPlay(lastPlayedSong: MediaItem): Promise<MediaItem | undefined> {
-        let nextSong: MediaItem | undefined | null; 
-        
+        let nextSong: MediaItem | undefined | null;
+
         try {
             nextSong = await this.songRecommender.recommendNextSong(lastPlayedSong);
         } catch (e) {
