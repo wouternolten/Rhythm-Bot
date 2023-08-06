@@ -40,6 +40,7 @@ export class MediaPlayer {
     }
 
     private async performFunction(functionName: string, nextState: PlayerState, silent?: boolean): Promise<void> {
+        this.logger.debug(`Performing function ${functionName}, current state ${this.state}, next state: ${nextState}`);
         try {
             const handler = this.getHandlerForState(this.state);
 

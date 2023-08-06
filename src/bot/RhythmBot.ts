@@ -10,7 +10,6 @@ import { IRhythmBotConfig } from './IRhythmBotConfig';
 export class RhythmBot {
     private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
 
-    // TODO: Clean up constructor.
     constructor(
         private readonly config: IRhythmBotConfig,
         private readonly user: User,
@@ -21,7 +20,7 @@ export class RhythmBot {
     ) {
         this.commands = commandMapFactory.createMusicBotCommandsMap();
     }
-    
+
     handleMessage(msg: Message): void {
         if (!this.config.command?.symbol) {
             this.logger.error('Symbol handle message not set.');
@@ -47,7 +46,7 @@ export class RhythmBot {
         }
 
         this.logger.debug(`Bot Command: ${msg.content}`);
-        handlers.forEach(handle => {
+        handlers.forEach((handle) => {
             handle(parsed as SuccessfulParsedMessage<Message>, msg);
         });
     }
@@ -76,9 +75,9 @@ export class RhythmBot {
         ) {
             return;
         }
-    
+
         const embed = reaction.message.embeds[0];
-        
+
         if (reaction.emoji.name === this.config.emojis.addSong && embed.url) {
             this.logger.debug(`Emoji Click: Adding Media: ${embed.url}`);
             this.queueManager.addMedia({
@@ -92,7 +91,7 @@ export class RhythmBot {
             this.logger.debug('Emoji Click: Stopping Song');
             this.player.stop();
         }
-        
+
         if (reaction.emoji.name === this.config.emojis.playSong) {
             this.logger.debug('Emoji Click: Playing/Resuming Song');
             this.player.play();
@@ -102,12 +101,12 @@ export class RhythmBot {
             this.logger.debug('Emoji Click: Pausing Song');
             this.player.pause();
         }
-        
+
         if (reaction.emoji.name === this.config.emojis.skipSong) {
             this.logger.debug('Emoji Click: Skipping Song');
             this.player.skip();
         }
-        
+
         reaction.users.remove(user.id);
     }
 }

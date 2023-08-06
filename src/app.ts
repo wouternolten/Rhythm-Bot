@@ -157,7 +157,6 @@ function initMusicBot(state: VoiceState): void {
     const logger: Logger = container.get(tokens.logger);
 
     client.on('messageCreate', (msg: Message) => {
-        logger.debug('Getting message');
         musicBot.handleMessage(msg);
     });
 
