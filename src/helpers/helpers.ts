@@ -1,4 +1,4 @@
-import { EmbedBuilder, RGBTuple } from "@discordjs/builders";
+import { EmbedBuilder, RGBTuple } from '@discordjs/builders';
 
 const darkBlue: RGBTuple = [0, 153, 255];
 const darkOrange: RGBTuple = [255, 51, 0];
@@ -13,7 +13,7 @@ export function secondsToTimestamp(seconds: number): string {
 
     let hours = Math.floor(secondsLeft / 3600);
     secondsLeft -= hours * 3600;
-    
+
     let minutes = Math.floor(secondsLeft / 60);
     secondsLeft -= minutes * 60;
 
@@ -38,11 +38,15 @@ export function createErrorEmbed(message: string) {
     return { embeds: [new EmbedBuilder().setColor(darkOrange).setTitle('Error').setDescription(message)] };
 }
 
-export function createInfoEmbed(title: string, message: string = '') {
-    const infoEmbed = new EmbedBuilder().setColor(darkBlue).setTitle(title);
+export function createInfoEmbed(message: string, title?: string) {
+    const infoEmbed = new EmbedBuilder().setColor(darkBlue).setDescription(message);
 
-    if (message) {
-        infoEmbed.setDescription(message);
+    try {
+        if (title) {
+            infoEmbed.setTitle(title);
+        }
+    } catch (error) {
+        console.error(error);
     }
 
     return { embeds: [infoEmbed] };

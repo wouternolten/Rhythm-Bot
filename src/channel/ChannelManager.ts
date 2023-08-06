@@ -1,7 +1,7 @@
-import { TextChannel, DMChannel, NewsChannel, Message } from "discord.js";
-import { IRhythmBotConfig } from "src/bot/IRhythmBotConfig";
-import { createEmbed, createErrorEmbed, createInfoEmbed } from "./../helpers/helpers";
-import { MediaItem } from "./../media/MediaItem";
+import { TextChannel, DMChannel, NewsChannel, Message } from 'discord.js';
+import { IRhythmBotConfig } from 'src/bot/IRhythmBotConfig';
+import { createEmbed, createErrorEmbed, createInfoEmbed } from './../helpers/helpers';
+import { MediaItem } from './../media/MediaItem';
 
 export interface IChannelManager {
     sendInfoMessage(message: string): Promise<void>;
@@ -16,14 +16,14 @@ export class ChannelManager implements IChannelManager {
     constructor(
         private readonly config: IRhythmBotConfig,
         private readonly channel: TextChannel | DMChannel | NewsChannel
-    ) { }
-    
+    ) {}
+
     async sendInfoMessage(message: string): Promise<void> {
         await this.channel.send(createInfoEmbed(message));
     }
 
     async sendInfoMessageWithTitle(message: string, title: string): Promise<void> {
-        await this.channel.send(createInfoEmbed(title, message));
+        await this.channel.send(createInfoEmbed(message, title));
     }
 
     async sendErrorMessage(message: string): Promise<void> {
@@ -35,6 +35,7 @@ export class ChannelManager implements IChannelManager {
             embeds: [
                 createEmbed()
                     .setTitle('Track Added')
+                    .setImage(item.imageUrl ?? '')
                     .addFields(
                         { name: 'Title:', value: item.name },
                         {
@@ -47,8 +48,8 @@ export class ChannelManager implements IChannelManager {
                             value: item.requestor,
                             inline: true,
                         }
-                    )
-            ]
+                    ),
+            ],
         });
     }
 
@@ -58,15 +59,15 @@ export class ChannelManager implements IChannelManager {
                 createEmbed()
                     .setTitle('▶️ Now playing')
                     .setDescription(`${item.name}`)
-                    .addFields({ name: 'Requested By', value: `${item.requestor}` })
-            ]
+                    .addFields({ name: 'Requested By', value: `${item.requestor}` }),
+            ],
         });
 
         await Promise.all([
             message.react(this.config.emojis.stopSong),
             message.react(this.config.emojis.playSong),
             message.react(this.config.emojis.pauseSong),
-            message.react(this.config.emojis.skipSong)
+            message.react(this.config.emojis.skipSong),
         ]);
     }
 
