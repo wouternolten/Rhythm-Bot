@@ -85,10 +85,6 @@ export class MediaPlayer {
             await this.play();
         });
 
-        this.audioPlayer.on('debug', (message) => {
-            this.logger.debug(`V1 debug: ${message}`);
-        });
-
         this.status.emptyBanner();
     }
 
