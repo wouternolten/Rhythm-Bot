@@ -22,8 +22,6 @@ export default class PausedStateHandler extends AbstractMediaPlayerStateHandler 
 
         const currentSong = this.queueManager.getLastPlayedSong();
 
-        console.log(currentSong);
-
         if (currentSong) {
             this.status.setBanner(`Playing ${currentSong.name}`);
             this.channelManager.sendInfoMessage(`⏯️ "${currentSong.name}" resumed`);
@@ -42,7 +40,7 @@ export default class PausedStateHandler extends AbstractMediaPlayerStateHandler 
             }
         }
 
-        const nextSongToPlay = await this.queueManager.getNextSongToPlay();
+        const nextSongToPlay = this.queueManager.nextSongInQueue();
 
         if (nextSongToPlay) {
             this.status.setBanner(`Up Next: "${nextSongToPlay.name}" Requested by: ${nextSongToPlay.requestor}`);

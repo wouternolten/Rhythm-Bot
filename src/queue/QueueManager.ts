@@ -10,6 +10,7 @@ import { MediaTypeProvider } from './../mediatypes/MediaTypeProvider';
 export interface IQueueManager {
     addMedia(item: MediaItem, silent?: boolean): Promise<void>;
     getNextSongToPlay(): Promise<MediaItem | undefined>;
+    nextSongInQueue(): MediaItem | undefined;
     at(index: number): MediaItem;
     remove(item: MediaItem): void;
     move(currentIndex: number, targetIndex: number): void;
@@ -82,6 +83,10 @@ export class QueueManager implements IQueueManager {
         }
 
         return nextSong;
+    }
+
+    nextSongInQueue(): MediaItem | undefined {
+        return this.at(0);
     }
 
     at(index: number): MediaItem {

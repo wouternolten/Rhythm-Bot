@@ -27,7 +27,7 @@ export default class PlayingStateHandler extends AbstractMediaPlayerStateHandler
             }
         }
 
-        const nextSongToPlay = await this.queueManager.getNextSongToPlay();
+        const nextSongToPlay = await this.queueManager.nextSongInQueue();
 
         if (nextSongToPlay) {
             this.status.setBanner(`Up Next: "${nextSongToPlay.name}" Requested by: ${nextSongToPlay.requestor}`);

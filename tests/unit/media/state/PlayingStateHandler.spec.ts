@@ -61,7 +61,7 @@ describe('stop()', () => {
         });
 
         it('Should set the banner to the next song to play when found', async () => {
-            queueManager.getNextSongToPlay.mockResolvedValue(getValidMediaItem());
+            queueManager.nextSongInQueue.mockResolvedValue(getValidMediaItem());
 
             await handler.stop(true);
 
