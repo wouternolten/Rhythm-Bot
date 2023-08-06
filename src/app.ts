@@ -47,10 +47,9 @@ async function initialiseClients(): Promise<void> {
         process.exit(1);
     }
 
-    musicBotClient.on('voiceStateUpdate', async (oldState) => {
-        if (!musicBotCreated) {
-            logger.debug('voiceStateUpdate for music bot');
-            initMusicBot(oldState);
+    musicBotClient.on('voiceStateUpdate', async (_, newState) => {
+        if (!musicBotCreated && newState) {
+            initMusicBot(newState);
             musicBotCreated = true;
         }
     });
