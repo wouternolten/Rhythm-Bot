@@ -1,4 +1,4 @@
-import { ChannelType, Message, MessageReaction, TextChannel, User, VoiceState } from 'discord.js';
+import { Message, MessageReaction, TextChannel, User, VoiceState } from 'discord.js';
 import 'reflect-metadata';
 import { config as dotenv } from 'dotenv';
 import { Logger } from 'winston';
@@ -132,16 +132,14 @@ function initMusicBot(state: VoiceState): void {
     ));
 
     container.share(tokens.mediaPlayer, (): MediaPlayer => new MediaPlayer(
-        container.get(tokens.config),
         container.get(tokens.botStatus),
         container.get(tokens.logger),
         container.get(tokens.mediaTypeProvider),
-        container.get(tokens.songRecommender),
-        channel as TextChannel,
-        container.get(tokens.musicBotAudioPlayerFactory).createSubscribedAudioPlayer(state)
+        container.get(tokens.musicBotAudioPlayerFactory).createSubscribedAudioPlayer(state),
+        container.get(tokens.queueManager),
+        container.get(tokens.channelManager),
     ));
 
-    const mediaPlayer: MediaPlayer = container.get(tokens.mediaPlayer);
     const musicBot: RhythmBot = container.get(tokens.rhythmBot);
     const logger: Logger = container.get(tokens.logger);
             
