@@ -1,16 +1,10 @@
-import { AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType } from '@discordjs/voice';
+import { AudioPlayer, AudioPlayerStatus } from '@discordjs/voice';
 import { IChannelManager } from 'src/channel/ChannelManager';
 import { IQueueManager } from 'src/queue/QueueManager';
 import { Logger } from 'winston';
 import { BotStatus } from '../bot/BotStatus';
-import { IMediaTypeProvider } from '../mediatypes/IMediaTypeProvider';
-import { MediaItem } from './MediaItem';
-
-enum PlayerState {
-    Playing = 'playing',
-    Paused = 'paused',
-    Idle = 'idle',
-}
+import IMediaPlayerStateHandler from './state/IMediaPlayerStateHandler';
+import { PlayerState } from './state/Types';
 
 // TODO: Why does the player stop for a millisecond when searching?
 export class MediaPlayer {
@@ -19,10 +13,10 @@ export class MediaPlayer {
     constructor(
         private readonly status: BotStatus, // TODO: Make subscription-driven. (Command, don't ask)
         private readonly logger: Logger,
-        private readonly mediaTypeProvider: IMediaTypeProvider,
         private readonly audioPlayer: AudioPlayer,
         private readonly queueManager: IQueueManager,
-        private readonly channelManager: IChannelManager
+        private readonly channelManager: IChannelManager,
+        private readonly stateHandlers: IMediaPlayerStateHandler[]
     ) {
         this.initializePlayer();
     }
@@ -31,89 +25,38 @@ export class MediaPlayer {
     // State changing methods
     // --------------------------------------------------------------------------
     async play(): Promise<void> {
-        if (this.isInState(PlayerState.Playing)) {
-            return;
-        }
-
-        if (this.isInState(PlayerState.Paused)) {
-            this.setPlayerState(PlayerState.Playing);
-            if (!this.audioPlayer.unpause()) {
-                this.setPlayerState(PlayerState.Paused);
-                return;
-            }
-
-            const currentSong = this.queueManager.getLastPlayedSong();
-
-            if (currentSong) {
-                this.status.setBanner(`Playing ${currentSong.name}`);
-                this.channelManager.sendInfoMessage(`⏯️ "${currentSong.name}" resumed`);
-            }
-            return;
-        }
-
-        try {
-            const itemToPlay = await this.queueManager.getNextSongToPlay();
-
-            if (!itemToPlay) {
-                this.channelManager.sendErrorMessage('Failed to find song. Try again please.');
-                return;
-            }
-
-            await this.playFirstItemFromQueue(itemToPlay);
-        } catch (error) {
-            this.logger.error('Failed to play song due to error', error);
-            return;
-        }
+        await this.performFunction('play', PlayerState.Playing);
     }
 
     async stop(silent: boolean = false): Promise<void> {
-        if (this.state === PlayerState.Idle) {
-            return;
-        }
-
-        const previousPlayerState = this.state;
-
-        if (!this.audioPlayer.stop()) {
-            this.logger.error('Failed to stop player.');
-            this.setPlayerState(previousPlayerState);
-            return;
-        }
-
-        this.setPlayerState(PlayerState.Idle);
-
-        const lastPlayedSong = this.queueManager.getLastPlayedSong();
-        if (lastPlayedSong && !silent) {
-            this.channelManager.sendInfoMessage(`⏹️ "${lastPlayedSong.name}" stopped`);
-        }
-
-        const nextSongToPlay = await this.queueManager.getNextSongToPlay();
-
-        if (nextSongToPlay) {
-            this.status.setBanner(`Up Next: "${nextSongToPlay.name}" Requested by: ${nextSongToPlay.requestor}`);
-            return;
-        }
-
-        this.status.emptyBanner();
+        await this.performFunction('stop', PlayerState.Idle, silent);
     }
 
-    pause(): void {
-        if (this.state !== PlayerState.Playing || !this.audioPlayer.pause()) {
-            return;
-        }
-
-        this.setPlayerState(PlayerState.Paused);
-        const lastSong = this.queueManager.getLastPlayedSong();
-
-        if (lastSong) {
-            this.channelManager.sendInfoMessage(`⏸️ "${lastSong?.name}" paused`);
-            this.status.setBanner(`Paused: "${lastSong.name}" Requested by: ${lastSong.requestor}`);
-        }
+    async pause(): Promise<void> {
+        await this.performFunction('pause', PlayerState.Paused);
     }
 
     async skip(): Promise<void> {
-        this.stop(true);
+        await this.stop(true);
         await this.channelManager.sendInfoMessage(`⏭️ "${this.queueManager.getLastPlayedSong()?.name}" skipped`);
-        this.play();
+        await this.play();
+    }
+
+    private async performFunction(functionName: string, nextState: PlayerState, silent?: boolean): Promise<void> {
+        try {
+            const handler = this.getHandlerForState(this.state);
+
+            if (silent === undefined) {
+                await handler[functionName]();
+            } else {
+                await handler[functionName](silent);
+            }
+
+            this.setPlayerState(nextState);
+        } catch (error) {
+            this.channelManager.sendErrorMessage(`Failed to ${functionName} player`);
+            this.logger.error(error);
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -152,24 +95,6 @@ export class MediaPlayer {
         return this.state === state;
     }
 
-    private async playFirstItemFromQueue(item: MediaItem): Promise<void> {
-        let type = this.mediaTypeProvider.get(item.type);
-
-        if (!type) {
-            this.channelManager.sendErrorMessage(`Invalid type for item. See logs`);
-            this.logger.error(JSON.stringify({ message: 'Invalid type for item', erroredItem: item }));
-            return;
-        }
-
-        this.setPlayerState(PlayerState.Playing);
-        const currentSong = await type.getStream(item);
-
-        this.audioPlayer.play(createAudioResource(currentSong, { inputType: StreamType.Arbitrary }));
-
-        this.status.setBanner(`Playing ${item.name}`);
-        this.channelManager.sendTrackPlayingMessage(item);
-    }
-
     private initializePlayer(): void {
         this.audioPlayer.on('error', async (error) => {
             await this.skip();
@@ -194,5 +119,15 @@ export class MediaPlayer {
         });
 
         this.status.emptyBanner();
+    }
+
+    private getHandlerForState(state: PlayerState): IMediaPlayerStateHandler {
+        const handler = this.stateHandlers.find((handler) => handler.getApplicableStateName() === state);
+
+        if (!handler) {
+            throw new Error('Handler not found');
+        }
+
+        return handler;
     }
 }
