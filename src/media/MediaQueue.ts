@@ -20,28 +20,9 @@ export class MediaQueue extends Array<MediaItem> {
                 this.splice(idx, 1);
             }
             return item;
-        } else {
-            return this.shift();
         }
-    }
 
-    clear() {
-        this.length = 0;
-    }
-
-    shuffle() {
-        let currentIndex = this.length,
-            temporaryValue,
-            randomIndex;
-
-        while (0 !== currentIndex) {
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex -= 1;
-
-            temporaryValue = this[currentIndex];
-            this[currentIndex] = this[randomIndex];
-            this[randomIndex] = temporaryValue;
-        }
+        return this.shift();
     }
 
     move(key1, key2) {

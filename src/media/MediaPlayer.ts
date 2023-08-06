@@ -21,9 +21,6 @@ export class MediaPlayer {
         this.initializePlayer();
     }
 
-    // --------------------------------------------------------------------------
-    // State changing methods
-    // --------------------------------------------------------------------------
     async play(): Promise<void> {
         await this.performFunction('play', PlayerState.Playing);
     }
@@ -59,33 +56,6 @@ export class MediaPlayer {
         }
     }
 
-    // --------------------------------------------------------------------------
-    // Queue changing methods
-    // --------------------------------------------------------------------------
-    clear() {
-        if (!this.isInState(PlayerState.Idle)) {
-            this.stop(true);
-        }
-
-        this.queueManager.clear();
-        this.channelManager.sendInfoMessage(`Playlist cleared`);
-    }
-
-    // TODO: Change feature; shuffle should just select a different song as soon as this one is done.
-    shuffle() {
-        if (!this.isInState(PlayerState.Idle)) {
-            this.stop(true);
-        }
-
-        this.queueManager.shuffle();
-        this.channelManager.sendInfoMessage(`🔀 Queue Shuffled`);
-
-        this.play();
-    }
-
-    // --------------------------------------------------------------------------
-    // Private methods
-    // --------------------------------------------------------------------------
     private setPlayerState(state: PlayerState) {
         this.logger.debug(`Player moving from state ${this.state} to ${state}`);
         this.state = state;
