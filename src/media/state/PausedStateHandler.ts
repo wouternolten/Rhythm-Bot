@@ -3,6 +3,7 @@ import { BotStatus } from 'src/bot/BotStatus';
 import { IChannelManager } from 'src/channel/ChannelManager';
 import { IQueueManager } from 'src/queue/QueueManager';
 import AbstractMediaPlayerStateHandler from './AbstractMediaPlayerStateHandler';
+import { PlayerState } from './Types';
 
 export default class PausedStateHandler extends AbstractMediaPlayerStateHandler {
     constructor(
@@ -49,5 +50,9 @@ export default class PausedStateHandler extends AbstractMediaPlayerStateHandler 
         }
 
         this.status.emptyBanner();
+    }
+
+    getApplicableStateName(): PlayerState {
+        return PlayerState.Paused;
     }
 }

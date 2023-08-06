@@ -3,6 +3,7 @@ import { BotStatus } from 'src/bot/BotStatus';
 import { IChannelManager } from 'src/channel/ChannelManager';
 import { IQueueManager } from 'src/queue/QueueManager';
 import AbstractMediaPlayerStateHandler from './AbstractMediaPlayerStateHandler';
+import { PlayerState } from './Types';
 
 export default class PlayingStateHandler extends AbstractMediaPlayerStateHandler {
     constructor(
@@ -47,5 +48,9 @@ export default class PlayingStateHandler extends AbstractMediaPlayerStateHandler
             await this.channelManager.sendInfoMessage(`⏸️ "${lastSong.name}" paused`);
             this.status.setBanner(`Paused: "${lastSong.name}" Requested by: ${lastSong.requestor}`);
         }
+    }
+
+    getApplicableStateName(): PlayerState {
+        return PlayerState.Playing;
     }
 }

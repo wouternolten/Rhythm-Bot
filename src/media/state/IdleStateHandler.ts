@@ -5,6 +5,7 @@ import { IMediaTypeProvider } from 'src/mediatypes/IMediaTypeProvider';
 import { IQueueManager } from 'src/queue/QueueManager';
 import { Logger } from 'winston';
 import AbstractMediaPlayerStateHandler from './AbstractMediaPlayerStateHandler';
+import { PlayerState } from './Types';
 
 export default class IdleStateHandler extends AbstractMediaPlayerStateHandler {
     constructor(
@@ -42,5 +43,9 @@ export default class IdleStateHandler extends AbstractMediaPlayerStateHandler {
 
         this.status.setBanner(`Playing ${item.name}`);
         await this.channelManager.sendTrackPlayingMessage(item);
+    }
+
+    getApplicableStateName(): PlayerState {
+        return PlayerState.Idle;
     }
 }
