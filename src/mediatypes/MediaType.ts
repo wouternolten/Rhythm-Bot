@@ -1,0 +1,1 @@
+export const MEDIA_TYPE_YOUTUBE = 'youtube';
