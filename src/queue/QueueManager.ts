@@ -1,19 +1,21 @@
-import { IRhythmBotConfig } from "./../bot/IRhythmBotConfig";
-import { MediaItem } from "./../media/MediaItem";
-import { MediaQueue } from "./../media/MediaQueue";
-import { IMediaType } from "./../media/MediaType";
-import { ISongRecommender } from "./../media/SongRecommender";
-import { MediaTypeProvider } from "./../mediatypes/MediaTypeProvider";
-import { Logger } from "winston";
+import { IChannelManager } from 'src/channel/ChannelManager';
+import { Logger } from 'winston';
+import { IRhythmBotConfig } from './../bot/IRhythmBotConfig';
+import { MediaItem } from './../media/MediaItem';
+import { MediaQueue } from './../media/MediaQueue';
+import { IMediaType } from './../media/MediaType';
+import { ISongRecommender } from './../media/SongRecommender';
+import { MediaTypeProvider } from './../mediatypes/MediaTypeProvider';
 
 export interface IQueueManager {
     addMedia(item: MediaItem, silent?: boolean): Promise<void>;
     getNextSongToPlay(): Promise<MediaItem | undefined>;
+    nextSongInQueue(): MediaItem | undefined;
     at(index: number): MediaItem;
     remove(item: MediaItem): void;
-    clear(): void;
-    shuffle(): void;
     move(currentIndex: number, targetIndex: number): void;
+    getAutoPlay(): boolean;
+    setAutoPlay(audioPlay: boolean): void;
     getQueueLength(): number;
     getQueue(): MediaItem[];
     getLastPlayedSong(): MediaItem | undefined;
@@ -28,7 +30,8 @@ export class QueueManager implements IQueueManager {
         readonly configuration: IRhythmBotConfig,
         private readonly mediaTypeProvider: MediaTypeProvider,
         private readonly logger: Logger,
-        private readonly songRecommender: ISongRecommender
+        private readonly songRecommender: ISongRecommender,
+        private readonly channelManager: IChannelManager
     ) {
         this.autoPlay = configuration.queue.autoPlay;
     }
@@ -56,20 +59,24 @@ export class QueueManager implements IQueueManager {
 
         this.queue.enqueue(item);
 
-        // TODO: ADD STATUS
+        if (silent) {
+            return;
+        }
+
+        this.channelManager.sendTrackAddedMessage(item, this.queue.indexOf(item) + 1);
     }
 
     async getNextSongToPlay(): Promise<MediaItem | undefined> {
         if (this.queue.length > 0) {
             this.lastFetchedSong = this.queue.first;
-            return this.queue.shift();
+            return this.queue.shift(); // TODO: ONLY SHIFT WHEN ASKED.
         }
 
         if ((!this.autoPlay && this.queue.length === 0) || (this.autoPlay && !this.lastFetchedSong)) {
             return undefined;
         }
 
-        const nextSong = await this.findNextSongToPlay(this.lastFetchedSong)
+        const nextSong = await this.findNextSongToPlay(this.lastFetchedSong);
 
         if (nextSong) {
             this.lastFetchedSong = nextSong;
@@ -78,20 +85,16 @@ export class QueueManager implements IQueueManager {
         return nextSong;
     }
 
+    nextSongInQueue(): MediaItem | undefined {
+        return this.at(0);
+    }
+
     at(index: number): MediaItem {
         return this.queue[index];
     }
 
     remove(item: MediaItem): void {
         this.queue.dequeue(item);
-    }
-
-    clear(): void {
-        this.queue.clear();
-    }
-
-    shuffle(): void {
-        this.queue.shuffle();
     }
 
     move(currentIndex: number, targetIndex: number): void {
@@ -122,10 +125,10 @@ export class QueueManager implements IQueueManager {
     getLastPlayedSong(): MediaItem | undefined {
         return this.lastFetchedSong;
     }
-    
+
     private async findNextSongToPlay(lastPlayedSong: MediaItem): Promise<MediaItem | undefined> {
-        let nextSong: MediaItem | undefined | null; 
-        
+        let nextSong: MediaItem | undefined | null;
+
         try {
             nextSong = await this.songRecommender.recommendNextSong(lastPlayedSong);
         } catch (e) {

@@ -1,4 +1,4 @@
-import { ClientUser, PresenceStatusData } from 'discord.js';
+import { ClientUser } from 'discord.js';
 import { Logger } from 'winston';
 
 export class BotStatus {
@@ -18,7 +18,13 @@ export class BotStatus {
         }
     }
 
-    setActivity(activity: PresenceStatusData) {
-        this.user.setStatus(activity);
+    emptyBanner(): void {
+        try {
+            this.user.setPresence({
+                activities: [{ name: ''}],
+            });
+        } catch (error) {
+            this.logger.error(error);
+        }
     }
 }

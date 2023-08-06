@@ -1,13 +1,14 @@
-import { Logger } from 'winston';
-import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
-import { MediaPlayer } from '../media/MediaPlayer';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
-import { ICommand } from './ICommand';
-import { createErrorEmbed, createInfoEmbed } from '../helpers/helpers';
-import { MediaItem } from '../media/MediaItem';
-import ytpl from 'ytpl';
+import { IChannelManager } from 'src/channel/ChannelManager';
 import { IMediaItemHelper } from 'src/helpers/IMediaItemHelper';
+import { IQueueManager } from 'src/queue/QueueManager';
+import { Logger } from 'winston';
+import ytpl from 'ytpl';
+import { MediaItem } from '../media/MediaItem';
+import { MediaPlayer } from '../media/MediaPlayer';
+import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
+import { ICommand } from './ICommand';
 
 const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
 const SPOTIFY_REGEX = /spotify\.com/;
@@ -17,29 +18,32 @@ export class SearchAndAddCommand implements ICommand {
         private readonly player: MediaPlayer,
         private readonly spotifyAPIHelper: SpotifyAPIHelper,
         private readonly mediaItemHelper: IMediaItemHelper,
-        private readonly logger: Logger,
-    ) { }
-    
+        private readonly queueManager: IQueueManager,
+        private readonly channelManager: IChannelManager,
+        private readonly logger: Logger
+    ) {}
+
     async execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): Promise<void> {
         const query = cmd.body;
 
         if (!query) {
-            msg.channel.send(createInfoEmbed(`No songs found`));
+            this.channelManager.sendInfoMessage(`No songs found`);
             return;
         }
 
         if (YOUTUBE_REGEX.test(query)) {
             if (query.indexOf('&list=') !== -1) {
                 try {
-                    await this.addYoutubePlayList(query, msg)
+                    await this.addYoutubePlayList(query, msg);
                 } catch (error) {
                     return;
                 }
             } else {
-                await this.player.addMedia({
+                console.log(3);
+                await this.queueManager.addMedia({
                     type: 'youtube',
                     url: cmd.body,
-                    requestor: msg.author.username
+                    requestor: msg.author.username,
                 });
             }
         } else if (SPOTIFY_REGEX.test(query)) {
@@ -62,37 +66,39 @@ export class SearchAndAddCommand implements ICommand {
     }
 
     getDescription(): string {
-        return `search for a song and directly add it to the queue.`
+        return `search for a song and directly add it to the queue.`;
     }
 
     private async addSpotifyPlayList(query: string, msg: Message): Promise<void> {
         const playListId = this.getPlayListIdFromSpotifyQuery(query);
 
         if (!playListId) {
-            msg.channel.send(createInfoEmbed('Playlist not found.'));
+            this.channelManager.sendInfoMessage('Playlist not found.');
             return;
         }
 
         let playListItems;
 
         try {
-            playListItems = await this.spotifyAPIHelper.getTracksFromPlaylist(playListId)
+            playListItems = await this.spotifyAPIHelper.getTracksFromPlaylist(playListId);
         } catch (errorGettingTracksFromPlaylist) {
             this.logger.error(JSON.stringify({ errorGettingTracksFromPlaylist }));
-            msg.channel.send(createErrorEmbed('Error when trying get tracks from playlist'));
+            this.channelManager.sendErrorMessage('Error when trying get tracks from playlist');
 
             return;
         }
 
-        await Promise.all(playListItems.map(async (playListItem: string) => {
-            try {
-                await this.searchForVideo(playListItem, msg, true);
-            } catch (error) { }
-            
-            this.logger.info(`Added ${playListItem}`);
-        }));
+        await Promise.all(
+            playListItems.map(async (playListItem: string) => {
+                try {
+                    await this.searchForVideo(playListItem, msg, true);
+                } catch (error) {}
 
-        msg.channel.send(createInfoEmbed('Added spotify playlist'));
+                this.logger.info(`Added ${playListItem}`);
+            })
+        );
+
+        this.channelManager.sendInfoMessage('Added spotify playlist');
     }
 
     private getPlayListIdFromSpotifyQuery(query: string): string | null | undefined {
@@ -107,21 +113,24 @@ export class SearchAndAddCommand implements ICommand {
             playList = await this.getPlayList(query);
         } catch (errorWhenFetchingPlayList) {
             this.logger.error(JSON.stringify({ errorWhenFetchingPlayList }));
-            msg.channel.send(createErrorEmbed('Error when fetching playlist'));
+            this.channelManager.sendErrorMessage('Error when fetching playlist');
             throw errorWhenFetchingPlayList;
         }
 
         for (const item of playList.items) {
-            await this.player.addMedia({
-                type: item.type,
-                name: item.name,
-                url: item.url,
-                duration: item.duration,
-                requestor: msg.author.username,
-            }, true);
+            await this.queueManager.addMedia(
+                {
+                    type: item.type,
+                    name: item.name,
+                    url: item.url,
+                    duration: item.duration,
+                    requestor: msg.author.username,
+                },
+                true
+            );
         }
 
-        msg.channel.send(createInfoEmbed(`Playlist "${playList.title}" added`));
+        this.channelManager.sendInfoMessage(`Playlist "${playList.title}" added`);
     }
 
     private async searchForVideo(query: string, msg: Message, silent = false): Promise<void> {
@@ -131,19 +140,22 @@ export class SearchAndAddCommand implements ICommand {
             mediaItem = await this.mediaItemHelper.getMediaItemForSearchString(query);
         } catch (errorGettingMediaItemForSearchString) {
             this.logger.error(JSON.stringify({ errorGettingMediaItemForSearchString }));
-            msg.channel.send(createErrorEmbed('Error when fetching media item'));
+            this.channelManager.sendErrorMessage('Error when fetching media item');
             return;
         }
 
         if (mediaItem) {
-            await this.player.addMedia({
-                ...mediaItem,
-                requestor: msg.author.username
-            }, silent);
+            await this.queueManager.addMedia(
+                {
+                    ...mediaItem,
+                    requestor: msg.author.username,
+                },
+                silent
+            );
         }
     }
 
-    private async getPlayList(url: string): Promise<{ title: string, items: MediaItem[] }> {
+    private async getPlayList(url: string): Promise<{ title: string; items: MediaItem[] }> {
         let playList: ytpl.Result;
 
         playList = await ytpl(url);
@@ -160,7 +172,10 @@ export class SearchAndAddCommand implements ICommand {
 
         return {
             title: playList.title,
-            items: playList.items.map(item => ({ type: 'youtube', url: item.shortUrl, name: item.title, duration: item.duration } as MediaItem))
+            items: playList.items.map(
+                (item) =>
+                    ({ type: 'youtube', url: item.shortUrl, name: item.title, duration: item.duration } as MediaItem)
+            ),
         };
     }
 }

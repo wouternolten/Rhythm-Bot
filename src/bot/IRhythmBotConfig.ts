@@ -7,7 +7,6 @@ export interface IRhythmBotConfig {
     };
     queue?: {
         announce?: boolean;
-        repeat?: boolean;
         autoPlay?: boolean;
     };
     stream?: {

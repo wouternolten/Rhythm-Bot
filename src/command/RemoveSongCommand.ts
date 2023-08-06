@@ -1,21 +1,28 @@
-import { MediaPlayer } from '../media/MediaPlayer';
 import { SuccessfulParsedMessage } from "discord-command-parser";
 import { Message } from "discord.js";
 import { ICommand } from "./ICommand";
+import { IQueueManager } from 'src/queue/QueueManager';
+import { IChannelManager } from "src/channel/ChannelManager";
 
 export class RemoveSongCommand implements ICommand {
-    constructor(private readonly player: MediaPlayer) { }
+    constructor(
+        private readonly queueManager: IQueueManager,
+        private readonly channelManager: IChannelManager
+    ) { }
 
     execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
         if (!cmd.arguments || cmd.arguments.length === 0) {
             return;
         }
 
-        let idx = parseInt(cmd.arguments[0]);
-        let item = this.player.at(idx - 1);
-        if (item) {
-            this.player.remove(item);
+        const index = parseInt(cmd.arguments[0]);
+        const item = this.queueManager.at(index - 1);
+        if (!item) {
+            return;
         }
+        
+        this.queueManager.remove(item);
+        this.channelManager.sendInfoMessageWithTitle(`Track Removed`, item.name);
     }
 
     getDescription(): string {

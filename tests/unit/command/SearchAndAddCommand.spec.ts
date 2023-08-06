@@ -1,12 +1,14 @@
-import { MediaItem } from './../../../src/media/MediaItem';
-import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
-import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
-import { MediaPlayer } from '../../../src/media/MediaPlayer';
-import { SearchAndAddCommand } from './../../../src/command/SearchAndAddCommand';
-import { createErrorEmbed, createInfoEmbed } from '../../../src/helpers/helpers';
-import { mockLogger } from '../../mocks/mockLogger';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
+import { mock, MockProxy } from 'jest-mock-extended';
+import { IChannelManager } from '../../../src/channel/ChannelManager';
+import { MediaPlayer } from '../../../src/media/MediaPlayer';
+import { IQueueManager } from '../../../src/queue/QueueManager';
+import { mockLogger } from '../../mocks/mockLogger';
+import { SearchAndAddCommand } from './../../../src/command/SearchAndAddCommand';
+import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
+import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
+import { MediaItem } from './../../../src/media/MediaItem';
 
 jest.mock('../../../src/helpers/helpers');
 
@@ -23,7 +25,6 @@ jest.mock('ytpl', () => {
 let searchAndAddCommand: SearchAndAddCommand;
 let mockYtplReturnValue;//, mockYtsReturnValue;
 let player = {
-    addMedia: jest.fn(),
     play: jest.fn()
 } as unknown as MediaPlayer;
 
@@ -48,9 +49,21 @@ const MESSAGE = {
     }
 } as unknown as Message;
 
+let queueManager: MockProxy<IQueueManager>;
+let channelManager: MockProxy<IChannelManager>;
+
 beforeEach(() => {
     jest.clearAllMocks();
-    searchAndAddCommand = new SearchAndAddCommand(player, spotifyAPIHelper, mediaItemHelper, logger);
+    queueManager = mock<IQueueManager>();
+    channelManager = mock<IChannelManager>();
+    searchAndAddCommand = new SearchAndAddCommand(
+        player,
+        spotifyAPIHelper,
+        mediaItemHelper,
+        queueManager,
+        channelManager,
+        logger
+    );
 })
 
 it('Should return when no body given', async () => {
@@ -58,7 +71,7 @@ it('Should return when no body given', async () => {
 
     await searchAndAddCommand.execute({} as SuccessfulParsedMessage<Message>, MESSAGE);
 
-    expect(MESSAGE.channel.send).toBeCalled();
+    expect(channelManager.sendInfoMessage).toBeCalled();
 });
 
 it('Should have a description', () => {
@@ -77,7 +90,7 @@ describe('Playlist', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(createErrorEmbed).toBeCalled();
+        expect(channelManager.sendErrorMessage).toBeCalled();
     });
 
     it.each([
@@ -94,7 +107,7 @@ describe('Playlist', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(createErrorEmbed).toBeCalled();
+        expect(channelManager.sendErrorMessage).toBeCalled();
     });
 
     it('Should add media to player and play', async () => {
@@ -118,7 +131,7 @@ describe('Playlist', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(player.addMedia).toBeCalledTimes(2);
+        expect(queueManager.addMedia).toBeCalledTimes(2);
         expect(player.play).toBeCalled();
     });
 });
@@ -133,7 +146,7 @@ describe('Youtube video', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(player.addMedia).toBeCalled();
+        expect(queueManager.addMedia).toBeCalled();
         expect(player.play).toBeCalled();
     });
 });
@@ -151,7 +164,7 @@ describe('Search terms', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(createErrorEmbed).toBeCalled();
+        expect(channelManager.sendErrorMessage).toBeCalled();
     });
 
     it('Should return when no video result found', async () => {
@@ -161,7 +174,7 @@ describe('Search terms', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(player.addMedia).not.toBeCalled();
+        expect(queueManager.addMedia).not.toBeCalled();
     });
 
     it('Should add found video to player', async () => {
@@ -177,7 +190,7 @@ describe('Search terms', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(player.addMedia).toHaveBeenCalledWith({
+        expect(queueManager.addMedia).toHaveBeenCalledWith({
             ...video,
             requestor: RICK_ASTLEY
         }, false);
@@ -198,7 +211,7 @@ describe('Spotify playlist', () => {
 
         await searchAndAddCommand.execute(invalidPlayListCommand, MESSAGE);
 
-        expect(createInfoEmbed).toBeCalled();
+        expect(channelManager.sendInfoMessage).toBeCalled();
     });
 
     it('Should error out when spotify cannot get tracks', async () => {
@@ -208,7 +221,7 @@ describe('Spotify playlist', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(createErrorEmbed).toBeCalled();
+        expect(channelManager.sendErrorMessage).toBeCalled();
     });
 
     it('Should not quit when one track not found', async () => {
@@ -226,6 +239,6 @@ describe('Spotify playlist', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(createInfoEmbed).toBeCalled();
+        expect(channelManager.sendInfoMessage).toBeCalled();
     });
 });

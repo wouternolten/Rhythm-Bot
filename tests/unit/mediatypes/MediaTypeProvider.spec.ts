@@ -2,20 +2,11 @@ import { MediaTypeNotFoundError } from './../../../src/mediatypes/MediaTypeNotFo
 import { MediaTypeProvider } from './../../../src/mediatypes/MediaTypeProvider';
 import { IMediaType } from '../../../src/media/MediaType';
 import { MediaItem } from '../../../src/media/MediaItem';
+import container from '../../../etc/container';
+import { MockProxy } from 'jest-mock-extended';
 
 const mockGetReturnValue = jest.fn();
-
-jest.mock('typedi', () => {
-    const originalModule = jest.requireActual('typedi');
-
-    return {
-        __esModule: true,
-        ...originalModule,
-        Container: {
-            get: (...params: any) => mockGetReturnValue(params)
-        }
-    }
-});
+jest.mock('../../../etc/container')
 
 let mediaTypeProvider: MediaTypeProvider;
 
@@ -33,7 +24,7 @@ describe('Getting media types', () => {
     });
 
     it('Should return error when mediaType not found in container', () => {
-        mockGetReturnValue.mockReturnValue({ 'invalid': 'invalid' });
+        (container as MockProxy<typeof container>).get.mockReturnValue({ 'invalid': 'invalid' });
 
         try {
             mediaTypeProvider.get('youtube');
@@ -50,7 +41,7 @@ describe('Getting media types', () => {
             getStream: (item: MediaItem) => Promise.reject('mock')
         } as IMediaType;
         
-        mockGetReturnValue.mockReturnValue(MOCK_MEDIA_TYPE);
+        (container as MockProxy<typeof container>).get.mockReturnValue(MOCK_MEDIA_TYPE);
 
         const result = mediaTypeProvider.get('youtube');
 
