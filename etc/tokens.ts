@@ -1,4 +1,3 @@
-import { AudioPlayer } from '@discordjs/voice';
 import { token } from 'containor';
 import { Client, ClientUser } from 'discord.js';
 import { Logger } from 'winston';
@@ -47,7 +46,6 @@ export default {
     welcomeBotAudioPlayerFactory: token<AudioPlayerFactory>('welcomeBotAudioPlayerFactory'),
     spotifyApiHelper: token<SpotifyAPIHelper>('spotifyApiHelper'),
     youtubeApiHelper: token<YoutubeAPIHelper>('youtubeApiHelper'),
-    musicBotAudioPlayer: token<AudioPlayer>('musicBotAudioPlayer'),
     welcomeBotAudioEventBus: token<AudioEventBus>('welcomeBotAudioEventBus'),
     musicBotAudioEventBus: token<AudioEventBus>('musicBotAudioEventBus'),
 
