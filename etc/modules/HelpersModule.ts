@@ -38,11 +38,11 @@ export default class HelpersModule implements Module {
             }) as Logger;
         });
 
-        container.add(tokens.musicBotAudioPlayerFactory, AudioPlayerFactory, [
+        container.share(tokens.musicBotAudioPlayerFactory, AudioPlayerFactory, [
             tokens.musicBotClient,
             tokens.musicBotAudioEventBus,
         ]);
-        container.add(tokens.welcomeBotAudioPlayerFactory, AudioPlayerFactory, [
+        container.share(tokens.welcomeBotAudioPlayerFactory, AudioPlayerFactory, [
             tokens.welcomeBotClient,
             tokens.welcomeBotAudioEventBus,
         ]);
