@@ -1,4 +1,3 @@
-import { AudioPlayer } from '@discordjs/voice';
 import { Message, MessageReaction, TextChannel, User, VoiceState } from 'discord.js';
 import { config as dotenv } from 'dotenv';
 import 'reflect-metadata';
@@ -47,9 +46,10 @@ async function initialiseClients(): Promise<void> {
         process.exit(1);
     }
 
-    musicBotClient.on('voiceStateUpdate', async (_, newState) => {
-        if (!musicBotCreated && newState) {
-            initMusicBot(newState);
+    musicBotClient.on('voiceStateUpdate', async (oldState, newState) => {
+        if (!musicBotCreated && (oldState.channel || newState.channel)) {
+            const useState = oldState.channel ? oldState : newState;
+            initMusicBot(useState);
             musicBotCreated = true;
         }
     });
@@ -131,24 +131,19 @@ function initMusicBot(state: VoiceState): void {
     );
 
     container.share(
-        tokens.musicBotAudioPlayer,
-        (): AudioPlayer => container.get(tokens.musicBotAudioPlayerFactory).createSubscribedAudioPlayer(state)
-    );
-
-    container.share(
         tokens.mediaPlayer,
         (): MediaPlayer =>
             new MediaPlayer(
                 container.get(tokens.botStatus),
                 container.get(tokens.logger),
-                container.get(tokens.musicBotAudioPlayer),
                 container.get(tokens.queueManager),
                 container.get(tokens.channelManager),
                 [
                     container.get(tokens.idleStateHandler),
                     container.get(tokens.playingStateHandler),
                     container.get(tokens.pausedStateHandler),
-                ]
+                ],
+                container.get(tokens.musicBotAudioEventBus)
             )
     );
 
@@ -159,7 +154,9 @@ function initMusicBot(state: VoiceState): void {
         musicBot.handleMessage(msg);
     });
 
-    client.on('messageReactionAdd', (reaction: MessageReaction, user: User) => musicBot.handleReaction(reaction, user));
+    client.on('messageReactionAdd', (reaction: MessageReaction, user: User) => {
+        musicBot.handleReaction(reaction, user);
+    });
     client.on('ready', async () => {
         logger.debug('Music bot online');
     });
