@@ -1,5 +1,6 @@
 import { AudioPlayer } from '@discordjs/voice';
 import { mock } from 'jest-mock-extended';
+import { AudioPlayerFactory } from '../../../../src/helpers/AudioPlayerFactory';
 import PausedStateHandler from '../../../../src/media/state/PausedStateHandler';
 import { getValidMediaItem } from '../../../fixtures/mediaItemFixtures';
 import { BotStatus } from './../../../../src/bot/BotStatus';
@@ -10,16 +11,29 @@ let handler: PausedStateHandler;
 
 const status = mock<BotStatus>();
 const audioPlayer = mock<AudioPlayer>();
+const audioPlayerFactory = mock<AudioPlayerFactory>();
 const queueManager = mock<IQueueManager>();
 const channelManager = mock<IChannelManager>();
 
 beforeEach(() => {
     jest.resetAllMocks();
 
-    handler = new PausedStateHandler(status, audioPlayer, queueManager, channelManager);
+    audioPlayerFactory.getAudioPlayer.mockReturnValue(audioPlayer);
+
+    handler = new PausedStateHandler(status, audioPlayerFactory, queueManager, channelManager);
 });
 
 describe('stop()', () => {
+    it('Should throw an error when no audio player could be created', async () => {
+        audioPlayerFactory.getAudioPlayer.mockReturnValue(undefined);
+
+        try {
+            await handler.stop();
+        } catch (e) {
+            expect(e).toBeDefined();
+        }
+    });
+
     it('Should throw an error when stopping the audio player fails', async () => {
         audioPlayer.stop.mockReturnValue(false);
 
@@ -71,6 +85,16 @@ describe('stop()', () => {
 });
 
 describe('play()', () => {
+    it('Should throw an error when no audio player could be created', async () => {
+        audioPlayerFactory.getAudioPlayer.mockReturnValue(undefined);
+
+        try {
+            await handler.play();
+        } catch (e) {
+            expect(e).toBeDefined();
+        }
+    });
+
     it('Should throw an error when unpausing the audio player fails', async () => {
         audioPlayer.unpause.mockReturnValue(false);
 
