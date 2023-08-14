@@ -1,22 +1,22 @@
-import { AudioPlayer, AudioPlayerStatus } from '@discordjs/voice';
+import { AudioPlayerStatus } from '@discordjs/voice';
 import { IChannelManager } from 'src/channel/ChannelManager';
 import { IQueueManager } from 'src/queue/QueueManager';
 import { Logger } from 'winston';
 import { BotStatus } from '../bot/BotStatus';
+import { AudioEventBus } from '../helpers/EventBus';
 import IMediaPlayerStateHandler from './state/IMediaPlayerStateHandler';
 import { PlayerState } from './state/Types';
 
-// TODO: Why does the player stop for a millisecond when searching?
 export class MediaPlayer {
     private state: PlayerState = PlayerState.Idle;
 
     constructor(
-        private readonly status: BotStatus, // TODO: Make subscription-driven. (Command, don't ask)
+        private readonly status: BotStatus,
         private readonly logger: Logger,
-        private readonly audioPlayer: AudioPlayer,
         private readonly queueManager: IQueueManager,
         private readonly channelManager: IChannelManager,
-        private readonly stateHandlers: IMediaPlayerStateHandler[]
+        private readonly stateHandlers: IMediaPlayerStateHandler[],
+        private readonly eventBus: AudioEventBus
     ) {
         this.initializePlayer();
     }
@@ -41,6 +41,7 @@ export class MediaPlayer {
 
     private async performFunction(functionName: string, nextState: PlayerState, silent?: boolean): Promise<void> {
         this.logger.debug(`Performing function ${functionName}, current state ${this.state}, next state: ${nextState}`);
+
         try {
             const handler = this.getHandlerForState(this.state);
 
@@ -67,14 +68,13 @@ export class MediaPlayer {
     }
 
     private initializePlayer(): void {
-        this.audioPlayer.on('error', async (error) => {
-            await this.skip();
+        this.eventBus.on('error', async (error) => {
             this.logger.error('Error playing song: ', { error });
             await this.channelManager.sendErrorMessage(`Error Playing Song: ${error.message}`);
-            await this.play();
+            await this.skip();
         });
 
-        this.audioPlayer.on(AudioPlayerStatus.Idle, async () => {
+        this.eventBus.on(AudioPlayerStatus.Idle, async () => {
             if (!this.isInState(PlayerState.Playing)) {
                 this.logger.debug('Not doing anything with idle state, as previous state was not playing.');
                 return;

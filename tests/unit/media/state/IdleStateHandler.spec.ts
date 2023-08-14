@@ -4,6 +4,7 @@ import { Readable } from 'stream';
 import { Logger } from 'winston';
 import { BotStatus } from '../../../../src/bot/BotStatus';
 import { IChannelManager } from '../../../../src/channel/ChannelManager';
+import { AudioPlayerFactory } from '../../../../src/helpers/AudioPlayerFactory';
 import { IMediaType } from '../../../../src/media/MediaType';
 import IdleStateHandler from '../../../../src/media/state/IdleStateHandler';
 import { IMediaTypeProvider } from '../../../../src/mediatypes/IMediaTypeProvider';
@@ -18,13 +19,16 @@ const status = mock<BotStatus>();
 const logger = mock<Logger>();
 const mediaTypeProvider = mock<IMediaTypeProvider>();
 const audioPlayer = mock<AudioPlayer>();
+const audioPlayerFactory = mock<AudioPlayerFactory>();
 const queueManager = mock<IQueueManager>();
 const channelManager = mock<IChannelManager>();
 
 beforeEach(() => {
     jest.resetAllMocks();
 
-    handler = new IdleStateHandler(status, logger, mediaTypeProvider, audioPlayer, queueManager, channelManager);
+    audioPlayerFactory.getAudioPlayer.mockReturnValue(audioPlayer);
+
+    handler = new IdleStateHandler(status, logger, mediaTypeProvider, audioPlayerFactory, queueManager, channelManager);
 });
 
 describe('play()', () => {
@@ -56,7 +60,24 @@ describe('play()', () => {
         }
     });
 
-    it('Should start playing he audio player when found', async () => {
+    it('Should throw error when audio player not found', async () => {
+        queueManager.getNextSongToPlay.mockResolvedValue(getValidMediaItem());
+        const mediaType = mock<IMediaType>();
+        mediaType.getStream.mockResolvedValue(mock<Readable>());
+        mediaTypeProvider.get.mockReturnValue(mediaType);
+
+        audioPlayerFactory.getAudioPlayer.mockReturnValue(undefined);
+
+        expect.assertions(1);
+
+        try {
+            await handler.play();
+        } catch (e) {
+            expect(e).toBeDefined();
+        }
+    });
+
+    it('Should start playing the audio player when found', async () => {
         queueManager.getNextSongToPlay.mockResolvedValue(getValidMediaItem());
         const mediaType = mock<IMediaType>();
         mediaType.getStream.mockResolvedValue(mock<Readable>());

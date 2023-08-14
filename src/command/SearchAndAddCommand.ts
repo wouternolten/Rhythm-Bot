@@ -39,7 +39,6 @@ export class SearchAndAddCommand implements ICommand {
                     return;
                 }
             } else {
-                console.log(3);
                 await this.queueManager.addMedia({
                     type: 'youtube',
                     url: cmd.body,

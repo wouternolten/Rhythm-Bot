@@ -1,14 +1,14 @@
-import { AudioPlayer } from '@discordjs/voice';
 import { BotStatus } from 'src/bot/BotStatus';
 import { IChannelManager } from 'src/channel/ChannelManager';
 import { IQueueManager } from 'src/queue/QueueManager';
+import { AudioPlayerFactory } from '../../helpers/AudioPlayerFactory';
 import AbstractMediaPlayerStateHandler from './AbstractMediaPlayerStateHandler';
 import { PlayerState } from './Types';
 
 export default class PausedStateHandler extends AbstractMediaPlayerStateHandler {
     constructor(
         private readonly status: BotStatus,
-        private readonly audioPlayer: AudioPlayer,
+        private readonly audioPlayerFactory: AudioPlayerFactory,
         private readonly queueManager: IQueueManager,
         private readonly channelManager: IChannelManager
     ) {
@@ -16,7 +16,13 @@ export default class PausedStateHandler extends AbstractMediaPlayerStateHandler 
     }
 
     async play(): Promise<void> {
-        if (!this.audioPlayer.unpause()) {
+        const audioPlayer = this.audioPlayerFactory.getAudioPlayer();
+
+        if (!audioPlayer) {
+            throw new Error('Player not yet created.');
+        }
+
+        if (!audioPlayer.unpause()) {
             throw new Error('Failed to unpause player');
         }
 
@@ -29,7 +35,13 @@ export default class PausedStateHandler extends AbstractMediaPlayerStateHandler 
     }
 
     async stop(silent: boolean = false): Promise<void> {
-        if (!this.audioPlayer.stop()) {
+        const audioPlayer = this.audioPlayerFactory.getAudioPlayer();
+
+        if (!audioPlayer) {
+            throw new Error('Player not yet created.');
+        }
+
+        if (!audioPlayer.stop()) {
             throw new Error('Failed to stop player.');
         }
 

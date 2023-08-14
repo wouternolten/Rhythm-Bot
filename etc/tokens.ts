@@ -1,4 +1,3 @@
-import { AudioPlayer } from '@discordjs/voice';
 import { token } from 'containor';
 import { Client, ClientUser } from 'discord.js';
 import { Logger } from 'winston';
@@ -9,6 +8,7 @@ import { WelcomeTuneBot } from '../src/bot/WelcomeTuneBot';
 import { ChannelManager } from '../src/channel/ChannelManager';
 import { CommandMapFactory } from '../src/command/CommandMapFactory';
 import { AudioPlayerFactory } from '../src/helpers/AudioPlayerFactory';
+import { AudioEventBus } from '../src/helpers/EventBus';
 import { SpotifyAPIHelper } from '../src/helpers/SpotifyAPIHelper';
 import { YoutubeAPIHelper } from '../src/helpers/YoutubeAPIHelper';
 import { MediaFilePlayer } from '../src/media/MediaFilePlayer';
@@ -46,7 +46,8 @@ export default {
     welcomeBotAudioPlayerFactory: token<AudioPlayerFactory>('welcomeBotAudioPlayerFactory'),
     spotifyApiHelper: token<SpotifyAPIHelper>('spotifyApiHelper'),
     youtubeApiHelper: token<YoutubeAPIHelper>('youtubeApiHelper'),
-    musicBotAudioPlayer: token<AudioPlayer>('musicBotAudioPlayer'),
+    welcomeBotAudioEventBus: token<AudioEventBus>('welcomeBotAudioEventBus'),
+    musicBotAudioEventBus: token<AudioEventBus>('musicBotAudioEventBus'),
 
     // Media
     mediaPlayer: token<MediaPlayer>('mediaPlayer'),

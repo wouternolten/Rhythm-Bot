@@ -22,21 +22,21 @@ export default class MediaModule implements Module {
             tokens.botStatus,
             tokens.logger,
             tokens.mediaTypeProvider,
-            tokens.musicBotAudioPlayer,
+            tokens.musicBotAudioPlayerFactory,
             tokens.queueManager,
             tokens.channelManager,
         ]);
 
         container.add(tokens.playingStateHandler, PlayingStateHandler, [
             tokens.botStatus,
-            tokens.musicBotAudioPlayer,
+            tokens.musicBotAudioPlayerFactory,
             tokens.queueManager,
             tokens.channelManager,
         ]);
 
         container.add(tokens.pausedStateHandler, PausedStateHandler, [
             tokens.botStatus,
-            tokens.musicBotAudioPlayer,
+            tokens.musicBotAudioPlayerFactory,
             tokens.queueManager,
             tokens.channelManager,
         ]);
