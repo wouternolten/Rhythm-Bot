@@ -1,8 +1,8 @@
-import { AudioPlayer } from '@discordjs/voice';
 import { mock } from 'jest-mock-extended';
 import { Logger } from 'winston';
 import { BotStatus } from '../../../src/bot/BotStatus';
 import { IChannelManager } from '../../../src/channel/ChannelManager';
+import { AudioEventBus } from '../../../src/helpers/EventBus';
 import { MediaPlayer } from '../../../src/media/MediaPlayer';
 import IMediaPlayerStateHandler from '../../../src/media/state/IMediaPlayerStateHandler';
 import { PlayerState } from '../../../src/media/state/Types';
@@ -12,15 +12,15 @@ let mediaPlayer: MediaPlayer;
 
 const status = mock<BotStatus>();
 const logger = mock<Logger>();
-const audioPlayer = mock<AudioPlayer>();
 const queueManager = mock<IQueueManager>();
 const channelManager = mock<IChannelManager>();
 const stateHandler = mock<IMediaPlayerStateHandler>();
+const eventBus = mock<AudioEventBus>();
 
 beforeEach(() => {
     jest.resetAllMocks();
 
-    mediaPlayer = new MediaPlayer(status, logger, audioPlayer, queueManager, channelManager, [stateHandler]);
+    mediaPlayer = new MediaPlayer(status, logger, queueManager, channelManager, [stateHandler], eventBus);
 
     stateHandler.getApplicableStateName.mockReturnValue(PlayerState.Idle);
 });
