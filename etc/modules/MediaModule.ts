@@ -22,7 +22,7 @@ export default class MediaModule implements Module {
             tokens.botStatus,
             tokens.logger,
             tokens.mediaTypeProvider,
-            tokens.musicBotAudioPlayer,
+            tokens.musicBotAudioPlayerFactory,
             tokens.queueManager,
             tokens.channelManager,
         ]);

@@ -1,6 +1,7 @@
-import { AudioPlayer, createAudioResource, StreamType } from '@discordjs/voice';
+import { createAudioResource, StreamType } from '@discordjs/voice';
 import { BotStatus } from 'src/bot/BotStatus';
 import { IChannelManager } from 'src/channel/ChannelManager';
+import { AudioPlayerFactory } from 'src/helpers/AudioPlayerFactory';
 import { IMediaTypeProvider } from 'src/mediatypes/IMediaTypeProvider';
 import { IQueueManager } from 'src/queue/QueueManager';
 import { Logger } from 'winston';
@@ -12,7 +13,7 @@ export default class IdleStateHandler extends AbstractMediaPlayerStateHandler {
         private readonly status: BotStatus,
         private readonly logger: Logger,
         private readonly mediaTypeProvider: IMediaTypeProvider,
-        private readonly audioPlayer: AudioPlayer,
+        private readonly audioPlayerFactory: AudioPlayerFactory,
         private readonly queueManager: IQueueManager,
         private readonly channelManager: IChannelManager
     ) {
@@ -39,7 +40,13 @@ export default class IdleStateHandler extends AbstractMediaPlayerStateHandler {
 
         const currentSong = await type.getStream(item);
 
-        this.audioPlayer.play(createAudioResource(currentSong, { inputType: StreamType.Arbitrary }));
+        const audioPlayer = this.audioPlayerFactory.getAudioPlayer();
+
+        if (!audioPlayer) {
+            throw new Error('Audio player not found');
+        }
+
+        audioPlayer.play(createAudioResource(currentSong, { inputType: StreamType.Arbitrary }));
 
         this.status.setBanner(`Playing ${item.name}`);
         await this.channelManager.sendTrackPlayingMessage(item);
