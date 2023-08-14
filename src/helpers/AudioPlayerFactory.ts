@@ -3,7 +3,7 @@ import { Client, Message, VoiceState } from 'discord.js';
 import { AudioEventBus } from './EventBus';
 
 export interface IAudioPlayerFactory {
-    createSubscribedAudioPlayer(voice: VoiceState): AudioPlayer;
+    getAudioPlayer(): AudioPlayer;
 }
 
 export class AudioPlayerFactory {
@@ -18,7 +18,7 @@ export class AudioPlayerFactory {
         return this.audioPlayer;
     }
 
-    public initialize(): void {
+    private initialize(): void {
         this.client.on('messageCreate', (message: Message<boolean>) => {
             if (!message?.member?.voice?.channel) {
                 return;
@@ -28,7 +28,7 @@ export class AudioPlayerFactory {
         });
     }
 
-    public createSubscribedAudioPlayer(voice: VoiceState): AudioPlayer {
+    private createSubscribedAudioPlayer(voice: VoiceState): AudioPlayer {
         if (this.channelId && this.channelId !== voice.channelId) {
             return this.audioPlayer; // Don't go to a different channel.
         }

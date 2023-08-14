@@ -1,7 +1,7 @@
 import { createAudioResource, StreamType } from '@discordjs/voice';
 import { BotStatus } from 'src/bot/BotStatus';
 import { IChannelManager } from 'src/channel/ChannelManager';
-import { AudioPlayerFactory } from 'src/helpers/AudioPlayerFactory';
+import { IAudioPlayerFactory } from 'src/helpers/AudioPlayerFactory';
 import { IMediaTypeProvider } from 'src/mediatypes/IMediaTypeProvider';
 import { IQueueManager } from 'src/queue/QueueManager';
 import { Logger } from 'winston';
@@ -13,7 +13,7 @@ export default class IdleStateHandler extends AbstractMediaPlayerStateHandler {
         private readonly status: BotStatus,
         private readonly logger: Logger,
         private readonly mediaTypeProvider: IMediaTypeProvider,
-        private readonly audioPlayerFactory: AudioPlayerFactory,
+        private readonly audioPlayerFactory: IAudioPlayerFactory,
         private readonly queueManager: IQueueManager,
         private readonly channelManager: IChannelManager
     ) {
