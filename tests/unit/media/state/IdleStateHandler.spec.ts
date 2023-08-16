@@ -4,7 +4,7 @@ import { Readable } from 'stream';
 import { Logger } from 'winston';
 import { BotStatus } from '../../../../src/bot/BotStatus';
 import { IChannelManager } from '../../../../src/channel/ChannelManager';
-import { AudioPlayerFactory } from '../../../../src/helpers/AudioPlayerFactory';
+import { IAudioPlayerFactory } from '../../../../src/helpers/AudioPlayerFactory';
 import { IMediaType } from '../../../../src/media/MediaType';
 import IdleStateHandler from '../../../../src/media/state/IdleStateHandler';
 import { IMediaTypeProvider } from '../../../../src/mediatypes/IMediaTypeProvider';
@@ -19,7 +19,7 @@ const status = mock<BotStatus>();
 const logger = mock<Logger>();
 const mediaTypeProvider = mock<IMediaTypeProvider>();
 const audioPlayer = mock<AudioPlayer>();
-const audioPlayerFactory = mock<AudioPlayerFactory>();
+const audioPlayerFactory = mock<IAudioPlayerFactory>();
 const queueManager = mock<IQueueManager>();
 const channelManager = mock<IChannelManager>();
 
