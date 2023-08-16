@@ -4,21 +4,20 @@ import { AudioEventBus } from './EventBus';
 
 export interface IAudioPlayerFactory {
     getAudioPlayer(): AudioPlayer;
+    initialize(): void;
 }
 
 export class AudioPlayerFactory {
     private audioPlayer: AudioPlayer;
     private channelId: string;
 
-    constructor(private readonly client: Client, private readonly audioEventBus: AudioEventBus) {
-        this.initialize();
-    }
+    constructor(private readonly client: Client, private readonly audioEventBus: AudioEventBus) {}
 
     public getAudioPlayer(): AudioPlayer | undefined {
         return this.audioPlayer;
     }
 
-    private initialize(): void {
+    public initialize(): void {
         this.client.on('messageCreate', (message: Message<boolean>) => {
             if (!message?.member?.voice?.channel) {
                 return;

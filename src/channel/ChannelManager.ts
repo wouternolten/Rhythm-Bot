@@ -20,11 +20,9 @@ export class ChannelManager implements IChannelManager {
         private readonly config: IRhythmBotConfig,
         private readonly client: Client,
         private readonly logger: Logger
-    ) {
-        this.initialize();
-    }
+    ) {}
 
-    private initialize(): void {
+    public initialize(): void {
         this.client.on('messageCreate', (message: Message<boolean>) => {
             this.channel = message.channel;
         });

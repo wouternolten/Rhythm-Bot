@@ -6,7 +6,6 @@ import container from '../etc/container';
 import tokens from '../etc/tokens';
 import { MediaPlayer } from '../src/media/MediaPlayer';
 import { RhythmBot } from './bot/RhythmBot';
-import { ChannelManager } from './channel/ChannelManager';
 
 let musicBotCreated = false;
 
@@ -45,6 +44,11 @@ async function initialiseClients(): Promise<void> {
         logger.error({ clientLoginError: error });
         process.exit(1);
     }
+
+    musicBotClient.on('ready', async () => {
+        container.get(tokens.channelManager).initialize();
+        container.get(tokens.musicBotAudioPlayerFactory).initialize();
+    });
 
     musicBotClient.on('voiceStateUpdate', async (oldState, newState) => {
         if (!musicBotCreated && (oldState.channel || newState.channel)) {
@@ -123,16 +127,6 @@ function initMusicBot(state: VoiceState): void {
     const { client } = state;
 
     container.share(
-        tokens.channelManager,
-        (): ChannelManager =>
-            new ChannelManager(
-                container.get(tokens.config),
-                container.get(tokens.musicBotClient),
-                container.get(tokens.logger)
-            )
-    );
-
-    container.share(
         tokens.mediaPlayer,
         (): MediaPlayer =>
             new MediaPlayer(
@@ -159,12 +153,11 @@ function initMusicBot(state: VoiceState): void {
     client.on('messageReactionAdd', (reaction: MessageReaction, user: User) => {
         musicBot.handleReaction(reaction, user);
     });
-    client.on('ready', async () => {
-        logger.debug('Music bot online');
-    });
+
     client.on('disconnect', async () => {
         logger.debug('Music bot Disconnected');
     });
+
     client.on('error', async (error: Error) => {
         logger.error({ musicBotClientError: error });
     });

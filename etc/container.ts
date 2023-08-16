@@ -1,5 +1,6 @@
 import { Container } from 'containor';
 import BotModule from './modules/BotModule';
+import ChannelModule from './modules/ChannelModule';
 import ClientModule from './modules/ClientModule';
 import CommandModule from './modules/CommandModule';
 import HelpersModule from './modules/HelpersModule';
@@ -16,5 +17,6 @@ container.use(HelpersModule);
 container.use(MediaModule);
 container.use(MediaTypeModule);
 container.use(QueueModule);
+container.use(ChannelModule);
 
 export default container;

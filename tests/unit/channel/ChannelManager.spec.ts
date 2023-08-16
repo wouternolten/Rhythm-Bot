@@ -30,7 +30,7 @@ it('Should send message when channel found', async () => {
         return client;
     });
 
-    channelManager = new ChannelManager(config, client, logger);
+    channelManager.initialize();
 
     channelManager.sendInfoMessage('Something');
 
