@@ -33,6 +33,7 @@ export class ChannelManager implements IChannelManager {
             this.logger.error('Channel not found in channel manager. Call stack added', {
                 callStack: new Error().stack,
             });
+            console.error(new Error().stack);
         }
 
         return this.channel;

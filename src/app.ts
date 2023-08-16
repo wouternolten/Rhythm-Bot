@@ -1,13 +1,8 @@
-import { Message, MessageReaction, User, VoiceState } from 'discord.js';
+import { Message, MessageReaction, User } from 'discord.js';
 import { config as dotenv } from 'dotenv';
 import 'reflect-metadata';
-import { Logger } from 'winston';
 import container from '../etc/container';
 import tokens from '../etc/tokens';
-import { MediaPlayer } from '../src/media/MediaPlayer';
-import { RhythmBot } from './bot/RhythmBot';
-
-let musicBotCreated = false;
 
 dotenv();
 
@@ -37,6 +32,28 @@ async function initialiseClients(): Promise<void> {
     const welcomeBotClient = container.get(tokens.welcomeBotClient);
     const logger = container.get(tokens.logger);
 
+    musicBotClient.on('ready', () => {
+        container.get(tokens.channelManager).initialize();
+        container.get(tokens.musicBotAudioPlayerFactory).initialize();
+        container.get(tokens.mediaPlayer).initializePlayer();
+    });
+
+    musicBotClient.on('messageCreate', (msg: Message) => {
+        container.get(tokens.rhythmBot).handleMessage(msg);
+    });
+
+    musicBotClient.on('messageReactionAdd', (reaction: MessageReaction, user: User) => {
+        container.get(tokens.rhythmBot).handleReaction(reaction, user);
+    });
+
+    musicBotClient.on('disconnect', async () => {
+        logger.debug('Music bot Disconnected');
+    });
+
+    musicBotClient.on('error', async (error: Error) => {
+        logger.error({ musicBotClientError: error });
+    });
+
     try {
         await musicBotClient.login(config.discord.token);
         await welcomeBotClient.login(config.discord.welcomeBotToken);
@@ -44,19 +61,6 @@ async function initialiseClients(): Promise<void> {
         logger.error({ clientLoginError: error });
         process.exit(1);
     }
-
-    musicBotClient.on('ready', async () => {
-        container.get(tokens.channelManager).initialize();
-        container.get(tokens.musicBotAudioPlayerFactory).initialize();
-    });
-
-    musicBotClient.on('voiceStateUpdate', async (oldState, newState) => {
-        if (!musicBotCreated && (oldState.channel || newState.channel)) {
-            const useState = oldState.channel ? oldState : newState;
-            initMusicBot(useState);
-            musicBotCreated = true;
-        }
-    });
 }
 
 // async function createWelcomeBot(
@@ -122,43 +126,3 @@ async function initialiseClients(): Promise<void> {
 //     client.on('disconnect', async () => { logger.debug('Welcome bot Disconnected') });
 //     client.on('error', async (error: Error) => { logger.error({ welcomeBotClientError: error }) });
 // }
-
-function initMusicBot(state: VoiceState): void {
-    const { client } = state;
-
-    container.share(
-        tokens.mediaPlayer,
-        (): MediaPlayer =>
-            new MediaPlayer(
-                container.get(tokens.botStatus),
-                container.get(tokens.logger),
-                container.get(tokens.queueManager),
-                container.get(tokens.channelManager),
-                [
-                    container.get(tokens.idleStateHandler),
-                    container.get(tokens.playingStateHandler),
-                    container.get(tokens.pausedStateHandler),
-                ],
-                container.get(tokens.musicBotAudioEventBus)
-            )
-    );
-
-    const musicBot: RhythmBot = container.get(tokens.rhythmBot);
-    const logger: Logger = container.get(tokens.logger);
-
-    client.on('messageCreate', (msg: Message) => {
-        musicBot.handleMessage(msg);
-    });
-
-    client.on('messageReactionAdd', (reaction: MessageReaction, user: User) => {
-        musicBot.handleReaction(reaction, user);
-    });
-
-    client.on('disconnect', async () => {
-        logger.debug('Music bot Disconnected');
-    });
-
-    client.on('error', async (error: Error) => {
-        logger.error({ musicBotClientError: error });
-    });
-}
