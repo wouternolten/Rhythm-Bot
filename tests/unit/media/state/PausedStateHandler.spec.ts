@@ -1,6 +1,6 @@
 import { AudioPlayer } from '@discordjs/voice';
 import { mock } from 'jest-mock-extended';
-import { AudioPlayerFactory } from '../../../../src/helpers/AudioPlayerFactory';
+import { IAudioPlayerFactory } from '../../../../src/helpers/AudioPlayerFactory';
 import PausedStateHandler from '../../../../src/media/state/PausedStateHandler';
 import { getValidMediaItem } from '../../../fixtures/mediaItemFixtures';
 import { BotStatus } from './../../../../src/bot/BotStatus';
@@ -11,7 +11,7 @@ let handler: PausedStateHandler;
 
 const status = mock<BotStatus>();
 const audioPlayer = mock<AudioPlayer>();
-const audioPlayerFactory = mock<AudioPlayerFactory>();
+const audioPlayerFactory = mock<IAudioPlayerFactory>();
 const queueManager = mock<IQueueManager>();
 const channelManager = mock<IChannelManager>();
 

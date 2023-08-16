@@ -1,14 +1,14 @@
 import { BotStatus } from 'src/bot/BotStatus';
 import { IChannelManager } from 'src/channel/ChannelManager';
 import { IQueueManager } from 'src/queue/QueueManager';
-import { AudioPlayerFactory } from '../../helpers/AudioPlayerFactory';
+import { IAudioPlayerFactory } from '../../helpers/AudioPlayerFactory';
 import AbstractMediaPlayerStateHandler from './AbstractMediaPlayerStateHandler';
 import { PlayerState } from './Types';
 
 export default class PlayingStateHandler extends AbstractMediaPlayerStateHandler {
     constructor(
         private readonly status: BotStatus,
-        private readonly audioPlayerFactory: AudioPlayerFactory,
+        private readonly audioPlayerFactory: IAudioPlayerFactory,
         private readonly queueManager: IQueueManager,
         private readonly channelManager: IChannelManager
     ) {
