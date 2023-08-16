@@ -1,4 +1,4 @@
-import { Message, MessageReaction, TextChannel, User, VoiceState } from 'discord.js';
+import { Message, MessageReaction, User, VoiceState } from 'discord.js';
 import { config as dotenv } from 'dotenv';
 import 'reflect-metadata';
 import { Logger } from 'winston';
@@ -121,13 +121,15 @@ async function initialiseClients(): Promise<void> {
 
 function initMusicBot(state: VoiceState): void {
     const { client } = state;
-    const channel = state.guild.channels.cache
-        .filter((cacheChannel) => cacheChannel.name.toLowerCase().startsWith('rhythm') && cacheChannel.isTextBased())
-        .first();
 
     container.share(
         tokens.channelManager,
-        (): ChannelManager => new ChannelManager(container.get(tokens.config), channel as TextChannel)
+        (): ChannelManager =>
+            new ChannelManager(
+                container.get(tokens.config),
+                container.get(tokens.musicBotClient),
+                container.get(tokens.logger)
+            )
     );
 
     container.share(

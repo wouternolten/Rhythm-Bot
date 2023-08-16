@@ -1,5 +1,6 @@
-import { TextChannel, DMChannel, NewsChannel, Message } from 'discord.js';
+import { Client, Message, TextChannel } from 'discord.js';
 import { IRhythmBotConfig } from 'src/bot/IRhythmBotConfig';
+import { Logger } from 'winston';
 import { createEmbed, createErrorEmbed, createInfoEmbed } from './../helpers/helpers';
 import { MediaItem } from './../media/MediaItem';
 
@@ -13,25 +14,46 @@ export interface IChannelManager {
 }
 
 export class ChannelManager implements IChannelManager {
+    private channel: TextChannel | any | undefined; // I'm a developer and too lazy to type 26 different aspects of a 'channel' when I just need one method.
+
     constructor(
         private readonly config: IRhythmBotConfig,
-        private readonly channel: TextChannel | DMChannel | NewsChannel
-    ) {}
+        private readonly client: Client,
+        private readonly logger: Logger
+    ) {
+        this.initialize();
+    }
+
+    private initialize(): void {
+        this.client.on('messageCreate', (message: Message<boolean>) => {
+            this.channel = message.channel;
+        });
+    }
+
+    private getChannel(): TextChannel | undefined {
+        if (!this.channel) {
+            this.logger.error('Channel not found in channel manager. Call stack added', {
+                callStack: new Error().stack,
+            });
+        }
+
+        return this.channel;
+    }
 
     async sendInfoMessage(message: string): Promise<void> {
-        await this.channel.send(createInfoEmbed(message));
+        await this.getChannel()?.send(createInfoEmbed(message));
     }
 
     async sendInfoMessageWithTitle(message: string, title: string): Promise<void> {
-        await this.channel.send(createInfoEmbed(message, title));
+        await this.getChannel()?.send(createInfoEmbed(message, title));
     }
 
     async sendErrorMessage(message: string): Promise<void> {
-        await this.channel.send(createErrorEmbed(message));
+        await this.getChannel()?.send(createErrorEmbed(message));
     }
 
     async sendTrackAddedMessage(item: MediaItem, position: number): Promise<void> {
-        await this.channel.send({
+        await this.getChannel()?.send({
             embeds: [
                 createEmbed()
                     .setTitle('Track Added')
@@ -54,7 +76,7 @@ export class ChannelManager implements IChannelManager {
     }
 
     async sendTrackPlayingMessage(item: MediaItem): Promise<void> {
-        const message = await this.channel.send({
+        const message = await this.getChannel()?.send({
             embeds: [
                 createEmbed()
                     .setTitle('▶️ Now playing')
