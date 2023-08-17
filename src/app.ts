@@ -1,4 +1,3 @@
-import { Message, MessageReaction, User } from 'discord.js';
 import { config as dotenv } from 'dotenv';
 import 'reflect-metadata';
 import container from '../etc/container';
@@ -36,14 +35,9 @@ async function initialiseClients(): Promise<void> {
         container.get(tokens.channelManager).initialize();
         container.get(tokens.musicBotAudioPlayerFactory).initialize();
         container.get(tokens.mediaPlayer).initializePlayer();
-    });
+        container.get(tokens.rhythmBot).initialize();
 
-    musicBotClient.on('messageCreate', (msg: Message) => {
-        container.get(tokens.rhythmBot).handleMessage(msg);
-    });
-
-    musicBotClient.on('messageReactionAdd', (reaction: MessageReaction, user: User) => {
-        container.get(tokens.rhythmBot).handleReaction(reaction, user);
+        logger.info('Bot is ready to go.');
     });
 
     musicBotClient.on('disconnect', async () => {

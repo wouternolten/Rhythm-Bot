@@ -1,5 +1,5 @@
 import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
-import { Message, MessageReaction, User } from 'discord.js';
+import { Client, Message, MessageReaction, User } from 'discord.js';
 import { IQueueManager } from 'src/queue/QueueManager';
 import { Logger } from 'winston';
 import { ICommandMapFactory } from '../command/ICommandMapFactory';
@@ -11,14 +11,24 @@ export class RhythmBot {
     private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
 
     constructor(
+        private readonly client: Client,
         private readonly config: IRhythmBotConfig,
-        private readonly user: User,
         private readonly player: MediaPlayer,
         private readonly queueManager: IQueueManager,
         private readonly logger: Logger,
         commandMapFactory: ICommandMapFactory
     ) {
         this.commands = commandMapFactory.createMusicBotCommandsMap();
+    }
+
+    initialize(): void {
+        this.client.on('messageCreate', (msg: Message) => {
+            this.handleMessage(msg);
+        });
+
+        this.client.on('messageReactionAdd', (reaction: MessageReaction, user: User) => {
+            this.handleReaction(reaction, user);
+        });
     }
 
     handleMessage(msg: Message): void {
@@ -28,7 +38,7 @@ export class RhythmBot {
             return;
         }
 
-        if (msg.author.id === this.user.id) {
+        if (msg.author.id === this.client.user.id) {
             return;
         }
 
@@ -68,8 +78,8 @@ export class RhythmBot {
         }
 
         if (
-            reaction.message.author.id !== this.user.id ||
-            user.id === this.user.id ||
+            reaction.message.author.id !== this.client.user.id ||
+            user.id === this.client.user.id ||
             Array.isArray(reaction.message.embeds) == false ||
             reaction.message.embeds.length === 0
         ) {

@@ -1,4 +1,4 @@
-import { AudioPlayer, createAudioPlayer, joinVoiceChannel } from '@discordjs/voice';
+import { AudioPlayer, AudioPlayerStatus, createAudioPlayer, joinVoiceChannel } from '@discordjs/voice';
 import { Client, Message, VoiceState } from 'discord.js';
 import { AudioEventBus } from './EventBus';
 
@@ -62,5 +62,12 @@ export class AudioPlayerFactory {
         );
         this.audioPlayer.on('subscribe', (subscription) => this.audioEventBus.emit('subscribe', subscription));
         this.audioPlayer.on('unsubscribe', (unsubscribe) => this.audioEventBus.emit('unsubscribe', unsubscribe));
+
+        for (const status in AudioPlayerStatus) {
+            this.audioPlayer.on(status as AudioPlayerStatus, (oldState, newState) => {
+                this.audioEventBus.emit(status, oldState, newState);
+                console.log('Some state');
+            });
+        }
     }
 }
