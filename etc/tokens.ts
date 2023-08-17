@@ -15,6 +15,7 @@ import { MediaFilePlayer } from '../src/media/MediaFilePlayer';
 import { MediaPlayer } from '../src/media/MediaPlayer';
 import { SongRecommender } from '../src/media/SongRecommender';
 import IdleStateHandler from '../src/media/state/IdleStateHandler';
+import IMediaPlayerStateHandler from '../src/media/state/IMediaPlayerStateHandler';
 import PausedStateHandler from '../src/media/state/PausedStateHandler';
 import PlayingStateHandler from '../src/media/state/PlayingStateHandler';
 import { MediaTypeProvider } from '../src/mediatypes/MediaTypeProvider';
@@ -56,6 +57,7 @@ export default {
     pausedStateHandler: token<PausedStateHandler>('pausedStateHandler'),
     playingStateHandler: token<PlayingStateHandler>('playingStateHandler'),
     idleStateHandler: token<IdleStateHandler>('idleStateHandler'),
+    stateHandlers: token<IMediaPlayerStateHandler[]>('stateHandlers'),
 
     // MediaTypes
     mediaTypeProvider: token<MediaTypeProvider>('mediaTypeProvider'),

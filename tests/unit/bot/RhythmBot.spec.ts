@@ -1,5 +1,5 @@
 import { SuccessfulParsedMessage } from 'discord-command-parser';
-import { Message, MessageReaction, User } from 'discord.js';
+import { Client, ClientUser, Message, MessageReaction, User } from 'discord.js';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { IRhythmBotConfig } from '../../../src/bot/IRhythmBotConfig';
 import { RhythmBot } from '../../../src/bot/RhythmBot';
@@ -17,31 +17,31 @@ jest.mock('discord-command-parser', () => {
     return {
         __esModule: true,
         ...originalModule,
-        parse: (...params: any) => mockParseReturnValue(params)
-    }
+        parse: (...params: any) => mockParseReturnValue(params),
+    };
 });
 
 let bot: RhythmBot;
 
 const config = {
     command: {
-        symbol: "!"
+        symbol: '!',
     },
-    "emojis": {
-        "addSong": "👍",
-        "stopSong": "⏹️",
-        "playSong": "▶️",
-        "pauseSong": "⏸️",
-        "skipSong": "⏭️"
-    }
+    emojis: {
+        addSong: '👍',
+        stopSong: '⏹️',
+        playSong: '▶️',
+        pauseSong: '⏸️',
+        skipSong: '⏭️',
+    },
 } as unknown as IRhythmBotConfig;
 
 const botUser = {
-    id: "RICK_ASTLEY"
-} as unknown as User;
+    id: 'RICK_ASTLEY',
+} as unknown as ClientUser;
 
 const otherUser = {
-    id: "MICHAEL_JACKSON"
+    id: 'MICHAEL_JACKSON',
 } as unknown as User;
 
 const mediaPlayer = {
@@ -49,7 +49,7 @@ const mediaPlayer = {
     play: jest.fn(),
     pause: jest.fn(),
     skip: jest.fn(),
-    setChannel: jest.fn()
+    setChannel: jest.fn(),
 } as unknown as MediaPlayer;
 
 const logger = mockLogger();
@@ -62,9 +62,12 @@ commands.on('cmd', (cmd, msg) => commandFunction(cmd, msg));
 const commandFactory = { createMusicBotCommandsMap: () => commands } as ICommandMapFactory;
 
 const message = {
-    content: "Some content",
-    author: otherUser
+    content: 'Some content',
+    author: otherUser,
 } as unknown as Message;
+
+const client = mock<Client>();
+client.user = botUser;
 
 let queueManager: MockProxy<IQueueManager>;
 
@@ -72,8 +75,8 @@ describe('Invalid config', () => {
     beforeEach(() => {
         queueManager = mock<IQueueManager>();
         bot = new RhythmBot(
+            client,
             {} as unknown as IRhythmBotConfig,
-            botUser,
             mediaPlayer,
             queueManager,
             logger,
@@ -99,19 +102,12 @@ describe('Valid constructor parameters', () => {
         queueManager = mock<IQueueManager>();
         jest.clearAllMocks();
 
-        bot = new RhythmBot(
-            config,
-            botUser,
-            mediaPlayer,
-            queueManager,
-            logger,
-            commandFactory
-        );
+        bot = new RhythmBot(client, config, mediaPlayer, queueManager, logger, commandFactory);
     });
 
     describe('handleMessage()', () => {
         it('Should return when message user is bot itself', () => {
-            mockParseReturnValue.mockReturnValue({ success: true, command: "cmd" });
+            mockParseReturnValue.mockReturnValue({ success: true, command: 'cmd' });
             const botMessage = { ...message } as unknown as Message;
             botMessage.author = botUser;
 
@@ -122,7 +118,7 @@ describe('Valid constructor parameters', () => {
         });
 
         it('Should return when parsing fails on handle message', () => {
-            mockParseReturnValue.mockReturnValue({ success: false, command: "cmd" });
+            mockParseReturnValue.mockReturnValue({ success: false, command: 'cmd' });
 
             bot.handleMessage(message);
 
@@ -130,7 +126,7 @@ describe('Valid constructor parameters', () => {
         });
 
         it('Should return when no handlers found', () => {
-            mockParseReturnValue.mockReturnValue({ success: true, command: "INVALID" });
+            mockParseReturnValue.mockReturnValue({ success: true, command: 'INVALID' });
 
             bot.handleMessage(message);
 
@@ -140,10 +136,10 @@ describe('Valid constructor parameters', () => {
         it('Should call handler when found on handleMessage', () => {
             mockParseReturnValue.mockReturnValue({
                 success: true,
-                command: "cmd",
+                command: 'cmd',
                 message: {
-                    channel: {}
-                }
+                    channel: {},
+                },
             });
 
             bot.handleMessage(message);
@@ -151,12 +147,12 @@ describe('Valid constructor parameters', () => {
             expect(commandFunction).toBeCalled();
         });
     });
-    
+
     describe('handleReaction()', () => {
         it('Should throw an error when partial fetching of reaction fails on handleReaction', async () => {
             const reaction = {
                 partial: true,
-                fetch: jest.fn().mockRejectedValue('')
+                fetch: jest.fn().mockRejectedValue(''),
             } as unknown as MessageReaction;
 
             await bot.handleReaction(reaction, botUser);
@@ -169,12 +165,12 @@ describe('Valid constructor parameters', () => {
                 partial: false,
                 message: {
                     author: {
-                        id: `NOT_${botUser.id}`
-                    }
+                        id: `NOT_${botUser.id}`,
+                    },
                 },
                 users: {
-                    remove: jest.fn()
-                }
+                    remove: jest.fn(),
+                },
             } as unknown as MessageReaction;
 
             await bot.handleReaction(reaction, otherUser);
@@ -187,12 +183,12 @@ describe('Valid constructor parameters', () => {
                 partial: false,
                 message: {
                     author: {
-                        id: botUser.id
-                    }
+                        id: botUser.id,
+                    },
                 },
                 users: {
-                    remove: jest.fn()
-                }
+                    remove: jest.fn(),
+                },
             } as unknown as MessageReaction;
 
             await bot.handleReaction(reaction, botUser);
@@ -205,13 +201,13 @@ describe('Valid constructor parameters', () => {
                 partial: false,
                 message: {
                     author: {
-                        id: botUser.id
+                        id: botUser.id,
                     },
-                    embeds: 1234
+                    embeds: 1234,
                 },
                 users: {
-                    remove: jest.fn()
-                }
+                    remove: jest.fn(),
+                },
             } as unknown as MessageReaction;
 
             await bot.handleReaction(reaction, otherUser);
@@ -224,13 +220,13 @@ describe('Valid constructor parameters', () => {
                 partial: false,
                 message: {
                     author: {
-                        id: botUser.id
+                        id: botUser.id,
                     },
-                    embeds: []
+                    embeds: [],
                 },
                 users: {
-                    remove: jest.fn()
-                }
+                    remove: jest.fn(),
+                },
             } as unknown as MessageReaction;
 
             await bot.handleReaction(reaction, otherUser);
@@ -240,55 +236,58 @@ describe('Valid constructor parameters', () => {
 
         describe('Reacting', () => {
             const emojiWithFunction = {
-                [config.emojis.pauseSong]: "pause",
-                [config.emojis.playSong]: "play",
-                [config.emojis.skipSong]: "skip",
-                [config.emojis.stopSong]: "stop",
+                [config.emojis.pauseSong]: 'pause',
+                [config.emojis.playSong]: 'play',
+                [config.emojis.skipSong]: 'skip',
+                [config.emojis.stopSong]: 'stop',
             };
 
-            it.each(Object.keys(emojiWithFunction))
-                ('Should perform action when emoji clicked', async (emojiName) => {
-                    const reaction = {
-                        partial: false,
-                        message: {
-                            author: {
-                                id: botUser.id
+            it.each(Object.keys(emojiWithFunction))('Should perform action when emoji clicked', async (emojiName) => {
+                const reaction = {
+                    partial: false,
+                    message: {
+                        author: {
+                            id: botUser.id,
+                        },
+                        embeds: [
+                            {
+                                url: 'some_url',
                             },
-                            embeds: [{
-                                url: "some_url"
-                            }]
-                        },
-                        emoji: {
-                            name: emojiName
-                        },
-                        users: {
-                            remove: jest.fn()
-                        }
-                    } as unknown as MessageReaction;
+                        ],
+                    },
+                    emoji: {
+                        name: emojiName,
+                    },
+                    users: {
+                        remove: jest.fn(),
+                    },
+                } as unknown as MessageReaction;
 
-                    await bot.handleReaction(reaction, otherUser);
+                await bot.handleReaction(reaction, otherUser);
 
-                    expect(mediaPlayer[emojiWithFunction[emojiName]]).toBeCalled();
-                    expect(reaction.users.remove).toBeCalled();
-                });
-            
+                expect(mediaPlayer[emojiWithFunction[emojiName]]).toBeCalled();
+                expect(reaction.users.remove).toBeCalled();
+            });
+
             it('Should perform action when add media emjo clicked', async () => {
                 const reaction = {
                     partial: false,
                     message: {
                         author: {
-                            id: botUser.id
+                            id: botUser.id,
                         },
-                        embeds: [{
-                            url: "some_url"
-                        }]
+                        embeds: [
+                            {
+                                url: 'some_url',
+                            },
+                        ],
                     },
                     emoji: {
-                        name: config.emojis.addSong
+                        name: config.emojis.addSong,
                     },
                     users: {
-                        remove: jest.fn()
-                    }
+                        remove: jest.fn(),
+                    },
                 } as unknown as MessageReaction;
 
                 await bot.handleReaction(reaction, otherUser);

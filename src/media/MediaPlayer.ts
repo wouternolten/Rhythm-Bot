@@ -17,8 +17,27 @@ export class MediaPlayer {
         private readonly channelManager: IChannelManager,
         private readonly stateHandlers: IMediaPlayerStateHandler[],
         private readonly eventBus: AudioEventBus
-    ) {
-        this.initializePlayer();
+    ) {}
+
+    public initializePlayer(): void {
+        this.eventBus.on('error', async (error) => {
+            this.logger.error('Error playing song: ', { error });
+            await this.channelManager.sendErrorMessage(`Error Playing Song: ${error.message}`);
+            await this.skip();
+        });
+
+        this.eventBus.on(AudioPlayerStatus.Idle, async () => {
+            if (!this.isInState(PlayerState.Playing)) {
+                this.logger.debug('Not doing anything with idle state, as previous state was not playing.');
+                return;
+            }
+
+            this.logger.debug('Stream done');
+            this.setPlayerState(PlayerState.Idle);
+            await this.play();
+        });
+
+        this.status.emptyBanner();
     }
 
     async play(): Promise<void> {
@@ -65,27 +84,6 @@ export class MediaPlayer {
 
     private isInState(state: PlayerState): boolean {
         return this.state === state;
-    }
-
-    private initializePlayer(): void {
-        this.eventBus.on('error', async (error) => {
-            this.logger.error('Error playing song: ', { error });
-            await this.channelManager.sendErrorMessage(`Error Playing Song: ${error.message}`);
-            await this.skip();
-        });
-
-        this.eventBus.on(AudioPlayerStatus.Idle, async () => {
-            if (!this.isInState(PlayerState.Playing)) {
-                this.logger.debug('Not doing anything with idle state, as previous state was not playing.');
-                return;
-            }
-
-            this.logger.debug('Stream done');
-            this.setPlayerState(PlayerState.Idle);
-            await this.play();
-        });
-
-        this.status.emptyBanner();
     }
 
     private getHandlerForState(state: PlayerState): IMediaPlayerStateHandler {
