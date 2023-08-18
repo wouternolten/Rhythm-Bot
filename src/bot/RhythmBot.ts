@@ -42,13 +42,13 @@ export class RhythmBot {
             return;
         }
 
-        let parsed = parse(msg, this.config.command.symbol);
+        const parsed = parse(msg, this.config.command.symbol);
 
         if (!parsed.success) {
             return;
         }
 
-        let handlers = this.commands.get(parsed.command);
+        const handlers = this.commands.get(parsed.command);
 
         if (!handlers) {
             this.logger.debug('Handlers not found');

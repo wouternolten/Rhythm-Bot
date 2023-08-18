@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+.github
+.vscode
+data
+babel.config.js

@@ -31,6 +31,9 @@ jobs:
             - name: Run unit tests
               run: npm test
 
+            - name: Run linter
+              run: npm run lint
+
             - name: Block merging if tests or lint fail
               if: ${{ failure() }}
               run: |

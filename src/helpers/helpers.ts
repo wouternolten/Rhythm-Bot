@@ -11,10 +11,10 @@ export function secondsToTimestamp(seconds: number): string {
 
     let secondsLeft = seconds;
 
-    let hours = Math.floor(secondsLeft / 3600);
+    const hours = Math.floor(secondsLeft / 3600);
     secondsLeft -= hours * 3600;
 
-    let minutes = Math.floor(secondsLeft / 60);
+    const minutes = Math.floor(secondsLeft / 60);
     secondsLeft -= minutes * 60;
 
     return `${leftPad(hours, 2)}:${leftPad(minutes, 2)}:${leftPad(Math.round(secondsLeft), 2)}`;
@@ -52,7 +52,7 @@ export function createInfoEmbed(message: string, title?: string) {
     return { embeds: [infoEmbed] };
 }
 
-export function isInteger(body: string): Boolean {
+export function isInteger(body: string): boolean {
     if (typeof body !== 'string') {
         return false;
     }

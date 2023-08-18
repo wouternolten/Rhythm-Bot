@@ -14,7 +14,7 @@ export interface IChannelManager {
 }
 
 export class ChannelManager implements IChannelManager {
-    private channel: TextChannel | any | undefined; // I'm a developer and too lazy to type 26 different aspects of a 'channel' when I just need one method.
+    private channel: TextChannel | undefined;
 
     constructor(
         private readonly config: IRhythmBotConfig,
@@ -24,7 +24,7 @@ export class ChannelManager implements IChannelManager {
 
     public initialize(): void {
         this.client.on('messageCreate', (message: Message<boolean>) => {
-            this.channel = message.channel;
+            this.channel = message.channel as TextChannel; // I'm a developer and too lazy to type 26 different aspects of a 'channel' when I just need one method.
         });
     }
 

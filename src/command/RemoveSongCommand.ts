@@ -1,16 +1,13 @@
-import { SuccessfulParsedMessage } from "discord-command-parser";
-import { Message } from "discord.js";
-import { ICommand } from "./ICommand";
+import { SuccessfulParsedMessage } from 'discord-command-parser';
+import { Message } from 'discord.js';
+import { IChannelManager } from 'src/channel/ChannelManager';
 import { IQueueManager } from 'src/queue/QueueManager';
-import { IChannelManager } from "src/channel/ChannelManager";
+import { ICommand } from './ICommand';
 
 export class RemoveSongCommand implements ICommand {
-    constructor(
-        private readonly queueManager: IQueueManager,
-        private readonly channelManager: IChannelManager
-    ) { }
+    constructor(private readonly queueManager: IQueueManager, private readonly channelManager: IChannelManager) {}
 
-    execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): void {
+    execute(cmd: SuccessfulParsedMessage<Message>): void {
         if (!cmd.arguments || cmd.arguments.length === 0) {
             return;
         }
@@ -20,12 +17,12 @@ export class RemoveSongCommand implements ICommand {
         if (!item) {
             return;
         }
-        
+
         this.queueManager.remove(item);
         this.channelManager.sendInfoMessageWithTitle(`Track Removed`, item.name);
     }
 
     getDescription(): string {
-        return 'remove a song from the queue. Usage: `remove [song index]`.'; 
+        return 'remove a song from the queue. Usage: `remove [song index]`.';
     }
 }

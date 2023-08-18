@@ -17,7 +17,7 @@ jest.mock('discord-command-parser', () => {
     return {
         __esModule: true,
         ...originalModule,
-        parse: (...params: any) => mockParseReturnValue(params),
+        parse: (msg: Message<boolean>, symbol: string) => mockParseReturnValue(msg, symbol),
     };
 });
 

@@ -8,4 +8,4 @@ export function mockLogger(): Logger {
         debug: jest.fn(),
         warning: jest.fn()
     } as unknown as Logger;
-};
+}
