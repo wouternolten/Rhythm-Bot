@@ -9,7 +9,8 @@
         "start:debug": "NODE_ENV=development DEBUG=* nodemon --inspect --trace-warnings",
         "start:prod": "NODE_ENV=production node --trace-warnings dist/app",
         "build": "tsc",
-        "test": "jest"
+        "test": "jest",
+        "lint": "eslint ."
     },
     "author": "Malexion",
     "license": "MIT",
@@ -43,7 +44,11 @@
         "@types/jsonfile": "^5.0.1",
         "@types/node": "^12.12.48",
         "@types/yt-search": "^2.3.0",
+        "@typescript-eslint/eslint-plugin": "^6.4.0",
+        "@typescript-eslint/parser": "^6.4.0",
         "babel-jest": "^27.4.6",
+        "eslint": "^8.47.0",
+        "eslint-config-prettier": "^9.0.0",
         "jest": "^27.4.7",
         "jest-mock-extended": "^3.0.4",
         "nodemon": "^3.0.1",

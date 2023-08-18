@@ -10,7 +10,7 @@ import { MediaPlayer } from '../media/MediaPlayer';
 import { SpotifyAPIHelper } from './../helpers/SpotifyAPIHelper';
 import { ICommand } from './ICommand';
 
-const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
+const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-_]*)(&(amp;)?[\w?=]*)?/;
 const SPOTIFY_REGEX = /spotify\.com/;
 
 export class SearchAndAddCommand implements ICommand {
@@ -91,7 +91,9 @@ export class SearchAndAddCommand implements ICommand {
             playListItems.map(async (playListItem: string) => {
                 try {
                     await this.searchForVideo(playListItem, msg, true);
-                } catch (error) {}
+                } catch (error) {
+                    this.logger.error('Video not found due to error', error);
+                }
 
                 this.logger.info(`Added ${playListItem}`);
             })
@@ -155,9 +157,7 @@ export class SearchAndAddCommand implements ICommand {
     }
 
     private async getPlayList(url: string): Promise<{ title: string; items: MediaItem[] }> {
-        let playList: ytpl.Result;
-
-        playList = await ytpl(url);
+        const playList: ytpl.Result = await ytpl(url);
 
         if (
             !playList ||

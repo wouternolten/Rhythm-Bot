@@ -7,7 +7,7 @@ import { IRhythmBotConfig } from '../bot/IRhythmBotConfig';
 import { MediaPlayer } from './../media/MediaPlayer';
 import { ICommand } from './ICommand';
 
-const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/;
+const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-_]*)(&(amp;)?[\w?=]*)?/;
 
 export class SearchCommand implements ICommand {
     constructor(
@@ -16,7 +16,7 @@ export class SearchCommand implements ICommand {
         private readonly queueManager: IQueueManager,
         private readonly channelManager: IChannelManager,
         private readonly config: IRhythmBotConfig
-    ) { }
+    ) {}
 
     async execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): Promise<void> {
         let noResults = true;
@@ -24,13 +24,13 @@ export class SearchCommand implements ICommand {
         if (!cmd.body || typeof cmd.body !== 'string') {
             this.channelManager.sendInfoMessage(`Please input a song.`);
             return;
-        } 
+        }
 
         if (YOUTUBE_REGEX.test(cmd.body)) {
             await this.queueManager.addMedia({
                 type: 'youtube',
                 url: cmd.body,
-                requestor: msg.author.username
+                requestor: msg.author.username,
             });
 
             this.player.play();

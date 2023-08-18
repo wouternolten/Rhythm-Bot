@@ -12,6 +12,8 @@ export class MediaFilePlayer implements IMediaFilePlayer {
 
     public constructor(private readonly audioPlayerFactory: IAudioPlayerFactory) {}
 
+    // TODO: FIX CHANNEL
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public playFile(fileName: string, channel: VoiceState): void {
         if (!this.audioPlayer) {
             this.audioPlayer = this.audioPlayerFactory.getAudioPlayer();

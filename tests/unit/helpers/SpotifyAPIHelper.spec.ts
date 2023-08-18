@@ -108,11 +108,11 @@ describe('Test fetching data for search string', () => {
                 await checkSpotifyId({ data: { tracks: { items: [] } } });
             });
 
-            async function checkSpotifyId(returnData: {}): Promise<void> {
+            async function checkSpotifyId(returnData: { [key: string]: unknown }): Promise<void> {
                 axios.get = jest.fn().mockResolvedValue(returnData);
 
                 try {
-                    const id = await helper.getSpotifyIDForSong(TRACK_STRING, ARTIST_STRING);
+                    await helper.getSpotifyIDForSong(TRACK_STRING, ARTIST_STRING);
                 } catch (error) {
                     expect(error).toBeDefined();
                 }
@@ -156,6 +156,7 @@ describe('Test fetching data for search string', () => {
 
             await helper.getSpotifyIDForSong(TRACK_STRING);
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             const firstArgument = axios.get.mock.calls[0][0] as string;
 
@@ -227,7 +228,7 @@ describe('Test fetching data for id', () => {
                 getRecommendationForTrack({ data: { tracks: [{ artists: [{ name: ARTIST_STRING }] }] } });
             });
 
-            async function getRecommendationForTrack(returnData: {}): Promise<void> {
+            async function getRecommendationForTrack(returnData: { [key: string]: unknown }): Promise<void> {
                 axios.get = jest.fn().mockResolvedValue(returnData);
 
                 try {

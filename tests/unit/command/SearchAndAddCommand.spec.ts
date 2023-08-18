@@ -24,15 +24,15 @@ jest.mock('ytpl', () => {
 
 let searchAndAddCommand: SearchAndAddCommand;
 let mockYtplReturnValue;//, mockYtsReturnValue;
-let player = {
+const player = {
     play: jest.fn()
 } as unknown as MediaPlayer;
 
-let spotifyAPIHelper = {} as unknown as SpotifyAPIHelper;
+const spotifyAPIHelper = {} as unknown as SpotifyAPIHelper;
 
-let logger = mockLogger();
+const logger = mockLogger();
 
-let mediaItemHelper = {
+const mediaItemHelper = {
     getMediaItemForSearchString: jest.fn()
 } as unknown as IMediaItemHelper;
 
