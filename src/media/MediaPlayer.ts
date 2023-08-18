@@ -1,9 +1,8 @@
-import { AudioPlayerStatus } from '@discordjs/voice';
 import { IChannelManager } from 'src/channel/ChannelManager';
 import { IQueueManager } from 'src/queue/QueueManager';
 import { Logger } from 'winston';
 import { BotStatus } from '../bot/BotStatus';
-import { AudioEventBus } from '../helpers/EventBus';
+import { AudioEventBus, AudioEventBusStatus } from '../helpers/EventBus';
 import IMediaPlayerStateHandler from './state/IMediaPlayerStateHandler';
 import { PlayerState } from './state/Types';
 
@@ -20,13 +19,13 @@ export class MediaPlayer {
     ) {}
 
     public initializePlayer(): void {
-        this.eventBus.on('error', async (error) => {
+        this.eventBus.on(AudioEventBusStatus.AudioPlayerError, async (error) => {
             this.logger.error('Error playing song: ', { error });
             await this.channelManager.sendErrorMessage(`Error Playing Song: ${error.message}`);
             await this.skip();
         });
 
-        this.eventBus.on(AudioPlayerStatus.Idle, async () => {
+        this.eventBus.on(AudioEventBusStatus.AudioPlayerIdle, () => {
             if (!this.isInState(PlayerState.Playing)) {
                 this.logger.debug('Not doing anything with idle state, as previous state was not playing.');
                 return;
@@ -34,7 +33,7 @@ export class MediaPlayer {
 
             this.logger.debug('Stream done');
             this.setPlayerState(PlayerState.Idle);
-            await this.play();
+            this.play();
         });
 
         this.status.emptyBanner();

@@ -49,7 +49,7 @@ export default class MediaModule implements Module {
             container.get(tokens.pausedStateHandler),
         ]);
 
-        container.add(tokens.mediaPlayer, MediaPlayer, [
+        container.share(tokens.mediaPlayer, MediaPlayer, [
             tokens.botStatus,
             tokens.logger,
             tokens.queueManager,

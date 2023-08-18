@@ -1,6 +1,6 @@
 import { AudioPlayer, AudioPlayerStatus, createAudioPlayer, joinVoiceChannel } from '@discordjs/voice';
 import { Client, Message, VoiceState } from 'discord.js';
-import { AudioEventBus } from './EventBus';
+import { AudioEventBus, AudioEventBusStatus } from './EventBus';
 
 export interface IAudioPlayerFactory {
     getAudioPlayer(): AudioPlayer;
@@ -57,17 +57,13 @@ export class AudioPlayerFactory {
     private sendEventsToEventBus() {
         this.audioPlayer.on('error', (error) => this.audioEventBus.emit('error', error));
         this.audioPlayer.on('debug', (message) => this.audioEventBus.emit('debug', message));
-        this.audioPlayer.on('stateChange', (oldState, newState) =>
-            this.audioEventBus.emit('stateChange', oldState, newState)
-        );
+        this.audioPlayer.on('stateChange', (oldState, newState) => {
+            this.audioEventBus.emit('stateChange', oldState, newState);
+            if (newState.status !== AudioPlayerStatus.Idle || oldState.status === AudioPlayerStatus.Idle) {
+                this.audioEventBus.emit(AudioEventBusStatus.AudioPlayerIdle);
+            }
+        });
         this.audioPlayer.on('subscribe', (subscription) => this.audioEventBus.emit('subscribe', subscription));
         this.audioPlayer.on('unsubscribe', (unsubscribe) => this.audioEventBus.emit('unsubscribe', unsubscribe));
-
-        for (const status in AudioPlayerStatus) {
-            this.audioPlayer.on(status as AudioPlayerStatus, (oldState, newState) => {
-                this.audioEventBus.emit(status, oldState, newState);
-                console.log('Some state');
-            });
-        }
     }
 }
