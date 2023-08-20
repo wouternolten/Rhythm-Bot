@@ -1,6 +1,7 @@
+import { mock } from 'jest-mock-extended';
 import { Readable } from 'stream';
+import { Logger } from 'winston';
 import ytdl from 'ytdl-core';
-import { mockLogger } from '../../mocks/mockLogger';
 import { MediaItem } from './../../../src/media/MediaItem';
 import { YoutubeMediaType } from './../../../src/mediatypes/YoutubeMediaType';
 
@@ -40,7 +41,7 @@ const MEDIA_ITEM = {
 
 let youtubeMediaType: YoutubeMediaType;
 
-const logger = mockLogger();
+const logger = mock<Logger>();
 
 beforeEach(() => {
     youtubeMediaType = new YoutubeMediaType(logger);

@@ -6,7 +6,6 @@ import { RhythmBot } from '../../../src/bot/RhythmBot';
 import { ICommandMapFactory } from '../../../src/command/ICommandMapFactory';
 import { CommandMap } from '../../../src/helpers/CommandMap';
 import { IQueueManager } from '../../../src/queue/QueueManager';
-import { mockLogger } from '../../mocks/mockLogger';
 import { MediaPlayer } from './../../../src/media/MediaPlayer';
 
 const mockParseReturnValue = jest.fn();
@@ -22,7 +21,6 @@ jest.mock('discord-command-parser', () => {
 });
 
 let bot: RhythmBot;
-
 const config = {
     command: {
         symbol: '!',
@@ -35,6 +33,8 @@ const config = {
         skipSong: '⏭️',
     },
 } as unknown as IRhythmBotConfig;
+const mediaPlayer = mock<MediaPlayer>();
+const logger = mock<Logger>();
 
 const botUser = {
     id: 'RICK_ASTLEY',
@@ -43,16 +43,6 @@ const botUser = {
 const otherUser = {
     id: 'MICHAEL_JACKSON',
 } as unknown as User;
-
-const mediaPlayer = {
-    stop: jest.fn(),
-    play: jest.fn(),
-    pause: jest.fn(),
-    skip: jest.fn(),
-    setChannel: jest.fn(),
-} as unknown as MediaPlayer;
-
-const logger = mockLogger();
 
 // I'm not mocking the commandMap, because, unlike the parse function, it's a simple key / value object.
 const commands = new CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>();

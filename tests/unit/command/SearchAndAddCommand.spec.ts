@@ -1,10 +1,10 @@
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { mock, MockProxy } from 'jest-mock-extended';
+import { Logger } from 'winston';
 import { IChannelManager } from '../../../src/channel/ChannelManager';
 import { MediaPlayer } from '../../../src/media/MediaPlayer';
 import { IQueueManager } from '../../../src/queue/QueueManager';
-import { mockLogger } from '../../mocks/mockLogger';
 import { SearchAndAddCommand } from './../../../src/command/SearchAndAddCommand';
 import { IMediaItemHelper } from './../../../src/helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
@@ -18,35 +18,36 @@ jest.mock('ytpl', () => {
     return {
         __esModule: true,
         ...originalModule,
-        default: () => mockYtplReturnValue
-    }
+        default: () => mockYtplReturnValue,
+    };
 });
 
 let searchAndAddCommand: SearchAndAddCommand;
-let mockYtplReturnValue;//, mockYtsReturnValue;
+let mockYtplReturnValue; //, mockYtsReturnValue;
 const player = {
-    play: jest.fn()
+    play: jest.fn(),
 } as unknown as MediaPlayer;
 
 const spotifyAPIHelper = {} as unknown as SpotifyAPIHelper;
 
-const logger = mockLogger();
+const logger = mock<Logger>();
 
 const mediaItemHelper = {
-    getMediaItemForSearchString: jest.fn()
+    getMediaItemForSearchString: jest.fn(),
 } as unknown as IMediaItemHelper;
 
 const RICK_ASTLEY = 'RICK_ASTLEY';
-const NEVER_GONNA_GIVE_YOU_UP_SPOTIFY_RADIO = 'https://open.spotify.com/playlist/37i9dQZF1E8NRjNUGTUFgD?si=70798392132d446d';
+const NEVER_GONNA_GIVE_YOU_UP_SPOTIFY_RADIO =
+    'https://open.spotify.com/playlist/37i9dQZF1E8NRjNUGTUFgD?si=70798392132d446d';
 const NEVER_GONNA_GIVE_YOU_UP_YOUTUBE_LINK = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
 
 const MESSAGE = {
     channel: {
-        send: jest.fn()
+        send: jest.fn(),
     },
     author: {
-        username: RICK_ASTLEY
-    }
+        username: RICK_ASTLEY,
+    },
 } as unknown as Message;
 
 let queueManager: MockProxy<IQueueManager>;
@@ -64,7 +65,7 @@ beforeEach(() => {
         channelManager,
         logger
     );
-})
+});
 
 it('Should return when no body given', async () => {
     expect.assertions(1);
@@ -80,9 +81,9 @@ it('Should have a description', () => {
 
 describe('Playlist', () => {
     const CMD = {
-        body: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL634F2B56B8C346A2'
+        body: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL634F2B56B8C346A2',
     } as unknown as SuccessfulParsedMessage<Message>;
-    
+
     it('Should return when no playlist found', async () => {
         expect.assertions(1);
 
@@ -99,7 +100,7 @@ describe('Playlist', () => {
         { title: 'Title' },
         { items: {} },
         { title: 'Some title', items: {} },
-        { title: 'Some title', items: [] }
+        { title: 'Some title', items: [] },
     ])('Should return when invalid results returned', async (ytplReturnValue) => {
         expect.assertions(1);
 
@@ -119,14 +120,14 @@ describe('Playlist', () => {
                 {
                     name: 'first item',
                     shortUrl: 'url',
-                    duration: '12345'
+                    duration: '12345',
                 },
                 {
                     name: 'second item',
                     shortUrl: 'url',
-                    duration: '12345'
-                }
-            ]
+                    duration: '12345',
+                },
+            ],
         });
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
@@ -138,7 +139,7 @@ describe('Playlist', () => {
 
 describe('Youtube video', () => {
     const CMD = {
-        body: NEVER_GONNA_GIVE_YOU_UP_YOUTUBE_LINK
+        body: NEVER_GONNA_GIVE_YOU_UP_YOUTUBE_LINK,
     } as unknown as SuccessfulParsedMessage<Message>;
 
     it('Should add media to player and play', async () => {
@@ -154,12 +155,12 @@ describe('Youtube video', () => {
 describe('Search terms', () => {
     const CMD_BODY = 'Rick Astley';
     const CMD = {
-        body: CMD_BODY
+        body: CMD_BODY,
     } as unknown as SuccessfulParsedMessage<Message>;
 
     it('Should return when search videos errors out', async () => {
         expect.assertions(1);
-        
+
         mediaItemHelper.getMediaItemForSearchString = jest.fn(() => Promise.reject('Error'));
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
@@ -170,7 +171,7 @@ describe('Search terms', () => {
     it('Should return when no video result found', async () => {
         expect.assertions(1);
 
-         mediaItemHelper.getMediaItemForSearchString = jest.fn(() => Promise.resolve(null));
+        mediaItemHelper.getMediaItemForSearchString = jest.fn(() => Promise.resolve(null));
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
@@ -182,7 +183,7 @@ describe('Search terms', () => {
             type: 'youtube',
             url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             title: 'The best video ever',
-            duration: '69:42'
+            duration: '69:42',
         } as MediaItem;
 
         expect.assertions(1);
@@ -190,21 +191,24 @@ describe('Search terms', () => {
 
         await searchAndAddCommand.execute(CMD, MESSAGE);
 
-        expect(queueManager.addMedia).toHaveBeenCalledWith({
-            ...video,
-            requestor: RICK_ASTLEY
-        }, false);
+        expect(queueManager.addMedia).toHaveBeenCalledWith(
+            {
+                ...video,
+                requestor: RICK_ASTLEY,
+            },
+            false
+        );
     });
 });
 
 describe('Spotify playlist', () => {
     const CMD = {
-        body: NEVER_GONNA_GIVE_YOU_UP_SPOTIFY_RADIO
+        body: NEVER_GONNA_GIVE_YOU_UP_SPOTIFY_RADIO,
     } as unknown as SuccessfulParsedMessage<Message>;
 
     it('Should send channel message and return when invalid playlist given', async () => {
         const invalidPlayListCommand = {
-            body: 'https://open.spotify.com/playlist?si=70798392132d446d'
+            body: 'https://open.spotify.com/playlist?si=70798392132d446d',
         } as unknown as SuccessfulParsedMessage<Message>;
 
         expect.assertions(1);
@@ -229,7 +233,7 @@ describe('Spotify playlist', () => {
             type: 'youtube',
             url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             title: 'The best video ever',
-            duration: '69:42'
+            duration: '69:42',
         } as MediaItem;
 
         expect.assertions(1);
