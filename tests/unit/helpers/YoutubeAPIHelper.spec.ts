@@ -1,5 +1,6 @@
+import { mock } from 'jest-mock-extended';
+import { Logger } from 'winston';
 import * as youtube from 'youtube-search-without-api-key';
-import { mockLogger } from '../../mocks/mockLogger';
 import { YoutubeAPIHelper } from './../../../src/helpers/YoutubeAPIHelper';
 import { MEDIA_TYPE_YOUTUBE } from './../../../src/mediatypes/MediaType';
 
@@ -13,7 +14,7 @@ const NEVER_GONNA_LET_YOU_DOWN_YOUTUBE_LINK = 'https://www.youtube.com/watch?v=A
 const NEVER_GONNA_LET_YOU_DOWN_DURATION = '42:69';
 
 let youtubeAPIHelper: YoutubeAPIHelper;
-const logger = mockLogger();
+const logger = mock<Logger>();
 
 beforeEach(() => {
     youtubeAPIHelper = new YoutubeAPIHelper(logger);

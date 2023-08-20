@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { mockLogger } from '../../mocks/mockLogger';
+import { mock } from 'jest-mock-extended';
+import { Logger } from 'winston';
 import { IRhythmBotConfig } from './../../../src/bot/IRhythmBotConfig';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
 
@@ -27,7 +28,7 @@ const TOKEN_RESPONSE = {
 };
 
 let helper: SpotifyAPIHelper;
-const logger = mockLogger();
+const logger = mock<Logger>();
 
 beforeEach(() => {
     helper = new SpotifyAPIHelper(config, logger);
