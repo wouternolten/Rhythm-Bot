@@ -1,10 +1,14 @@
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Client, ClientUser, Message, MessageReaction, User } from 'discord.js';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { mock } from 'jest-mock-extended';
+import { Logger } from 'winston';
 import { IRhythmBotConfig } from '../../../src/bot/IRhythmBotConfig';
 import { RhythmBot } from '../../../src/bot/RhythmBot';
+import { IChannelManager } from '../../../src/channel/ChannelManager';
 import { ICommandMapFactory } from '../../../src/command/ICommandMapFactory';
+import { IAudioPlayerFactory } from '../../../src/helpers/AudioPlayerFactory';
 import { CommandMap } from '../../../src/helpers/CommandMap';
+import { IMessageInformationHelper } from '../../../src/helpers/MessageInformationHelper';
 import { IQueueManager } from '../../../src/queue/QueueManager';
 import { MediaPlayer } from './../../../src/media/MediaPlayer';
 
@@ -19,6 +23,11 @@ jest.mock('discord-command-parser', () => {
         parse: (msg: Message<boolean>, symbol: string) => mockParseReturnValue(msg, symbol),
     };
 });
+
+const TEXT_CHANNEL_ID = 'some-text-id';
+const TEXT_CHANNEL_NAME = 'some-text-name';
+const VOICE_CHANNEL_ID = 'some-voice-id';
+const VOICE_CHANNEL_NAME = 'some-voice-name';
 
 let bot: RhythmBot;
 const config = {
@@ -35,6 +44,11 @@ const config = {
 } as unknown as IRhythmBotConfig;
 const mediaPlayer = mock<MediaPlayer>();
 const logger = mock<Logger>();
+const channelManager = mock<IChannelManager>();
+const audioPlayerFactory = mock<IAudioPlayerFactory>();
+const client = mock<Client>();
+const messageInformationHelper = mock<IMessageInformationHelper>();
+const queueManager = mock<IQueueManager>();
 
 const botUser = {
     id: 'RICK_ASTLEY',
@@ -56,20 +70,20 @@ const message = {
     author: otherUser,
 } as unknown as Message;
 
-const client = mock<Client>();
 client.user = botUser;
-
-let queueManager: MockProxy<IQueueManager>;
 
 describe('Invalid config', () => {
     beforeEach(() => {
-        queueManager = mock<IQueueManager>();
+        jest.resetAllMocks();
         bot = new RhythmBot(
             client,
             {} as unknown as IRhythmBotConfig,
             mediaPlayer,
             queueManager,
             logger,
+            channelManager,
+            audioPlayerFactory,
+            messageInformationHelper,
             commandFactory
         );
     });
@@ -89,10 +103,39 @@ describe('Invalid config', () => {
 
 describe('Valid constructor parameters', () => {
     beforeEach(() => {
-        queueManager = mock<IQueueManager>();
-        jest.clearAllMocks();
+        jest.resetAllMocks();
 
-        bot = new RhythmBot(client, config, mediaPlayer, queueManager, logger, commandFactory);
+        messageInformationHelper.getTextChannelInfo.mockReturnValue({
+            id: TEXT_CHANNEL_ID,
+            name: TEXT_CHANNEL_NAME,
+        });
+
+        channelManager.getChannelInfo.mockReturnValue({
+            id: TEXT_CHANNEL_ID,
+            name: TEXT_CHANNEL_NAME,
+        });
+
+        messageInformationHelper.getUserVoiceChannelInfo.mockReturnValue({
+            id: VOICE_CHANNEL_ID,
+            name: VOICE_CHANNEL_NAME,
+        });
+
+        audioPlayerFactory.getChannelInfo.mockReturnValue({
+            id: VOICE_CHANNEL_ID,
+            name: VOICE_CHANNEL_NAME,
+        });
+
+        bot = new RhythmBot(
+            client,
+            config,
+            mediaPlayer,
+            queueManager,
+            logger,
+            channelManager,
+            audioPlayerFactory,
+            messageInformationHelper,
+            commandFactory
+        );
     });
 
     describe('handleMessage()', () => {
@@ -121,6 +164,53 @@ describe('Valid constructor parameters', () => {
             bot.handleMessage(message);
 
             expect(logger.error).not.toBeCalled();
+        });
+
+        it('Should call handler when no text or voice channel is set', () => {
+            channelManager.getChannelInfo.mockReturnValue(undefined);
+            audioPlayerFactory.getChannelInfo.mockReturnValue(undefined);
+
+            mockParseReturnValue.mockReturnValue({
+                success: true,
+                command: 'cmd',
+                message: {
+                    channel: {},
+                },
+            });
+
+            bot.handleMessage(message);
+
+            expect(commandFunction).toBeCalled();
+        });
+
+        it('Should not call handler when user is in other text channel', () => {
+            messageInformationHelper.getTextChannelInfo.mockReturnValue({
+                id: 'too-cool-for-id',
+                name: 'too-cool-for-school',
+            });
+
+            bot.handleMessage(message);
+
+            expect(channelManager.sendErrorMessage).toHaveBeenCalledWith(expect.stringContaining('text channel'));
+        });
+
+        it('Should not call handler when user is in other voice channel', () => {
+            messageInformationHelper.getUserVoiceChannelInfo.mockReturnValue({
+                id: 'too-cool-for-id',
+                name: 'too-cool-for-school',
+            });
+
+            mockParseReturnValue.mockReturnValue({
+                success: true,
+                command: 'cmd',
+                message: {
+                    channel: {},
+                },
+            });
+
+            bot.handleMessage(message);
+
+            expect(channelManager.sendErrorMessage).toHaveBeenCalledWith(expect.stringContaining('voice channel'));
         });
 
         it('Should call handler when found on handleMessage', () => {
@@ -259,7 +349,7 @@ describe('Valid constructor parameters', () => {
                 expect(reaction.users.remove).toBeCalled();
             });
 
-            it('Should perform action when add media emjo clicked', async () => {
+            it('Should perform action when add media emoji clicked', async () => {
                 const reaction = {
                     partial: false,
                     message: {
