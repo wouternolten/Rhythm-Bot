@@ -69,7 +69,7 @@ export class QueueManager implements IQueueManager {
     async getNextSongToPlay(): Promise<MediaItem | undefined> {
         if (this.queue.length > 0) {
             this.lastFetchedSong = this.queue.first;
-            return this.queue.shift(); // TODO: ONLY SHIFT WHEN ASKED.
+            return this.queue.shift();
         }
 
         if ((!this.autoPlay && this.queue.length === 0) || (this.autoPlay && !this.lastFetchedSong)) {
