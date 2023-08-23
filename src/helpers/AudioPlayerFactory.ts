@@ -1,15 +1,17 @@
 import { AudioPlayer, AudioPlayerStatus, createAudioPlayer, joinVoiceChannel } from '@discordjs/voice';
-import { Client, Message, VoiceState } from 'discord.js';
+import { Client, Message, VoiceBasedChannel, VoiceState } from 'discord.js';
 import { AudioEventBus, AudioEventBusStatus } from './EventBus';
+import { ChannelInfo } from './MessageInformationHelper';
 
 export interface IAudioPlayerFactory {
     getAudioPlayer(): AudioPlayer;
     initialize(): void;
+    getChannelInfo(): ChannelInfo | undefined;
 }
 
-export class AudioPlayerFactory {
+export class AudioPlayerFactory implements IAudioPlayerFactory {
     private audioPlayer: AudioPlayer;
-    private channelId: string;
+    private channel: VoiceBasedChannel | undefined;
 
     constructor(private readonly client: Client, private readonly audioEventBus: AudioEventBus) {}
 
@@ -27,8 +29,19 @@ export class AudioPlayerFactory {
         });
     }
 
+    public getChannelInfo(): ChannelInfo | undefined {
+        if (!this.channel) {
+            return undefined;
+        }
+
+        return {
+            id: this.channel.id,
+            name: this.channel.name,
+        };
+    }
+
     private createSubscribedAudioPlayer(voice: VoiceState): AudioPlayer {
-        if (this.channelId && this.channelId !== voice.channelId) {
+        if (this.channel?.id && this.channel?.id !== voice.channelId) {
             return this.audioPlayer; // Don't go to a different channel.
         }
 
@@ -41,10 +54,9 @@ export class AudioPlayerFactory {
             selfDeaf: false,
         });
 
-        this.channelId = voice.channelId;
-
         if (!this.audioPlayer) {
             this.audioPlayer = createAudioPlayer();
+            this.channel = voice.channel;
 
             this.sendEventsToEventBus();
         }

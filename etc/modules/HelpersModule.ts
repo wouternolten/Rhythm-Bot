@@ -3,6 +3,7 @@ import * as path from 'path';
 import { createLogger, format, Logger, transports } from 'winston';
 import { AudioPlayerFactory } from '../../src/helpers/AudioPlayerFactory';
 import { AudioEventBus } from '../../src/helpers/EventBus';
+import { MessageInformationHelper } from '../../src/helpers/MessageInformationHelper';
 import { SpotifyAPIHelper } from '../../src/helpers/SpotifyAPIHelper';
 import { YoutubeAPIHelper } from '../../src/helpers/YoutubeAPIHelper';
 import tokens from '../tokens';
@@ -20,6 +21,7 @@ export default class HelpersModule implements Module {
         tokens.spotifyApiHelper,
         tokens.youtubeApiHelper,
         tokens.logger,
+        tokens.messageInformationHelper,
     ];
 
     public register(container: Container): void {
@@ -48,6 +50,7 @@ export default class HelpersModule implements Module {
         ]);
         container.add(tokens.spotifyApiHelper, SpotifyAPIHelper, [tokens.config, tokens.logger]);
         container.add(tokens.youtubeApiHelper, YoutubeAPIHelper, [tokens.logger]);
+        container.add(tokens.messageInformationHelper, MessageInformationHelper, []);
         container.share(tokens.musicBotAudioEventBus, AudioEventBus, []);
         container.share(tokens.welcomeBotAudioEventBus, AudioEventBus, []);
     }
