@@ -33,9 +33,3 @@ jobs:
 
             - name: Run linter
               run: npm run lint
-
-            - name: Block merging if tests or lint fail
-              if: ${{ failure() }}
-              run: |
-                  echo "Unit tests or lint failed. Fix the issues before merging."
-                  exit 1

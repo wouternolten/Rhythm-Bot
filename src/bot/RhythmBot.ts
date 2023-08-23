@@ -52,7 +52,6 @@ export class RhythmBot {
             return;
         }
 
-        // TODO: INJECTION & TESTS
         const parsed = parse(msg, this.config.command.symbol);
 
         if (!parsed.success) {
