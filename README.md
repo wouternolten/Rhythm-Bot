@@ -1,7 +1,7 @@
 # Rhythm-Bot | Wouter's fork
 
-Simple little music bot to queue up and play youtube audio over discord voice channels.
-Thanks to Malexion for the base code Basically used this project to learn new coding skills! Feel free to take a look around.
+Simple little music bot to queue up and play Youtube audio over Discord voice channels.
+Thanks to Malexion for the base code. Basically used this project to learn new coding skills! Feel free to take a look around.
 
 Note: This is not the bot listed here [https://rythmbot.co/](https://rythmbot.co/)
 
@@ -65,10 +65,10 @@ This bot has an autoplay functionality which makes use of the Spotify API. In or
 
 ### BONUS: Welcome tunes
 
-Net to 'just' playing tunes, it can also play custom files for when someone joins the voice chat. In order for this to work, follow these steps:
+Next to 'just' playing tunes, it can also play custom files for when someone joins the voice chat. In order for this to work, follow these steps:
 
 1. Create a new token, just like in the Configuration section, but in step 3, add it in the `WELCOME_BOT_TOKEN`.
 2. Set "useWelcomeBot" to true
 3. Add usernames with their sounds under "soundfiles". For instance, filling in `"rick_astley": "nevergonnagiveyouup.wav"` will play the sound in `./data/sounds/nevergonnagiveyouup.wav` when user `"rick_astley"` joins.
-4. There's also an `!aoe <number>` command. It was based on the Age Of Empires taunts in chat, hence the name. It'll search for the correct sound in `./data/sounds/age_taunts`. So, for instance, if a user types `!aoe 11`, it'll try to play a soundfile beginning with `11`.
+4. There's also an `!aoe <number>` command. It was based on the Age Of Empires taunts in chat, hence the name. It'll search for the correct sound in `./data/sounds/age_taunts`. So, for instance, if a user types `!aoe 11`, it'll try to play a soundfile beginning with `11`. With this logic, you can create your own sound bites by putting files starting with a number in that folder.
 5. Done!
