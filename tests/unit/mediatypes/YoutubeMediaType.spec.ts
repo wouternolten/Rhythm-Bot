@@ -1,6 +1,7 @@
+import { mock } from 'jest-mock-extended';
 import { Readable } from 'stream';
+import { Logger } from 'winston';
 import ytdl from 'ytdl-core';
-import { mockLogger } from '../../mocks/mockLogger';
 import { MediaItem } from './../../../src/media/MediaItem';
 import { YoutubeMediaType } from './../../../src/mediatypes/YoutubeMediaType';
 
@@ -9,8 +10,8 @@ const NAME = 'song title';
 const DURATION = '4:20:69';
 
 let mockYtplReturnValue;
-let mockYtdlCoreReturnValue = jest.fn();
-let mockYtdlGetInfoReturnValue = jest.fn();
+const mockYtdlCoreReturnValue = jest.fn();
+const mockYtdlGetInfoReturnValue = jest.fn();
 
 jest.mock('ytdl-core', () => {
     const originalModule = jest.requireActual('ytdl-core');
@@ -18,9 +19,9 @@ jest.mock('ytdl-core', () => {
     return {
         __esModule: true,
         ...originalModule,
-        default: (...params: any) => mockYtdlCoreReturnValue(params),
-        getInfo: (...params: any) => mockYtdlGetInfoReturnValue(params)
-    }
+        default: (url: string, options: { [key: string]: unknown }) => mockYtdlCoreReturnValue(url, options),
+        getInfo: (url: string) => mockYtdlGetInfoReturnValue(url),
+    };
 });
 
 jest.mock('ytpl', () => {
@@ -29,8 +30,8 @@ jest.mock('ytpl', () => {
     return {
         __esModule: true,
         ...originalModule,
-        default: () => mockYtplReturnValue
-    }
+        default: () => mockYtplReturnValue,
+    };
 });
 
 const MEDIA_ITEM = {
@@ -40,7 +41,7 @@ const MEDIA_ITEM = {
 
 let youtubeMediaType: YoutubeMediaType;
 
-const logger = mockLogger();
+const logger = mock<Logger>();
 
 beforeEach(() => {
     youtubeMediaType = new YoutubeMediaType(logger);
@@ -73,11 +74,13 @@ describe('Playlist', () => {
 
     it('Should return a playlist of items on getPlaylist', async () => {
         const playList = {
-            items: [{
-                url: URL,
-                title: NAME,
-                duration: DURATION
-            }]
+            items: [
+                {
+                    url: URL,
+                    title: NAME,
+                    duration: DURATION,
+                },
+            ],
         };
 
         mockYtplReturnValue = Promise.resolve(playList);
@@ -86,20 +89,22 @@ describe('Playlist', () => {
 
         const result = await youtubeMediaType.getPlaylist(MEDIA_ITEM);
 
-        expect(result).toEqual([{
-            type: youtubeMediaType.getType(),
-            url: URL,
-            name: NAME,
-            duration: DURATION
-        }]);
-    })
+        expect(result).toEqual([
+            {
+                type: youtubeMediaType.getType(),
+                url: URL,
+                name: NAME,
+                duration: DURATION,
+            },
+        ]);
+    });
 });
 
 describe('Details', () => {
     it('Should return item when duration and name are set', async () => {
         const item = {
             name: NAME,
-            duration: DURATION
+            duration: DURATION,
         } as MediaItem;
 
         expect.assertions(1);
@@ -111,7 +116,7 @@ describe('Details', () => {
 
     it('Should search for a full youtube url when item url is only a part', async () => {
         const item = {
-            url: URL
+            url: URL,
         } as MediaItem;
 
         mockYtdlGetInfoReturnValue.mockResolvedValue(item);
@@ -119,20 +124,20 @@ describe('Details', () => {
         expect.assertions(1);
 
         await youtubeMediaType.getDetails(item);
-        
-        expect(mockYtdlGetInfoReturnValue.mock.calls[0][0][0]).toContain('https://');   
+
+        expect(mockYtdlGetInfoReturnValue.mock.calls[0][0]).toContain('https://');
     });
 
     it('Should return info about an item', async () => {
         const item = {
-            url: 'https://awesome-sauce.com/' + URL
+            url: 'https://awesome-sauce.com/' + URL,
         } as MediaItem;
 
         const returnedVideoInfo = {
             videoDetails: {
                 title: NAME,
-                lengthSeconds: '1'
-            }
+                lengthSeconds: '1',
+            },
         } as ytdl.videoInfo;
 
         mockYtdlGetInfoReturnValue.mockResolvedValue(returnedVideoInfo);
@@ -142,7 +147,7 @@ describe('Details', () => {
         expect(result).toEqual({
             url: 'https://awesome-sauce.com/' + URL,
             name: NAME,
-            duration: '00:00:01'
+            duration: '00:00:01',
         });
     });
 });

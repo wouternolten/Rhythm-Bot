@@ -29,7 +29,7 @@ export default class IdleStateHandler extends AbstractMediaPlayerStateHandler {
             throw new Error(message);
         }
 
-        let type = this.mediaTypeProvider.get(item.type);
+        const type = this.mediaTypeProvider.get(item.type);
 
         if (!type) {
             const message = 'Invalid type for item.';

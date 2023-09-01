@@ -12,7 +12,7 @@ export default class MediaModule implements Module {
     public provides: Token[] = [tokens.mediaFilePlayer, tokens.songRecommender, tokens.mediaPlayer];
 
     public register(container: Container): void {
-        container.add(tokens.mediaFilePlayer, MediaFilePlayer, [tokens.welcomeBotAudioPlayerFactory]);
+        container.add(tokens.mediaFilePlayer, MediaFilePlayer, [tokens.welcomeBotAudioPlayerFactory, tokens.logger]);
 
         container.add(tokens.songRecommender, SongRecommender, [
             tokens.spotifyApiHelper,
@@ -49,7 +49,7 @@ export default class MediaModule implements Module {
             container.get(tokens.pausedStateHandler),
         ]);
 
-        container.add(tokens.mediaPlayer, MediaPlayer, [
+        container.share(tokens.mediaPlayer, MediaPlayer, [
             tokens.botStatus,
             tokens.logger,
             tokens.queueManager,

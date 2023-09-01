@@ -1,15 +1,17 @@
 import { AudioPlayer, AudioPlayerStatus, createAudioPlayer, joinVoiceChannel } from '@discordjs/voice';
-import { Client, Message, VoiceState } from 'discord.js';
-import { AudioEventBus } from './EventBus';
+import { Client, Message, VoiceBasedChannel, VoiceState } from 'discord.js';
+import { AudioEventBus, AudioEventBusStatus } from './EventBus';
+import { ChannelInfo } from './MessageInformationHelper';
 
 export interface IAudioPlayerFactory {
     getAudioPlayer(): AudioPlayer;
     initialize(): void;
+    getChannelInfo(): ChannelInfo | undefined;
 }
 
-export class AudioPlayerFactory {
+export class AudioPlayerFactory implements IAudioPlayerFactory {
     private audioPlayer: AudioPlayer;
-    private channelId: string;
+    private channel: VoiceBasedChannel | undefined;
 
     constructor(private readonly client: Client, private readonly audioEventBus: AudioEventBus) {}
 
@@ -18,6 +20,17 @@ export class AudioPlayerFactory {
     }
 
     public initialize(): void {
+        this.client.on('voiceStateUpdate', (oldState, newState) => {
+            if (newState?.channel) {
+                this.createSubscribedAudioPlayer(newState);
+                return;
+            }
+
+            if (oldState?.channel) {
+                this.createSubscribedAudioPlayer(oldState);
+            }
+        });
+
         this.client.on('messageCreate', (message: Message<boolean>) => {
             if (!message?.member?.voice?.channel) {
                 return;
@@ -27,9 +40,20 @@ export class AudioPlayerFactory {
         });
     }
 
+    public getChannelInfo(): ChannelInfo | undefined {
+        if (!this.channel) {
+            return undefined;
+        }
+
+        return {
+            id: this.channel.id,
+            name: this.channel.name,
+        };
+    }
+
     private createSubscribedAudioPlayer(voice: VoiceState): AudioPlayer {
-        if (this.channelId && this.channelId !== voice.channelId) {
-            return this.audioPlayer; // Don't go to a different channel.
+        if (this.audioPlayer) {
+            return this.audioPlayer; // Don't create a new audio player.
         }
 
         const connection = joinVoiceChannel({
@@ -41,10 +65,9 @@ export class AudioPlayerFactory {
             selfDeaf: false,
         });
 
-        this.channelId = voice.channelId;
-
         if (!this.audioPlayer) {
             this.audioPlayer = createAudioPlayer();
+            this.channel = voice.channel;
 
             this.sendEventsToEventBus();
         }
@@ -57,17 +80,13 @@ export class AudioPlayerFactory {
     private sendEventsToEventBus() {
         this.audioPlayer.on('error', (error) => this.audioEventBus.emit('error', error));
         this.audioPlayer.on('debug', (message) => this.audioEventBus.emit('debug', message));
-        this.audioPlayer.on('stateChange', (oldState, newState) =>
-            this.audioEventBus.emit('stateChange', oldState, newState)
-        );
+        this.audioPlayer.on('stateChange', (oldState, newState) => {
+            this.audioEventBus.emit('stateChange', oldState, newState);
+            if (newState.status !== AudioPlayerStatus.Idle || oldState.status === AudioPlayerStatus.Idle) {
+                this.audioEventBus.emit(AudioEventBusStatus.AudioPlayerIdle);
+            }
+        });
         this.audioPlayer.on('subscribe', (subscription) => this.audioEventBus.emit('subscribe', subscription));
         this.audioPlayer.on('unsubscribe', (unsubscribe) => this.audioEventBus.emit('unsubscribe', unsubscribe));
-
-        for (const status in AudioPlayerStatus) {
-            this.audioPlayer.on(status as AudioPlayerStatus, (oldState, newState) => {
-                this.audioEventBus.emit(status, oldState, newState);
-                console.log('Some state');
-            });
-        }
     }
 }

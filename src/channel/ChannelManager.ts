@@ -1,6 +1,7 @@
 import { Client, Message, TextChannel } from 'discord.js';
 import { IRhythmBotConfig } from 'src/bot/IRhythmBotConfig';
 import { Logger } from 'winston';
+import { ChannelInfo } from '../helpers/MessageInformationHelper';
 import { createEmbed, createErrorEmbed, createInfoEmbed } from './../helpers/helpers';
 import { MediaItem } from './../media/MediaItem';
 
@@ -11,10 +12,11 @@ export interface IChannelManager {
     sendTrackAddedMessage(item: MediaItem, position: number): Promise<void>;
     sendTrackPlayingMessage(item: MediaItem): Promise<void>;
     sendSearchResults(items: MediaItem[]): Promise<void>;
+    getChannelInfo(): ChannelInfo | undefined;
 }
 
 export class ChannelManager implements IChannelManager {
-    private channel: TextChannel | any | undefined; // I'm a developer and too lazy to type 26 different aspects of a 'channel' when I just need one method.
+    private channel: TextChannel | undefined;
 
     constructor(
         private readonly config: IRhythmBotConfig,
@@ -24,19 +26,21 @@ export class ChannelManager implements IChannelManager {
 
     public initialize(): void {
         this.client.on('messageCreate', (message: Message<boolean>) => {
-            this.channel = message.channel;
+            if (!this.channel) {
+                this.channel = message.channel as TextChannel; // I'm a developer and too lazy to type 26 different aspects of a 'channel' when I just need one method.
+            }
         });
     }
 
-    private getChannel(): TextChannel | undefined {
+    public getChannelInfo(): ChannelInfo | undefined {
         if (!this.channel) {
-            this.logger.error('Channel not found in channel manager. Call stack added', {
-                callStack: new Error().stack,
-            });
-            console.error(new Error().stack);
+            return undefined;
         }
 
-        return this.channel;
+        return {
+            id: this.channel.id,
+            name: this.channel.name,
+        };
     }
 
     async sendInfoMessage(message: string): Promise<void> {
@@ -56,7 +60,6 @@ export class ChannelManager implements IChannelManager {
             embeds: [
                 createEmbed()
                     .setTitle('Track Added')
-                    .setImage(item.imageUrl ?? '')
                     .addFields(
                         { name: 'Title:', value: item.name },
                         {
@@ -109,5 +112,16 @@ export class ChannelManager implements IChannelManager {
                         .then((message: Message) => message.react(this.config.emojis.addSong))
                 )
         );
+    }
+
+    private getChannel(): TextChannel | undefined {
+        if (!this.channel) {
+            this.logger.error('Channel not found in channel manager. Call stack added', {
+                callStack: new Error().stack,
+            });
+            console.error(new Error().stack);
+        }
+
+        return this.channel;
     }
 }

@@ -89,7 +89,7 @@ export class SpotifyAPIHelper {
     }
 
     async getRecommendationForTrack(spotifyId: string): Promise<string> {
-        let token = await this.getAccessToken();
+        const token = await this.getAccessToken();
 
         const config = {
             headers: {

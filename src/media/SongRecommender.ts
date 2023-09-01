@@ -1,7 +1,7 @@
+import { Logger } from 'winston';
 import { IMediaItemHelper } from '../helpers/IMediaItemHelper';
 import { SpotifyAPIHelper } from '../helpers/SpotifyAPIHelper';
 import { MediaItem } from './MediaItem';
-import { Logger } from 'winston';
 
 export interface ISongRecommender {
     recommendNextSong(lastPlayedSong: MediaItem): Promise<MediaItem | null>;
@@ -19,7 +19,7 @@ export class SongRecommender implements ISongRecommender {
             return null;
         }
 
-        const lettersAndSpacesRegex = /[^\w\s\-]+/gm;
+        const lettersAndSpacesRegex = /[^\w\s-]+/gm;
 
         /**
          * For future readers: most stuff in youtube videos that's behind brackets can be omitted.

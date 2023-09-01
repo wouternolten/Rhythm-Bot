@@ -9,6 +9,7 @@ import { ChannelManager } from '../src/channel/ChannelManager';
 import { CommandMapFactory } from '../src/command/CommandMapFactory';
 import { AudioPlayerFactory } from '../src/helpers/AudioPlayerFactory';
 import { AudioEventBus } from '../src/helpers/EventBus';
+import { MessageInformationHelper } from '../src/helpers/MessageInformationHelper';
 import { SpotifyAPIHelper } from '../src/helpers/SpotifyAPIHelper';
 import { YoutubeAPIHelper } from '../src/helpers/YoutubeAPIHelper';
 import { MediaFilePlayer } from '../src/media/MediaFilePlayer';
@@ -49,6 +50,7 @@ export default {
     youtubeApiHelper: token<YoutubeAPIHelper>('youtubeApiHelper'),
     welcomeBotAudioEventBus: token<AudioEventBus>('welcomeBotAudioEventBus'),
     musicBotAudioEventBus: token<AudioEventBus>('musicBotAudioEventBus'),
+    messageInformationHelper: token<MessageInformationHelper>('messageInformationHelper'),
 
     // Media
     mediaPlayer: token<MediaPlayer>('mediaPlayer'),

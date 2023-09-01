@@ -2,8 +2,11 @@ import { parse, SuccessfulParsedMessage } from 'discord-command-parser';
 import { Client, Message, MessageReaction, User } from 'discord.js';
 import { IQueueManager } from 'src/queue/QueueManager';
 import { Logger } from 'winston';
+import { IChannelManager } from '../channel/ChannelManager';
 import { ICommandMapFactory } from '../command/ICommandMapFactory';
+import { IAudioPlayerFactory } from '../helpers/AudioPlayerFactory';
 import { CommandMap } from '../helpers/CommandMap';
+import { IMessageInformationHelper } from '../helpers/MessageInformationHelper';
 import { MediaPlayer } from '../media/MediaPlayer';
 import { IRhythmBotConfig } from './IRhythmBotConfig';
 
@@ -16,6 +19,9 @@ export class RhythmBot {
         private readonly player: MediaPlayer,
         private readonly queueManager: IQueueManager,
         private readonly logger: Logger,
+        private readonly channelManager: IChannelManager,
+        private readonly audioPlayerFactory: IAudioPlayerFactory,
+        private readonly messageInformationHelper: IMessageInformationHelper,
         commandMapFactory: ICommandMapFactory
     ) {
         this.commands = commandMapFactory.createMusicBotCommandsMap();
@@ -42,13 +48,17 @@ export class RhythmBot {
             return;
         }
 
-        let parsed = parse(msg, this.config.command.symbol);
+        if (!this.correctTextChannel(msg) || !this.correctVoiceChannel(msg)) {
+            return;
+        }
+
+        const parsed = parse(msg, this.config.command.symbol);
 
         if (!parsed.success) {
             return;
         }
 
-        let handlers = this.commands.get(parsed.command);
+        const handlers = this.commands.get(parsed.command);
 
         if (!handlers) {
             this.logger.debug('Handlers not found');
@@ -59,6 +69,40 @@ export class RhythmBot {
         handlers.forEach((handle) => {
             handle(parsed as SuccessfulParsedMessage<Message>, msg);
         });
+    }
+
+    correctTextChannel(msg: Message<boolean>): boolean {
+        const textChannelInfo = this.channelManager.getChannelInfo();
+
+        if (!textChannelInfo) {
+            return true;
+        }
+
+        if (textChannelInfo.id === this.messageInformationHelper.getTextChannelInfo(msg)?.id) {
+            return true;
+        }
+
+        this.channelManager.sendErrorMessage(`Please join this text channel to send messages to the bot!`);
+
+        return false;
+    }
+
+    correctVoiceChannel(msg: Message<boolean>): boolean {
+        const voiceChannelInfo = this.audioPlayerFactory.getChannelInfo();
+
+        if (!voiceChannelInfo) {
+            return true;
+        }
+
+        if (voiceChannelInfo.id === this.messageInformationHelper.getUserVoiceChannelInfo(msg)?.id) {
+            return true;
+        }
+
+        this.channelManager.sendErrorMessage(
+            `Please join voice channel ${voiceChannelInfo.name} to send messages to the bot.`
+        );
+
+        return false;
     }
 
     async handleReaction(reaction: MessageReaction, user: User): Promise<void> {

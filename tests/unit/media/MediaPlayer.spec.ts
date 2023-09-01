@@ -2,7 +2,7 @@ import { mock } from 'jest-mock-extended';
 import { Logger } from 'winston';
 import { BotStatus } from '../../../src/bot/BotStatus';
 import { IChannelManager } from '../../../src/channel/ChannelManager';
-import { AudioEventBus } from '../../../src/helpers/EventBus';
+import { AudioEventBus, AudioEventBusStatus } from '../../../src/helpers/EventBus';
 import { MediaPlayer } from '../../../src/media/MediaPlayer';
 import IMediaPlayerStateHandler from '../../../src/media/state/IMediaPlayerStateHandler';
 import { PlayerState } from '../../../src/media/state/Types';
@@ -15,14 +15,51 @@ const logger = mock<Logger>();
 const queueManager = mock<IQueueManager>();
 const channelManager = mock<IChannelManager>();
 const stateHandler = mock<IMediaPlayerStateHandler>();
-const eventBus = mock<AudioEventBus>();
+let eventBus: AudioEventBus;
 
 beforeEach(() => {
     jest.resetAllMocks();
 
+    eventBus = new AudioEventBus();
     mediaPlayer = new MediaPlayer(status, logger, queueManager, channelManager, [stateHandler], eventBus);
 
     stateHandler.getApplicableStateName.mockReturnValue(PlayerState.Idle);
+});
+
+describe('Initialize', () => {
+    describe('stateChange event', () => {
+        it('Should not play when previous player state was not playing', () => {
+            mediaPlayer.initializePlayer();
+
+            eventBus.emit(AudioEventBusStatus.AudioPlayerIdle);
+
+            expect(logger.debug).toHaveBeenCalled();
+            expect(stateHandler.play).not.toHaveBeenCalled();
+        });
+
+        it('Should play new song when player is idle', async () => {
+            mediaPlayer.initializePlayer();
+
+            await mediaPlayer.play();
+
+            eventBus.emit(AudioEventBusStatus.AudioPlayerIdle);
+
+            expect(stateHandler.play).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('error event', () => {
+        it('Should log error, send to channel and skip song on error', async () => {
+            mediaPlayer.initializePlayer();
+
+            eventBus.emit(AudioEventBusStatus.AudioPlayerError, new Error());
+            expect.assertions(3);
+
+            expect(logger.error).toHaveBeenCalled();
+            expect(channelManager.sendErrorMessage).toHaveBeenCalledWith(expect.stringContaining('Error Playing Song'));
+            expect(channelManager.sendErrorMessage).toHaveBeenCalledTimes(1);
+        });
+    });
 });
 
 describe.each(['play', 'stop', 'pause'])('play/stop/pause()', (value: string) => {

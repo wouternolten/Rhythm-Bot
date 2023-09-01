@@ -9,7 +9,8 @@
         "start:debug": "NODE_ENV=development DEBUG=* nodemon --inspect --trace-warnings",
         "start:prod": "NODE_ENV=production node --trace-warnings dist/app",
         "build": "tsc",
-        "test": "jest"
+        "test": "jest",
+        "lint": "eslint ."
     },
     "author": "Malexion",
     "license": "MIT",
@@ -17,7 +18,7 @@
         "url": "https://github.com/Malexion/Rhythm-Bot"
     },
     "dependencies": {
-        "@discordjs/opus": "^0.5.3",
+        "@discordjs/opus": "^0.9.0",
         "@discordjs/voice": "^0.16.0",
         "axios": "^0.25.0",
         "bufferutil": "^4.0.1",
@@ -25,20 +26,14 @@
         "discord-command-parser": "^1.5.3",
         "discord.js": "^14.9.0",
         "dotenv": "^10.0.0",
-        "erlpack": "^0.1.3",
         "ffmpeg-static": "^4.2.7",
         "jsonfile": "^2.4.0",
-        "minimist": "^1.2.3",
-        "sodium": "^3.0.2",
-        "source-map-support": "^0.5.20",
+        "libsodium-wrappers": "^0.7.11",
         "typescript": "^5.0.4",
-        "utf-8-validate": "^5.0.2",
-        "uuid": "^8.3.2",
         "winston": "^3.3.3",
         "youtube-search-without-api-key": "^1.0.7",
         "ytdl-core": "^4.9.2",
-        "ytpl": "^2.0.4",
-        "zlib-sync": "^0.1.7"
+        "ytpl": "^2.0.4"
     },
     "devDependencies": {
         "@babel/core": "^7.16.7",
@@ -47,16 +42,16 @@
         "@babel/preset-typescript": "^7.16.7",
         "@types/jest": "^27.4.0",
         "@types/jsonfile": "^5.0.1",
-        "@types/minimist": "^1.2.0",
         "@types/node": "^12.12.48",
-        "@types/source-map-support": "^0.5.4",
-        "@types/uuid": "^8.3.1",
-        "@types/winston": "^2.4.4",
         "@types/yt-search": "^2.3.0",
+        "@typescript-eslint/eslint-plugin": "^6.4.0",
+        "@typescript-eslint/parser": "^6.4.0",
         "babel-jest": "^27.4.6",
+        "eslint": "^8.47.0",
+        "eslint-config-prettier": "^9.0.0",
         "jest": "^27.4.7",
         "jest-mock-extended": "^3.0.4",
-        "nodemon": "^2.0.13",
+        "nodemon": "^3.0.1",
         "prettier": "^2.4.1",
         "ts-node": "^10.2.1",
         "tsconfig-paths": "^3.11.0"

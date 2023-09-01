@@ -1,10 +1,10 @@
+import axios from 'axios';
+import { mock } from 'jest-mock-extended';
+import { Logger } from 'winston';
 import { IRhythmBotConfig } from './../../../src/bot/IRhythmBotConfig';
 import { SpotifyAPIHelper } from './../../../src/helpers/SpotifyAPIHelper';
-import axios from 'axios';
-import { mockLogger } from '../../mocks/mockLogger';
 
 jest.mock('axios');
-jest.mock('typedi');
 
 const CLIENT_ID = 'id';
 const CLIENT_SECRET = 'secret';
@@ -12,8 +12,8 @@ const CLIENT_SECRET = 'secret';
 const config = {
     spotify: {
         clientId: CLIENT_ID,
-        clientSecret: CLIENT_SECRET
-    }
+        clientSecret: CLIENT_SECRET,
+    },
 } as unknown as IRhythmBotConfig;
 
 const TRACK_STRING = 'Never gonna give you up';
@@ -23,15 +23,15 @@ const PLAYLIST_ID = '37i9dQZF1E8NRjNUGTUFgD';
 
 const TOKEN_RESPONSE = {
     data: {
-        access_token: 'ACCESS_TOKEN'
-    }
+        access_token: 'ACCESS_TOKEN',
+    },
 };
 
 let helper: SpotifyAPIHelper;
-const logger = mockLogger();
+const logger = mock<Logger>();
 
 beforeEach(() => {
-    helper = new SpotifyAPIHelper(config, logger)
+    helper = new SpotifyAPIHelper(config, logger);
 });
 
 describe('Test fetching data for search string', () => {
@@ -61,7 +61,7 @@ describe('Test fetching data for search string', () => {
 
     describe('When token retrieving succeeds', () => {
         beforeEach(() => {
-            axios.post = jest.fn().mockResolvedValue(TOKEN_RESPONSE)
+            axios.post = jest.fn().mockResolvedValue(TOKEN_RESPONSE);
         });
 
         it('Should return a rejected promise when searching fails', async () => {
@@ -82,7 +82,7 @@ describe('Test fetching data for search string', () => {
             } catch (error) {
                 expect(error).toBeDefined();
             }
-        })
+        });
 
         describe('Invalid return data', () => {
             beforeEach(() => {
@@ -91,7 +91,7 @@ describe('Test fetching data for search string', () => {
 
             it('Should error out when no response is given', async () => {
                 await checkSpotifyId(undefined);
-            })
+            });
 
             it('Should error out when data is not set', async () => {
                 await checkSpotifyId({});
@@ -109,11 +109,11 @@ describe('Test fetching data for search string', () => {
                 await checkSpotifyId({ data: { tracks: { items: [] } } });
             });
 
-            async function checkSpotifyId(returnData: {}): Promise<void> {
+            async function checkSpotifyId(returnData: { [key: string]: unknown }): Promise<void> {
                 axios.get = jest.fn().mockResolvedValue(returnData);
 
                 try {
-                    const id = await helper.getSpotifyIDForSong(TRACK_STRING, ARTIST_STRING);
+                    await helper.getSpotifyIDForSong(TRACK_STRING, ARTIST_STRING);
                 } catch (error) {
                     expect(error).toBeDefined();
                 }
@@ -126,11 +126,11 @@ describe('Test fetching data for search string', () => {
                     tracks: {
                         items: [
                             {
-                                id: TRACK_ID
-                            }
-                        ]
-                    }
-                }
+                                id: TRACK_ID,
+                            },
+                        ],
+                    },
+                },
             };
 
             axios.get = jest.fn().mockResolvedValue(validData);
@@ -146,23 +146,24 @@ describe('Test fetching data for search string', () => {
                     tracks: {
                         items: [
                             {
-                                id: TRACK_ID
-                            }
-                        ]
-                    }
-                }
+                                id: TRACK_ID,
+                            },
+                        ],
+                    },
+                },
             };
 
             axios.get = jest.fn().mockResolvedValue(validData);
 
             await helper.getSpotifyIDForSong(TRACK_STRING);
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             const firstArgument = axios.get.mock.calls[0][0] as string;
-            
+
             expect(firstArgument.search('artist')).toEqual(-1);
         });
-    })
+    });
 });
 
 describe('Test fetching data for id', () => {
@@ -190,10 +191,9 @@ describe('Test fetching data for id', () => {
         }
     });
 
-
     describe('When token retrieving succeeds', () => {
         beforeEach(() => {
-            axios.post = jest.fn().mockResolvedValue(TOKEN_RESPONSE)
+            axios.post = jest.fn().mockResolvedValue(TOKEN_RESPONSE);
         });
 
         describe('Invalid return data', () => {
@@ -203,7 +203,7 @@ describe('Test fetching data for id', () => {
 
             it('Should error out when no response is given', () => {
                 getRecommendationForTrack(undefined);
-            })
+            });
 
             it('Should error out when data is not set', () => {
                 getRecommendationForTrack({});
@@ -222,14 +222,14 @@ describe('Test fetching data for id', () => {
             });
 
             it('Should error out when first track has no artist', () => {
-                getRecommendationForTrack({ data: { tracks: [{name: TRACK_STRING}] } });
+                getRecommendationForTrack({ data: { tracks: [{ name: TRACK_STRING }] } });
             });
 
             it('Should error out when first track has no name', () => {
-                getRecommendationForTrack({ data: { tracks: [{artists: [{name: ARTIST_STRING }]}] } });
+                getRecommendationForTrack({ data: { tracks: [{ artists: [{ name: ARTIST_STRING }] }] } });
             });
 
-            async function getRecommendationForTrack(returnData: {}): Promise<void> {
+            async function getRecommendationForTrack(returnData: { [key: string]: unknown }): Promise<void> {
                 axios.get = jest.fn().mockResolvedValue(returnData);
 
                 try {
@@ -246,10 +246,10 @@ describe('Test fetching data for id', () => {
                     tracks: [
                         {
                             artists: [{ name: ARTIST_STRING }],
-                            name: TRACK_STRING
+                            name: TRACK_STRING,
                         },
-                    ]
-                }
+                    ],
+                },
             });
 
             const result = await helper.getRecommendationForTrack(TRACK_ID);
@@ -257,7 +257,7 @@ describe('Test fetching data for id', () => {
             expect(result).toEqual(`${ARTIST_STRING} - ${TRACK_STRING}`);
         });
     });
-})
+});
 
 describe('Playlist', () => {
     it('Should return a rejected promise when empty playlist id given', async () => {
@@ -306,12 +306,12 @@ describe('Playlist', () => {
 
     describe('When token retrieving succeeds', () => {
         beforeEach(() => {
-            axios.post = jest.fn().mockResolvedValue(TOKEN_RESPONSE)
+            axios.post = jest.fn().mockResolvedValue(TOKEN_RESPONSE);
         });
 
         it('Should log error and reject promise when axios throws error', async () => {
             expect.assertions(2);
-            
+
             axios.get = jest.fn().mockRejectedValue('my error');
 
             try {
@@ -324,7 +324,7 @@ describe('Playlist', () => {
 
         it('Should log error and reject when axios returns invalid data', async () => {
             expect.assertions(2);
-            
+
             axios.get = jest.fn().mockResolvedValue('invalid data');
 
             try {
@@ -345,14 +345,14 @@ describe('Playlist', () => {
                             track: {
                                 artists: [
                                     {
-                                        name: 'Rick Astley'
-                                    }
+                                        name: 'Rick Astley',
+                                    },
                                 ],
-                                name: 'Never gonna give you up'
-                            }
-                        }
-                    ]
-                }
+                                name: 'Never gonna give you up',
+                            },
+                        },
+                    ],
+                },
             });
 
             const result = await helper.getTracksFromPlaylist(PLAYLIST_ID);
