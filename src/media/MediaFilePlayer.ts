@@ -1,5 +1,6 @@
-import { AudioPlayer, createAudioResource } from '@discordjs/voice';
-import { VoiceState } from 'discord.js';
+import { createAudioResource } from '@discordjs/voice';
+import { createReadStream } from 'fs';
+import { Logger } from 'winston';
 import { IAudioPlayerFactory } from '../helpers/AudioPlayerFactory';
 
 export interface IMediaFilePlayer {
@@ -7,17 +8,17 @@ export interface IMediaFilePlayer {
 }
 
 export class MediaFilePlayer implements IMediaFilePlayer {
-    private audioPlayer: AudioPlayer;
+    public constructor(private readonly audioPlayerFactory: IAudioPlayerFactory, private readonly logger: Logger) {}
 
     public playFile(fileName: string): void {
+        const audioPlayer = this.audioPlayerFactory.getAudioPlayer();
 
-    // TODO: FIX CHANNEL
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public playFile(fileName: string, channel: VoiceState): void {
-        if (!this.audioPlayer) {
-            this.audioPlayer = this.audioPlayerFactory.getAudioPlayer();
+        if (!audioPlayer) {
+            this.logger.error('Audio player not found for media file player');
+            return;
         }
 
-        this.audioPlayer.play(createAudioResource(fileName));
+        // We play a streamed version, because the player gets stuck on buffering. Link: https://github.com/discordjs/discord.js/issues/7232
+        this.audioPlayerFactory.getAudioPlayer().play(createAudioResource(createReadStream(fileName)));
     }
 }
