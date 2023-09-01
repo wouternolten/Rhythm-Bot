@@ -39,6 +39,6 @@ export class PlayAOEFileCommand implements ICommand {
     }
 
     getDescription(): string {
-        return "Plays an command from Age of Empires with it's corresponding number.";
+        return "Plays a command from Age of Empires with it's corresponding number.";
     }
 }
