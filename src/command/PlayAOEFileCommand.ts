@@ -1,20 +1,17 @@
-import { IMediaFilePlayer } from './../media/MediaFilePlayer';
 import { SuccessfulParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import fs from 'fs';
-import { ICommand } from './ICommand';
-import { isInteger, leftPad } from '../helpers/helpers';
 import { Logger } from 'winston';
+import { isInteger, leftPad } from '../helpers/helpers';
+import { IMediaFilePlayer } from './../media/MediaFilePlayer';
+import { ICommand } from './ICommand';
 
 const AOE_SOUND_DIRECTORY = `${process.cwd()}\\data\\sounds\\age_taunts`;
 
 export class PlayAOEFileCommand implements ICommand {
-    public constructor(
-        private mediaPlayer: IMediaFilePlayer,
-        private logger: Logger
-    ) { }
-    
-    async execute(cmd: SuccessfulParsedMessage<Message>, msg: Message): Promise<void> {
+    public constructor(private mediaPlayer: IMediaFilePlayer, private logger: Logger) {}
+
+    async execute(cmd: SuccessfulParsedMessage<Message>): Promise<void> {
         let { body } = cmd;
 
         if (!body || !isInteger(body)) {
@@ -38,10 +35,10 @@ export class PlayAOEFileCommand implements ICommand {
             return;
         }
 
-        return this.mediaPlayer.playFile(`${AOE_SOUND_DIRECTORY}\\${fileName}`, msg.member.voice);
+        return this.mediaPlayer.playFile(`${AOE_SOUND_DIRECTORY}\\${fileName}`);
     }
 
     getDescription(): string {
-        return 'Plays an command from Age of Empires with it\'s corresponding number.';
+        return "Plays an command from Age of Empires with it's corresponding number.";
     }
 }

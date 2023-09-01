@@ -3,14 +3,13 @@ import { VoiceState } from 'discord.js';
 import { IAudioPlayerFactory } from '../helpers/AudioPlayerFactory';
 
 export interface IMediaFilePlayer {
-    playFile(fileName: string, channel: VoiceState): void;
+    playFile(fileName: string): void;
 }
 
-// TODO: TESTS
 export class MediaFilePlayer implements IMediaFilePlayer {
     private audioPlayer: AudioPlayer;
 
-    public constructor(private readonly audioPlayerFactory: IAudioPlayerFactory) {}
+    public playFile(fileName: string): void {
 
     // TODO: FIX CHANNEL
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

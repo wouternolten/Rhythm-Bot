@@ -20,6 +20,17 @@ export class AudioPlayerFactory implements IAudioPlayerFactory {
     }
 
     public initialize(): void {
+        this.client.on('voiceStateUpdate', (oldState, newState) => {
+            if (newState?.channel) {
+                this.createSubscribedAudioPlayer(newState);
+                return;
+            }
+
+            if (oldState?.channel) {
+                this.createSubscribedAudioPlayer(oldState);
+            }
+        });
+
         this.client.on('messageCreate', (message: Message<boolean>) => {
             if (!message?.member?.voice?.channel) {
                 return;
@@ -41,8 +52,8 @@ export class AudioPlayerFactory implements IAudioPlayerFactory {
     }
 
     private createSubscribedAudioPlayer(voice: VoiceState): AudioPlayer {
-        if (this.channel?.id && this.channel?.id !== voice.channelId) {
-            return this.audioPlayer; // Don't go to a different channel.
+        if (this.audioPlayer) {
+            return this.audioPlayer; // Don't create a new audio player.
         }
 
         const connection = joinVoiceChannel({

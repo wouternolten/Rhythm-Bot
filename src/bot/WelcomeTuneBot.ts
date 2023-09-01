@@ -10,9 +10,7 @@ import { IRhythmBotConfig } from './IRhythmBotConfig';
 
 const TWO_SECONDS = 2000;
 
-type SoundMap = {
-    soundFiles: { [username: string]: string };
-};
+type SoundMap = { [username: string]: string };
 
 export class WelcomeTuneBot {
     private readonly commands: CommandMap<(cmd: SuccessfulParsedMessage<Message>, msg: Message) => void>;
@@ -27,7 +25,17 @@ export class WelcomeTuneBot {
         this.commands = commandsFactory.createWelcomeBotCommandsMap();
     }
 
-    handleMessage(msg: Message): void {
+    initialize(): void {
+        this.client.on('messageCreate', (msg: Message) => {
+            this.handleMessage(msg);
+        });
+
+        this.client.on('voiceStateUpdate', async (oldVoiceState: VoiceState, newVoiceState: VoiceState) => {
+            this.handleVoiceStateUpdate(oldVoiceState, newVoiceState);
+        });
+    }
+
+    private handleMessage(msg: Message): void {
         try {
             if (!this.config.command?.symbol) {
                 this.logger.error('Symbol handle message not set.');
@@ -60,21 +68,20 @@ export class WelcomeTuneBot {
         }
     }
 
-    handleVoiceStateUpdate(oldVoiceState: VoiceState, newVoiceState: VoiceState) {
+    private handleVoiceStateUpdate(oldVoiceState: VoiceState, newVoiceState: VoiceState): void {
         if (oldVoiceState.channelId) {
             return;
         }
 
         const soundMap = this.getSoundMap();
 
-        if (!soundMap || !soundMap[newVoiceState.member.user.username]) {
+        if (!soundMap || !soundMap[newVoiceState.member?.user?.username]) {
             return;
         }
 
         setTimeout(() => {
             this.mediaPlayer.playFile(
-                `${process.cwd()}\\data\\sounds\\${soundMap[newVoiceState.member.user.username]}`,
-                newVoiceState
+                `${process.cwd()}\\data\\sounds\\${soundMap[newVoiceState.member.user.username]}`
             );
         }, TWO_SECONDS);
     }
@@ -88,7 +95,7 @@ export class WelcomeTuneBot {
         delete require.cache[projectDirectory('../bot-config.json')];
 
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const soundMap = require(projectDirectory(configPath)).soundFiles;
+        const soundMap = require(projectDirectory(configPath))?.soundFiles;
 
         if (!soundMap) {
             return;
