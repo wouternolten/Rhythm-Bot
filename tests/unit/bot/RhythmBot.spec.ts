@@ -14,15 +14,9 @@ import { MediaPlayer } from './../../../src/media/MediaPlayer';
 
 const mockParseReturnValue = jest.fn();
 
-jest.mock('discord-command-parser', () => {
-    const originalModule = jest.requireActual('ytdl-core');
-
-    return {
-        __esModule: true,
-        ...originalModule,
-        parse: (msg: Message<boolean>, symbol: string) => mockParseReturnValue(msg, symbol),
-    };
-});
+jest.mock('discord-command-parser', () => ({
+    parse: (msg: Message<boolean>, symbol: string) => mockParseReturnValue(msg, symbol),
+}));
 
 const TEXT_CHANNEL_ID = 'some-text-id';
 const TEXT_CHANNEL_NAME = 'some-text-name';

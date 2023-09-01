@@ -55,8 +55,6 @@ describe('Initialize', () => {
             eventBus.emit(AudioEventBusStatus.AudioPlayerError, new Error());
             expect.assertions(3);
 
-            jest.runAllTimers();
-
             expect(logger.error).toHaveBeenCalled();
             expect(channelManager.sendErrorMessage).toHaveBeenCalledWith(expect.stringContaining('Error Playing Song'));
             expect(channelManager.sendErrorMessage).toHaveBeenCalledTimes(1);
