@@ -22,15 +22,12 @@ export interface IRhythmBotConfig {
         pauseSong?: string;
         skipSong?: string;
     };
-    useWelcomeBot: boolean,
-    youtube?: {
-        apiKey: string;
-    }
+    useWelcomeBot: boolean;
     spotify?: {
         clientId: string;
         clientSecret: string;
-    }
-        command?: {
+    };
+    command?: {
         symbol?: string;
     };
     discord: {

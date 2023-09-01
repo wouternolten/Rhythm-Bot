@@ -16,15 +16,7 @@ dotenv();
 async function initialiseClients(): Promise<void> {
     const config = container.get(tokens.config);
     const musicBotClient = container.get(tokens.musicBotClient);
-    const welcomeBotClient = container.get(tokens.welcomeBotClient);
     const logger = container.get(tokens.logger);
-
-    welcomeBotClient.on('ready', () => {
-        container.get(tokens.welcomeBotAudioPlayerFactory).initialize();
-        container.get(tokens.welcomeTuneBot).initialize();
-
-        logger.info('Welcome bot ready to go.');
-    });
 
     musicBotClient.on('ready', () => {
         container.get(tokens.channelManager).initialize();
@@ -44,8 +36,20 @@ async function initialiseClients(): Promise<void> {
     });
 
     try {
+        if (config.useWelcomeBot) {
+            const welcomeBotClient = container.get(tokens.welcomeBotClient);
+
+            welcomeBotClient.on('ready', () => {
+                container.get(tokens.welcomeBotAudioPlayerFactory).initialize();
+                container.get(tokens.welcomeTuneBot).initialize();
+
+                logger.info('Welcome bot ready to go.');
+            });
+
+            await welcomeBotClient.login(config.discord.welcomeBotToken);
+        }
+
         await musicBotClient.login(config.discord.token);
-        await welcomeBotClient.login(config.discord.welcomeBotToken);
     } catch (error) {
         logger.error({ clientLoginError: error });
         process.exit(1);
